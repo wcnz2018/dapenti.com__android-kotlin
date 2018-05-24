@@ -51,7 +51,7 @@ public class DaPenTiPage extends Properties {
     }
 
     static public class PageNotes {
-        public String contentHtml;
+        public String content;
     }
 
     static public class PagePicture {
@@ -64,10 +64,10 @@ public class DaPenTiPage extends Properties {
         public String contentHtml;
     }
 
-    public PageLongReading pageLongReading;
-    public PageNotes pageNotes;
-    public PagePicture pagePicture;
-    public PageVideo pageVideo;
+    public PageLongReading pageLongReading = new PageLongReading();
+    public PageNotes pageNotes = new PageNotes();
+    public PagePicture pagePicture = new PagePicture();
+    public PageVideo pageVideo = new PageVideo();
 
     Element contentElement = null;
     String coverImageUrl = null;
@@ -94,7 +94,6 @@ public class DaPenTiPage extends Properties {
         if (e == null)
             return false;
 
-        pageVideo = new PageVideo();
         pageVideo.contentHtml = getContent(e);
         // TODO: get description
 
@@ -103,13 +102,54 @@ public class DaPenTiPage extends Properties {
     }
 
     private boolean preparePagePicture(Document doc) {
-        // TODO: finish me
+        if (!pageUrl.toString().contains("more.asp?name=tupian"))
+            return false;
+
+        String[] ss = {"div>img[src^='http://www.dapenti.com']",
+                "div>p>img[src^='http://www.dapenti.com']"};
+
+        for (String s : ss) {
+            Element e = getFirstElement(doc, s);
+            if (e != null) {
+                pagePicture.imageUrl = e.attr("src");
+
+                if (s.contains(">p>"))
+                    pagePicture.description = e.parent().parent().text();
+                else
+                    pagePicture.description = e.parent().text();
+
+                pageType = PageTypePicture;
+                return true;
+            }
+        }
+
         return false;
     }
 
     private boolean preparePageNote(Document doc) {
-        // TODO: finish me
-        return false;
+        String ss = "div.WB_info";
+        Element e = getFirstElement(doc, ss);
+        if (e != null) {
+            pageNotes.content = e.text();
+            pageType = PageTypeNote;
+            return true;
+        }
+
+        Elements es = doc.select("div.oblog_text");
+        Log.d(TAG, "es.size: " + es.size());
+        if (es.size() != 1)
+            return false;
+
+        e = es.first();
+
+        String sl[] = {"img", "video", "br"};
+        for (String s : sl)
+            if (e.select(s).size() > 0)
+                return false;
+
+        pageNotes.content = e.text();
+        pageType = PageTypeNote;
+        return true;
     }
 
     private boolean prepareLongReading(Document doc) {
@@ -135,13 +175,14 @@ public class DaPenTiPage extends Properties {
         try {
             Document doc = Jsoup.parse(pageUrl, 5000);
 
-            if (prepareLongReading(doc))
-                return true;
+            // Note: order counts
             if (preparePageVideo(doc))
                 return true;
-            if (preparePagePicture(doc))
-                return true;
             if (preparePageNote(doc))
+                return true;
+            if (prepareLongReading(doc))
+                return true;
+            if (preparePagePicture(doc))
                 return true;
 
             pageType = PageTypeOriginal;

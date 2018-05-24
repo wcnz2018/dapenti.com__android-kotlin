@@ -29,11 +29,13 @@ public class DaPenTiCategory {
     public String getCategoryName() { return categoryName; }
 
     public void preparePages() {
-        String ss = "div > ul > li > a";
+        //String ss = "div > ul > li > a";
+        String ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']";
         List<Pair<String, URL>> subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss);
 
-        for (Pair<String, URL> p : subItemPair)
+        for (Pair<String, URL> p : subItemPair) {
             pages.add(new DaPenTiPage((p)));
+        }
 
         if (categoryPrepared != null)
             categoryPrepared.onCategoryPrepared(pages.size() - 1);

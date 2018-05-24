@@ -100,6 +100,7 @@ public class DWebView extends WebView {
     }
 
     public void pauseVideo() {
+        playOnLoadFinished = false;
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()");
     }

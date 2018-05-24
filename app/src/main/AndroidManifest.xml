@@ -24,6 +24,7 @@
             android:name=".DetailActivity"
             android:label="@string/title_activity_detail"
             android:theme="@style/AppTheme"
+            android:launchMode="singleTask"
             android:hardwareAccelerated="true"/>
     </application>
 

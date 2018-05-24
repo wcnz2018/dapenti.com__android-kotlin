@@ -2,7 +2,6 @@ package com.willchou.dapenti;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.pdf.PdfDocument;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -16,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
 import com.willchou.dapenti.model.DaPenTiPage;
@@ -29,7 +29,7 @@ public class RecyclerViewAdapter
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DaPenTiCategory c = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         holder.update(c.pages.get(position));
-        enterAnimation(holder.itemView);
+        //enterAnimation(holder.itemView);
     }
 
     @Override
@@ -106,7 +106,7 @@ public class RecyclerViewAdapter
             if (page.getProperty(PageProperty_Expanded) != null)
                 showContent(mView, false);
 
-            mView.setOnClickListener((View v) -> {
+            titleTextView.setOnClickListener((View v) -> {
                 if (page.initiated())
                     triggerContent(v);
                 else {
@@ -139,15 +139,38 @@ public class RecyclerViewAdapter
 
         void hideContent(View v) {
             descriptionTextView.setVisibility(View.GONE);
+            descriptionTextView.setText("");
             imageView.setVisibility(View.GONE);
+            imageView.setImageDrawable(null);
             videoLayout.setVisibility(View.GONE);
 
+            detachWebView();
             if (dWebView != null)
                 dWebView.pauseVideo();
         }
 
         void showContent(View v, Boolean playVideo) {
             switch (page.getPageType()) {
+                case DaPenTiPage.PageTypeNote:
+                    DaPenTiPage.PageNotes notes = page.pageNotes;
+
+                    descriptionTextView.setVisibility(View.VISIBLE);
+                    descriptionTextView.setText(notes.content);
+                    break;
+
+                case DaPenTiPage.PageTypePicture:
+                    DaPenTiPage.PagePicture picture = page.pagePicture;
+
+                    descriptionTextView.setVisibility(View.VISIBLE);
+                    descriptionTextView.setText(picture.description);
+
+                    imageView.setImageDrawable(null);
+                    imageView.setVisibility(View.VISIBLE);
+                    Glide.with(v.getContext())
+                            .load(picture.imageUrl)
+                            .into(imageView);
+                    break;
+
                 case DaPenTiPage.PageTypeVideo:
                     if (dWebView == null) {
                         DaPenTiPage.PageVideo pageVideo = page.pageVideo;
@@ -166,6 +189,8 @@ public class RecyclerViewAdapter
                     break;
 
                 case DaPenTiPage.PageTypeLongReading:
+                    // show content with next click
+                    page.remove(PageProperty_Expanded);
                     DaPenTiPage.PageLongReading pageLongReading = page.pageLongReading;
 
                     Context context = v.getContext();
