@@ -18,6 +18,9 @@ import android.webkit.WebViewClient;
 public class DWebView extends WebView {
     static private final String TAG = "DWebView";
 
+    private boolean loadFinished;
+    public boolean playOnLoadFinished = false;
+
     public DWebView(Context context) {
         super(context);
         setup();
@@ -34,6 +37,8 @@ public class DWebView extends WebView {
     }
 
     private void setup() {
+        loadFinished = false;
+
         WebSettings settings = getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -73,7 +78,12 @@ public class DWebView extends WebView {
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.d(TAG, "onPageFinished");
-                view.loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()");
+                loadFinished = true;
+                if (playOnLoadFinished) {
+                    playOnLoadFinished = false;
+                    startVideo();
+                }
+                //view.loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()");
                 // TODO: 退出等待
             }
 
@@ -82,5 +92,15 @@ public class DWebView extends WebView {
                 handler.proceed();
             }
         });
+    }
+
+    public void startVideo() {
+        if (loadFinished)
+            loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()");
+    }
+
+    public void pauseVideo() {
+        if (loadFinished)
+            loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()");
     }
 }

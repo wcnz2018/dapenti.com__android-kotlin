@@ -10,10 +10,19 @@ import org.jsoup.select.Elements;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-public class DaPenTiPage {
+public class DaPenTiPage extends Properties {
     static private final String TAG = "DaPenTiPage";
+
+    // Properties
+    private Map<String, Object> mapObject = new HashMap<>();
+    public void setObjectProperty(String k, Object o) { mapObject.put(k, o); }
+    public Object getObjectProperty(String k) { return mapObject.get(k); }
+    public void removeObjectProperty(String k) { mapObject.remove(k); }
 
     static public final int PageTypeUnknown = 0;
     static public final int PageTypeLongReading = 1;

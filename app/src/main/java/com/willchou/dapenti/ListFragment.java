@@ -66,7 +66,8 @@ public class ListFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        recyclerViewAdapter = new RecyclerViewAdapter(daPenTiCategoryIndex);
+        if (recyclerViewAdapter == null)
+            recyclerViewAdapter = new RecyclerViewAdapter(daPenTiCategoryIndex);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         recyclerView.setAdapter(recyclerViewAdapter);
     }
