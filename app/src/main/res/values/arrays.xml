@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="font_entries_list">
+        <item>小</item>
+        <item>中</item>
+        <item>大</item>
+        <item>超大</item>
+    </string-array>
+    <string-array name="font_entries_value">
+        <item>small</item>
+        <item>media</item>
+        <item>big</item>
+        <item>super</item>
+    </string-array>
+    <string-array name="play_entries_list">
+        <item>使用移动流量及WiFi</item>
+        <item>仅使用WiFi</item>
+        <item>关闭</item>
+    </string-array>
+    <string-array name="play_entries_value">
+        <item>mobileAndWifi</item>
+        <item>wifi</item>
+        <item>none</item>
+    </string-array>
+</resources>

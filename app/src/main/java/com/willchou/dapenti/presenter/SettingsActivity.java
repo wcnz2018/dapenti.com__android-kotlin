@@ -1,5 +1,6 @@
 package com.willchou.dapenti.presenter;
 
+import android.preference.PreferenceFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -25,6 +26,11 @@ public class SettingsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(R.string.title_activity_settings);
         toolbar.setNavigationOnClickListener((View v) -> onBackPressed());
+
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.setting_content, new SettingsFragment())
+                .commit();
     }
 
     @Override
@@ -32,5 +38,13 @@ public class SettingsActivity extends AppCompatActivity {
         super.onBackPressed();
         overridePendingTransition(R.anim.swipeback_stack_to_front,
                 R.anim.swipeback_stack_right_out);
+    }
+
+    public static class SettingsFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.preferences);  //load preference screen from xml directory.
+        }
     }
 }

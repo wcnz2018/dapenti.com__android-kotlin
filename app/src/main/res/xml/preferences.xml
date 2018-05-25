@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/setting_category_general"
+        android:key="pref_category_general_key">
+
+        <ListPreference
+            android:key="font_size_key"
+            android:title="@string/setting_general_font_size"
+            android:summary="大"
+            android:entries="@array/font_entries_list"
+            android:entryValues="@array/font_entries_value"
+            android:dialogTitle="@string/setting_general_font_size" />
+
+        <ListPreference
+            android:key="video_play_key"
+            android:title="@string/setting_general_auto_play"
+            android:summary="WiFi"
+            android:entries="@array/play_entries_list"
+            android:entryValues="@array/play_entries_value"
+            android:dialogTitle="@string/setting_general_auto_play" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="smart_content_key"
+            android:title="@string/setting_general_smart_content"
+            android:summary="@string/setting_summary_smart_content" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="display_image_key"
+            android:title="@string/setting_general_display_image"
+            android:summary="@string/setting_summary_display_image" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="hide_empty_key"
+            android:title="@string/setting_general_hide_empty" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/setting_category_other"
+        android:key="pref_category_content_key">
+
+        <Preference
+            android:title="@string/setting_other_about"/>
+
+        <Preference
+            android:title="@string/setting_other_author"
+            android:summary="@string/setting_summary_author"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
