@@ -29,14 +29,14 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     static private final String PageProperty_Webview = "pp_webview";
 
     DaPenTiPage page;
-    DWebView dWebView;
+    EnhancedWebView enhancedWebView;
 
-    private DWebView.onFullScreenTriggered fullScreenTriggered;
-    private DWebView.FullScreenViewPair fullScreenViewPair;
+    private EnhancedWebView.onFullScreenTriggered fullScreenTriggered;
+    private EnhancedWebView.FullScreenViewPair fullScreenViewPair;
 
     RecyclerViewHolder(View v,
-                       DWebView.onFullScreenTriggered fullScreenTriggered,
-                       DWebView.FullScreenViewPair fullScreenViewPair) {
+                       EnhancedWebView.onFullScreenTriggered fullScreenTriggered,
+                       EnhancedWebView.FullScreenViewPair fullScreenViewPair) {
         super(v);
         mView = v;
 
@@ -52,7 +52,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
 
     void update(DaPenTiPage page) {
         this.page = page;
-        this.dWebView = (DWebView) page.getObjectProperty(PageProperty_Webview);
+        this.enhancedWebView = (EnhancedWebView) page.getObjectProperty(PageProperty_Webview);
 
         titleTextView.setText(page.getPageTitle());
         Log.d(TAG, "update(reuse view): " + page.getPageTitle());
@@ -73,7 +73,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     }
 
     void detachWebView() {
-        DWebView d = (DWebView) page.getObjectProperty(PageProperty_Webview);
+        EnhancedWebView d = (EnhancedWebView) page.getObjectProperty(PageProperty_Webview);
         if (d != null) {
             ViewGroup g = (ViewGroup) d.getParent();
             if (g != null)
@@ -82,9 +82,9 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     }
 
     void setupFullScreenWebView() {
-        dWebView.fullScreenTriggered = fullScreenTriggered;
-        fullScreenViewPair.nonVideoLayout = (ViewGroup) dWebView.getParent();
-        dWebView.prepareFullScreen(fullScreenViewPair);
+        enhancedWebView.fullScreenTriggered = fullScreenTriggered;
+        fullScreenViewPair.nonVideoLayout = (ViewGroup) enhancedWebView.getParent();
+        enhancedWebView.prepareFullScreen(fullScreenViewPair);
     }
 
     void attachedToWindow() {
@@ -106,8 +106,8 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         videoLayout.setVisibility(View.GONE);
 
         detachWebView();
-        if (dWebView != null)
-            dWebView.pauseVideo();
+        if (enhancedWebView != null)
+            enhancedWebView.pauseVideo();
 
         mView.requestLayout();
     }
@@ -135,20 +135,20 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
                 break;
 
             case DaPenTiPage.PageTypeVideo:
-                if (dWebView == null) {
-                    dWebView = new DWebView(v.getContext());
+                if (enhancedWebView == null) {
+                    enhancedWebView = new EnhancedWebView(v.getContext());
 
                     DaPenTiPage.PageVideo pageVideo = page.pageVideo;
-                    page.setObjectProperty(PageProperty_Webview, dWebView);
+                    page.setObjectProperty(PageProperty_Webview, enhancedWebView);
 
-                    dWebView.playOnLoadFinished = playVideo;
-                    dWebView.loadDataWithBaseURL("", pageVideo.contentHtml,
+                    enhancedWebView.playOnLoadFinished = playVideo;
+                    enhancedWebView.loadDataWithBaseURL("", pageVideo.contentHtml,
                             "text/html", "UTF-8", null);
                 } else if (playVideo)
-                    dWebView.startVideo();
+                    enhancedWebView.startVideo();
 
                 detachWebView();
-                videoLayout.addView(dWebView);
+                videoLayout.addView(enhancedWebView);
                 videoLayout.setVisibility(View.VISIBLE);
 
                 setupFullScreenWebView();

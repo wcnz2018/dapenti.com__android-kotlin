@@ -1,7 +1,6 @@
 package com.willchou.dapenti.presenter;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,7 +17,7 @@ import android.view.WindowManager;
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
-import com.willchou.dapenti.view.DWebView;
+import com.willchou.dapenti.view.EnhancedWebView;
 import com.willchou.dapenti.view.RecyclerViewAdapter;
 
 import java.util.List;
@@ -33,9 +32,9 @@ public class ListFragment extends Fragment {
     private RecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
-    private DWebView.FullScreenViewPair fullScreenViewPair;
+    private EnhancedWebView.FullScreenViewPair fullScreenViewPair;
 
-    private DWebView.onFullScreenTriggered fullScreenTriggered = fullscreen -> {
+    private EnhancedWebView.onFullScreenTriggered fullScreenTriggered = fullscreen -> {
         Activity activity = getActivity();
         if (activity == null) {
             Log.d(TAG, "Unable to get activity");
@@ -60,7 +59,7 @@ public class ListFragment extends Fragment {
     };
 
     ListFragment setDaPenTiItemIndex(int daPenTiCategoryIndex,
-                                     DWebView.FullScreenViewPair fullScreenViewPair) {
+                                     EnhancedWebView.FullScreenViewPair fullScreenViewPair) {
         this.daPenTiCategoryIndex = daPenTiCategoryIndex;
         this.daPenTiCategory = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         this.fullScreenViewPair = fullScreenViewPair;

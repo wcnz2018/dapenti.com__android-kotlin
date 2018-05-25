@@ -5,42 +5,43 @@
         android:key="pref_category_general_key">
 
         <ListPreference
-            android:key="font_size_key"
+            android:key="@string/pref_key_font_size"
             android:title="@string/setting_general_font_size"
-            android:summary="大"
+            android:summary="%s"
             android:entries="@array/font_entries_list"
             android:entryValues="@array/font_entries_value"
+            android:defaultValue="small"
             android:dialogTitle="@string/setting_general_font_size" />
 
         <ListPreference
-            android:key="video_play_key"
+            android:key="@string/pref_key_auto_play"
             android:title="@string/setting_general_auto_play"
-            android:summary="WiFi"
+            android:summary="%s"
             android:entries="@array/play_entries_list"
             android:entryValues="@array/play_entries_value"
+            android:defaultValue="WiFi"
             android:dialogTitle="@string/setting_general_auto_play" />
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="smart_content_key"
+            android:key="string/pref_key_smart_content"
             android:title="@string/setting_general_smart_content"
             android:summary="@string/setting_summary_smart_content" />
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="display_image_key"
+            android:key="string/pref_key_display_image"
             android:title="@string/setting_general_display_image"
             android:summary="@string/setting_summary_display_image" />
 
         <SwitchPreference
             android:defaultValue="false"
-            android:key="hide_empty_key"
+            android:key="@string/pref_key_hide_empty"
             android:title="@string/setting_general_hide_empty" />
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/setting_category_other"
-        android:key="pref_category_content_key">
+        android:title="@string/setting_category_other">
 
         <Preference
             android:title="@string/setting_other_about"/>

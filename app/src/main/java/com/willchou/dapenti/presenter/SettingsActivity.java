@@ -11,6 +11,7 @@ import com.hannesdorfmann.swipeback.SwipeBack;
 import com.willchou.dapenti.R;
 
 public class SettingsActivity extends AppCompatActivity {
+    static private final String TAG = "SettingsActivity";
     private Toolbar toolbar;
 
     @Override
@@ -44,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.preferences);  //load preference screen from xml directory.
+            addPreferencesFromResource(R.xml.preferences);
         }
     }
 }

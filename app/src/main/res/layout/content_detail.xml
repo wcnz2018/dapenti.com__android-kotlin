@@ -8,7 +8,7 @@
     tools:context=".presenter.DetailActivity"
     tools:showIn="@layout/activity_detail">
 
-    <com.willchou.dapenti.view.DWebView
+    <com.willchou.dapenti.view.EnhancedWebView
         android:id="@+id/webview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

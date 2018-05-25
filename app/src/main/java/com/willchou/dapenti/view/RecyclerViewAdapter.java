@@ -16,12 +16,12 @@ public class RecyclerViewAdapter
     static private final String TAG = "RecyclerViewAdapter";
     private int daPenTiCategoryIndex;
 
-    private DWebView.onFullScreenTriggered fullScreenTriggered;
-    private DWebView.FullScreenViewPair fullScreenViewPair;
+    private EnhancedWebView.onFullScreenTriggered fullScreenTriggered;
+    private EnhancedWebView.FullScreenViewPair fullScreenViewPair;
 
     public RecyclerViewAdapter(int daPenTiCategoryIndex,
-                               DWebView.FullScreenViewPair fullScreenViewPair,
-                               DWebView.onFullScreenTriggered triggered) {
+                               EnhancedWebView.FullScreenViewPair fullScreenViewPair,
+                               EnhancedWebView.onFullScreenTriggered triggered) {
         this.daPenTiCategoryIndex = daPenTiCategoryIndex;
         this.fullScreenViewPair = fullScreenViewPair;
         this.fullScreenTriggered = triggered;

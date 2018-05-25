@@ -13,13 +13,13 @@
         <item>super</item>
     </string-array>
     <string-array name="play_entries_list">
-        <item>使用移动流量及WiFi</item>
-        <item>仅使用WiFi</item>
+        <item>使用移动流量及WiFi时</item>
+        <item>仅使用WiFi时</item>
         <item>关闭</item>
     </string-array>
     <string-array name="play_entries_value">
-        <item>mobileAndWifi</item>
-        <item>wifi</item>
+        <item>mobileAndWiFi</item>
+        <item>WiFi</item>
         <item>none</item>
     </string-array>
 </resources>

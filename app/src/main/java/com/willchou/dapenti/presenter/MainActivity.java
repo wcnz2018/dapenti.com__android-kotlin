@@ -2,7 +2,6 @@ package com.willchou.dapenti.presenter;
 
 import android.content.Intent;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,7 +18,7 @@ import android.view.View;
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
-import com.willchou.dapenti.view.DWebView;
+import com.willchou.dapenti.view.EnhancedWebView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         Adapter adapter = new Adapter(getSupportFragmentManager());
 
-        DWebView.FullScreenViewPair viewPair = new DWebView.FullScreenViewPair();
+        EnhancedWebView.FullScreenViewPair viewPair = new EnhancedWebView.FullScreenViewPair();
         viewPair.nonVideoLayout = findViewById(R.id.coordinatorLayout);
         viewPair.videoLayout = findViewById(R.id.fullscreenVideo);
 

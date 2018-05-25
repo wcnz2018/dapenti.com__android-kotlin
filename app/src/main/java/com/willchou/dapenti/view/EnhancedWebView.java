@@ -18,7 +18,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class DWebView extends VideoEnabledWebView {
+public class EnhancedWebView extends VideoEnabledWebView {
     static private final String TAG = "DWebView";
 
     public interface onFullScreenTriggered {
@@ -34,17 +34,17 @@ public class DWebView extends VideoEnabledWebView {
         public ViewGroup videoLayout;
     }
 
-    public DWebView(Context context) {
+    public EnhancedWebView(Context context) {
         super(context);
         setup();
     }
 
-    public DWebView(Context context, AttributeSet attrs) {
+    public EnhancedWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         setup();
     }
 
-    public DWebView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public EnhancedWebView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setup();
     }
