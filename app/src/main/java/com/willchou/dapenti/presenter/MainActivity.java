@@ -1,7 +1,8 @@
 package com.willchou.dapenti.presenter;
 
-import android.content.pm.ActivityInfo;
+import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -11,8 +12,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
@@ -40,6 +42,30 @@ public class MainActivity extends AppCompatActivity {
         DaPenTi.categoryPrepared = () -> runOnUiThread(this::setupContent);
 
         new Thread(DaPenTi::prepareCategory).start();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "item clicked: " + item.getTitle());
+        switch (item.getItemId()) {
+            case R.id.action_mode:
+                return true;
+
+            case R.id.action_collection:
+                return true;
+
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setupContent() {

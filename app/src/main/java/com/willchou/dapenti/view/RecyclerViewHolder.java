@@ -108,6 +108,8 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         detachWebView();
         if (dWebView != null)
             dWebView.pauseVideo();
+
+        mView.requestLayout();
     }
 
     void showContent(View v, Boolean playVideo) {
@@ -167,6 +169,8 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
                 context.startActivity(intent);
                 break;
         }
+
+        mView.requestLayout();
     }
 
     void triggerContent(View v) {
