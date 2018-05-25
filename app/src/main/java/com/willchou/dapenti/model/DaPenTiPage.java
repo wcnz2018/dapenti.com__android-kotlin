@@ -153,7 +153,7 @@ public class DaPenTiPage extends Properties {
     }
 
     private boolean prepareLongReading(Document doc) {
-        Element e = getFirstElement(doc, "div.oblog_text");
+        Element e = getFirstElement(doc, "div.oblog_text,span.oblog_text > div");
         if (e == null)
             return false;
 
@@ -180,46 +180,15 @@ public class DaPenTiPage extends Properties {
                 return true;
             if (preparePageNote(doc))
                 return true;
-            if (prepareLongReading(doc))
-                return true;
             if (preparePagePicture(doc))
+                return true;
+            if (prepareLongReading(doc))
                 return true;
 
             pageType = PageTypeOriginal;
             orignalHtml = doc.toString();
 
             return true;
-
-            /*
-            Elements es = new Elements();
-            String[] sl = {"div.oblog_text", "div[class^=__reader_view_article_wrap]",
-                    "video", "table"};
-
-            for (String s : sl) {
-                es = doc.select(s);
-                if (es.size() == 0) {
-                    Log.d(TAG, "selector: " + s + " gets null");
-                    continue;
-                }
-
-                if (s.equals("video"))
-                    es = es.parents();
-                break;
-            }
-
-            if (es.size() == 0)
-                contentElement = doc.select("body").get(0);
-            else
-                contentElement = es.first();
-
-            if (contentElement != null) {
-                es = contentElement.select("img:not(.W_img_face)");
-                if (es.size() >= 1)
-                    coverImageUrl = es.first().attr("src");
-
-                fixContent();
-            }
-            */
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -270,6 +239,19 @@ public class DaPenTiPage extends Properties {
                 "img:not(.W_img_face) {display: block; margin: 0 auto;max-width: 100%;}" +
                 "video { width:100% !important; height:auto !important; }" +
                 "table { width: 100% !important; }" +
+                ".video-rotate {\n" +
+                "  position: absolute;\n" +
+                "  transform: rotate(90deg);\n" +
+                "\n" +
+                "  transform-origin: bottom left;\n" +
+                "  width: 100vh;\n" +
+                "  height: 100vw;\n" +
+                "  margin-top: -100vw;\n" +
+                "  object-fit: cover;\n" +
+                "\n" +
+                "  z-index: 4;\n" +
+                "  visibility: visible;\n" +
+                "}" +
                 "</style>";
         html += "<script type=\"text/javascript\">\n" +
                 "  document.addEventListener(\"DOMContentLoaded\", function(event) {\n" +

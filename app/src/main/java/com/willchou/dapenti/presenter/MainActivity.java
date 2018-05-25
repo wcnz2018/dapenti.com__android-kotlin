@@ -1,5 +1,6 @@
-package com.willchou.dapenti;
+package com.willchou.dapenti.presenter;
 
+import android.content.pm.ActivityInfo;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -11,9 +12,12 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 
+import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
+import com.willchou.dapenti.view.DWebView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,10 +56,14 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         Adapter adapter = new Adapter(getSupportFragmentManager());
 
+        DWebView.FullScreenViewPair viewPair = new DWebView.FullScreenViewPair();
+        viewPair.nonVideoLayout = findViewById(R.id.coordinatorLayout);
+        viewPair.videoLayout = findViewById(R.id.fullscreenVideo);
+
         for (int i = 0; i < DaPenTi.daPenTiCategories.size(); i ++) {
             DaPenTiCategory c = DaPenTi.daPenTiCategories.get(i);
             adapter.addFragment(c.getCategoryName(),
-                    new ListFragment().setDaPenTiItemIndex(i));
+                    new ListFragment().setDaPenTiItemIndex(i, viewPair));
         }
 
         viewPager.setAdapter(adapter);

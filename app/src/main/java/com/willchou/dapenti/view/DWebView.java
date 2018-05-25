@@ -1,11 +1,14 @@
-package com.willchou.dapenti;
+package com.willchou.dapenti.view;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
@@ -15,11 +18,21 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class DWebView extends WebView {
+public class DWebView extends VideoEnabledWebView {
     static private final String TAG = "DWebView";
+
+    public interface onFullScreenTriggered {
+        void triggered(boolean fullscreen);
+    }
+    public onFullScreenTriggered fullScreenTriggered = null;
 
     private boolean loadFinished;
     public boolean playOnLoadFinished = false;
+
+    static public class FullScreenViewPair {
+        public ViewGroup nonVideoLayout;
+        public ViewGroup videoLayout;
+    }
 
     public DWebView(Context context) {
         super(context);
@@ -36,6 +49,17 @@ public class DWebView extends WebView {
         setup();
     }
 
+    public void prepareFullScreen(FullScreenViewPair p) {
+        VideoEnabledWebChromeClient client = new VideoEnabledWebChromeClient(p.nonVideoLayout,
+                p.videoLayout, null, this);
+        client.setOnToggledFullscreen(fullscreen -> {
+            // Your code to handle the full-screen change, for example showing and hiding the title bar. Example:
+            if (fullScreenTriggered != null)
+                fullScreenTriggered.triggered(fullscreen);
+        });
+        setWebChromeClient(client);
+    }
+
     private void setup() {
         loadFinished = false;
 
@@ -43,29 +67,17 @@ public class DWebView extends WebView {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
 
-        setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onShowCustomView(View view, CustomViewCallback callback) {
-                //super.onShowCustomView(view, callback);
-            }
-
-            @Override
-            public void onHideCustomView() {
-                //super.onHideCustomView();
-            }
-
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d("webview console: ", consoleMessage.message());
-                return super.onConsoleMessage(consoleMessage);
-            }
-        });
-
         setWebViewClient(new WebViewClient(){
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 Log.d(TAG, "onPageStarted");
                 // TODO: 显示等待
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return true;
             }
 
             @Override

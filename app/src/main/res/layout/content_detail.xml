@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".DetailActivity"
+    tools:context=".presenter.DetailActivity"
     tools:showIn="@layout/activity_detail">
 
-    <com.willchou.dapenti.DWebView
+    <com.willchou.dapenti.view.DWebView
         android:id="@+id/webview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

@@ -1,24 +1,13 @@
-package com.willchou.dapenti;
+package com.willchou.dapenti.presenter;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.net.http.SslError;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
-import android.webkit.ConsoleMessage;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -28,6 +17,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.hannesdorfmann.swipeback.Position;
 import com.hannesdorfmann.swipeback.SwipeBack;
+import com.willchou.dapenti.R;
+import com.willchou.dapenti.view.DWebView;
 
 public class DetailActivity extends AppCompatActivity {
     private final String TAG = "DetailActivity";
