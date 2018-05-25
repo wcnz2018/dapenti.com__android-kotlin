@@ -22,6 +22,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.hannesdorfmann.swipeback.Position;
 import com.hannesdorfmann.swipeback.SwipeBack;
 import com.willchou.dapenti.R;
+import com.willchou.dapenti.model.Settings;
 import com.willchou.dapenti.view.EnhancedWebView;
 
 public class DetailActivity extends AppCompatActivity {
@@ -71,18 +72,21 @@ public class DetailActivity extends AppCompatActivity {
 
     private void applyUserSettings() {
         WebSettings webSettings = webView.getSettings();
-        SharedPreferences prefs =  PreferenceManager.getDefaultSharedPreferences(this);
-        String fontSize = prefs.getString(getResources().getString(R.string.pref_key_font_size),
-                "media");
-        Log.d(TAG, "fontSize from preference: " + fontSize);
-        if (fontSize.equals("small"))
-            webSettings.setDefaultFontSize(15);
-        else if (fontSize.equals("media"))
-            webSettings.setDefaultFontSize(17);
-        else if (fontSize.equals("big"))
-            webSettings.setDefaultFontSize(19);
-        else if (fontSize.equals("super"))
-            webSettings.setDefaultFontSize(21);
+
+        switch (Settings.getFontSize()) {
+            case Settings.FontSizeSmall:
+                webSettings.setDefaultFontSize(15);
+                break;
+            case Settings.FontSizeMedia:
+                webSettings.setDefaultFontSize(17);
+                break;
+            case Settings.FontSizeBig:
+                webSettings.setDefaultFontSize(19);
+                break;
+            case Settings.FontSizeSuperBig:
+                webSettings.setDefaultFontSize(21);
+                break;
+        }
     }
 
     private void prepareContent() {
@@ -102,11 +106,13 @@ public class DetailActivity extends AppCompatActivity {
                 .error(R.drawable.cat)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .priority(Priority.HIGH);
-        Glide.with(this)
-                .load(coverString)
-                .apply(options)
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .into(coverImageView);
+        if (Settings.isImageEnabled()) {
+            Glide.with(this)
+                    .load(coverString)
+                    .apply(options)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(coverImageView);
+        }
 
         webView.loadDataWithBaseURL(null, htmlString,
                 "text/html", "UTF-8", null);

@@ -2,8 +2,11 @@ package com.willchou.dapenti.view;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +18,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTiPage;
+import com.willchou.dapenti.model.Settings;
 import com.willchou.dapenti.presenter.DetailActivity;
 
 public class RecyclerViewHolder extends RecyclerView.ViewHolder {
@@ -28,16 +32,20 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     static private final String PageProperty_Expanded = "pp_expand";
     static private final String PageProperty_Webview = "pp_webview";
 
-    DaPenTiPage page;
-    EnhancedWebView enhancedWebView;
+    private DaPenTiPage page;
+    private EnhancedWebView enhancedWebView;
 
     private EnhancedWebView.onFullScreenTriggered fullScreenTriggered;
     private EnhancedWebView.FullScreenViewPair fullScreenViewPair;
+
+    private SharedPreferences prefs;
 
     RecyclerViewHolder(View v,
                        EnhancedWebView.onFullScreenTriggered fullScreenTriggered,
                        EnhancedWebView.FullScreenViewPair fullScreenViewPair) {
         super(v);
+        prefs =  PreferenceManager.getDefaultSharedPreferences(v.getContext());
+
         mView = v;
 
         this.fullScreenTriggered = fullScreenTriggered;
@@ -61,7 +69,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         if (page.getProperty(PageProperty_Expanded) != null)
             showContent(mView, false);
 
-        titleTextView.setOnClickListener((View v) -> {
+        mView.setOnClickListener((View v) -> {
             if (page.initiated())
                 triggerContent(v);
             else {
@@ -72,7 +80,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         });
     }
 
-    void detachWebView() {
+    private void detachWebView() {
         EnhancedWebView d = (EnhancedWebView) page.getObjectProperty(PageProperty_Webview);
         if (d != null) {
             ViewGroup g = (ViewGroup) d.getParent();
@@ -81,7 +89,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    void setupFullScreenWebView() {
+    private void setupFullScreenWebView() {
         enhancedWebView.fullScreenTriggered = fullScreenTriggered;
         fullScreenViewPair.nonVideoLayout = (ViewGroup) enhancedWebView.getParent();
         enhancedWebView.prepareFullScreen(fullScreenViewPair);
@@ -98,7 +106,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         hideContent(mView);
     }
 
-    void hideContent(View v) {
+    private void hideContent(View v) {
         descriptionTextView.setVisibility(View.GONE);
         descriptionTextView.setText("");
         imageView.setVisibility(View.GONE);
@@ -109,10 +117,12 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
         if (enhancedWebView != null)
             enhancedWebView.pauseVideo();
 
+        titleTextView.setBackgroundColor(Color.WHITE);
         mView.requestLayout();
     }
 
-    void showContent(View v, Boolean playVideo) {
+    private void showContent(View v, Boolean playVideo) {
+        titleTextView.setBackgroundColor(Color.LTGRAY);
         switch (page.getPageType()) {
             case DaPenTiPage.PageTypeNote:
                 DaPenTiPage.PageNotes notes = page.pageNotes;
@@ -127,11 +137,13 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
                 descriptionTextView.setVisibility(View.VISIBLE);
                 descriptionTextView.setText(picture.description);
 
-                imageView.setImageDrawable(null);
-                imageView.setVisibility(View.VISIBLE);
-                Glide.with(v.getContext())
-                        .load(picture.imageUrl)
-                        .into(imageView);
+                if (Settings.isImageEnabled()) {
+                    imageView.setImageDrawable(null);
+                    imageView.setVisibility(View.VISIBLE);
+                    Glide.with(v.getContext())
+                            .load(picture.imageUrl)
+                            .into(imageView);
+                }
                 break;
 
             case DaPenTiPage.PageTypeVideo:
@@ -157,6 +169,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
             case DaPenTiPage.PageTypeLongReading:
                 // show content with next click
                 page.remove(PageProperty_Expanded);
+                titleTextView.setBackgroundColor(Color.WHITE);
                 DaPenTiPage.PageLongReading pageLongReading = page.pageLongReading;
 
                 Context context = v.getContext();
@@ -170,10 +183,25 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
                 break;
         }
 
+        switch (Settings.getFontSize()) {
+            case Settings.FontSizeSmall:
+                descriptionTextView.setTextSize(14);
+                break;
+            case Settings.FontSizeMedia:
+                descriptionTextView.setTextSize(15);
+                break;
+            case Settings.FontSizeBig:
+                descriptionTextView.setTextSize(17);
+                break;
+            case Settings.FontSizeSuperBig:
+                descriptionTextView.setTextSize(20);
+                break;
+        }
+
         mView.requestLayout();
     }
 
-    void triggerContent(View v) {
+    private void triggerContent(View v) {
         Log.d(TAG, "update with pageType: " + page.getPageType());
 
         if (page.getProperty(PageProperty_Expanded) != null) {

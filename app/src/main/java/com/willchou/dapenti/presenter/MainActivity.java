@@ -1,6 +1,7 @@
 package com.willchou.dapenti.presenter;
 
 import android.content.Intent;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -18,6 +19,7 @@ import android.view.View;
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
+import com.willchou.dapenti.model.Settings;
 import com.willchou.dapenti.view.EnhancedWebView;
 
 import java.util.ArrayList;
@@ -40,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
         DaPenTi.storageDir = getFilesDir().getAbsolutePath();
         DaPenTi.categoryPrepared = () -> runOnUiThread(this::setupContent);
 
+        loadStaticEnv();
         new Thread(DaPenTi::prepareCategory).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadStaticEnv();
     }
 
     @Override
@@ -65,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadStaticEnv() {
+        Settings.initiate(PreferenceManager.getDefaultSharedPreferences(this),
+                getResources());
     }
 
     private void setupContent() {

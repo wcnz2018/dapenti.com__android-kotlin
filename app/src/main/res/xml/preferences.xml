@@ -10,7 +10,7 @@
             android:summary="%s"
             android:entries="@array/font_entries_list"
             android:entryValues="@array/font_entries_value"
-            android:defaultValue="small"
+            android:defaultValue="media"
             android:dialogTitle="@string/setting_general_font_size" />
 
         <ListPreference
@@ -24,13 +24,13 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="string/pref_key_smart_content"
+            android:key="@string/pref_key_smart_content"
             android:title="@string/setting_general_smart_content"
             android:summary="@string/setting_summary_smart_content" />
 
         <SwitchPreference
-            android:defaultValue="false"
-            android:key="string/pref_key_display_image"
+            android:defaultValue="true"
+            android:key="@string/pref_key_display_image"
             android:title="@string/setting_general_display_image"
             android:summary="@string/setting_summary_display_image" />
 
