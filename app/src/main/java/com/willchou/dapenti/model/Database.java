@@ -6,6 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.util.Pair;
+
+import java.net.URL;
+import java.util.List;
 
 public class Database extends SQLiteOpenHelper {
     private static final String TAG = "DaPenTiDatabase";
@@ -129,6 +133,30 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
+    public void getCategories(List<Pair<String, URL>> pairs) {
+        pairs.clear();
+
+        synchronized (this) {
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor cursor = db.query(TABLE_CATEGORIES, new String[]{COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__URL},
+                    COLUMN_CATEGORY__VISIBLE + "=?", new String[]{"1"},
+                    null, null,
+                    COLUMN_CATEGORY__DISPLAY_ORDER);
+
+            while (cursor.moveToNext()) {
+                try {
+                    pairs.add(new Pair<>(cursor.getString(0),
+                            new URL(cursor.getString(1))));
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+
+            Log.d(TAG, "getCategories get size: " + pairs.size());
+
+            cursor.close();
+            db.close();
+        }
+    }
+
     public void addPage(String category, String page, String url) {
         synchronized (this) {
             SQLiteDatabase db = getWritableDatabase();
@@ -160,6 +188,36 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
+    public void getPages(String category, List<Pair<String, URL>> pairs) {
+        pairs.clear();
+
+        synchronized (this) {
+            SQLiteDatabase db = getReadableDatabase();
+            int categoryID = getCategoryID(db, category);
+            if (categoryID == -1) {
+                Log.d(TAG, "Unable to find categoryID with " + category);
+                db.close();
+                return;
+            }
+            Cursor cursor = db.query(TABLE_PAGES, new String[]{COLUMN_PAGE__TITLE, COLUMN_PAGE__URL},
+                    COLUMN_PAGE__BELONG + "=?", new String[]{"" + categoryID},
+                    null, null,
+                    COLUMN_PAGE__CREATE_TIME);
+
+            while (cursor.moveToNext()) {
+                try {
+                    pairs.add(new Pair<>(cursor.getString(0),
+                            new URL(cursor.getString(1))));
+                } catch (Exception e) { e.printStackTrace(); }
+            }
+
+            Log.d(TAG, "getPages get size: " + pairs.size());
+
+            cursor.close();
+            db.close();
+        }
+    }
+
     public void updatePageContent(String page, String content) {
         synchronized (this) {
             SQLiteDatabase db = getWritableDatabase();
@@ -182,5 +240,25 @@ public class Database extends SQLiteOpenHelper {
                 db.close();
             }
         }
+    }
+
+    public String getPageContent(String page) {
+        String content = "";
+        synchronized (this) {
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor cursor = db.query(TABLE_PAGES, new String[]{COLUMN_PAGE__CONTENT},
+                    COLUMN_PAGE__TITLE + "=?", new String[]{page},
+                    null, null, null);
+
+            while (cursor.moveToNext()) {
+                content = cursor.getString(0);
+                if (content != null)
+                    break;
+            }
+
+            cursor.close();
+            db.close();
+        }
+        return content;
     }
 }

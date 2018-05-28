@@ -29,15 +29,25 @@ public class DaPenTiCategory {
     public String getCategoryName() { return categoryName; }
 
     public void preparePages() {
-        //String ss = "div > ul > li > a";
-        String ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']";
-        List<Pair<String, URL>> subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss);
+        List<Pair<String, URL>> subItemPair = new ArrayList<>();
 
+        boolean fromDatabase = true;
         Database database = Database.getDatabase();
+        if (database != null)
+            database.getPages(categoryName, subItemPair);
+
+        if (subItemPair.isEmpty()) {
+            //String ss = "div > ul > li > a";
+            String ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']";
+            subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss);
+
+            fromDatabase = false;
+        }
+
         for (Pair<String, URL> p : subItemPair) {
             pages.add(new DaPenTiPage((p)));
 
-            if (database != null)
+            if (!fromDatabase && database != null)
                 database.addPage(categoryName, p.first, p.second.toString());
         }
 

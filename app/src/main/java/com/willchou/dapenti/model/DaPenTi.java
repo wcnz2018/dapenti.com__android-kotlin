@@ -1,5 +1,6 @@
 package com.willchou.dapenti.model;
 
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.Pair;
 
@@ -28,17 +29,27 @@ public class DaPenTi {
     static public void prepareCategory() {
         Log.d(TAG, "prepareCategory");
 
-        String ss = "div.center_title > a, div.title > a, div.title > p > a";
-        List<Pair<String, URL>> urlPairs = getElementsWithQuery(url, ss);
+        boolean fromDatabase = true;
+        List<Pair<String, URL>> urlPairs = new ArrayList<>();
+        Database database = Database.getDatabase();
+        if (database != null)
+            database.getCategories(urlPairs);
+
+        if (urlPairs.isEmpty()) {
+            Log.d(TAG, "Unable to get category from database, try web page");
+            String ss = "div.center_title > a, div.title > a, div.title > p > a";
+            urlPairs = getElementsWithQuery(url, ss);
+            fromDatabase = false;
+        }
 
         if (urlPairs.isEmpty())
             return;
 
-        Database database = Database.getDatabase();
         daPenTiCategories = new ArrayList<>();
         for (Pair<String, URL> p : urlPairs) {
             daPenTiCategories.add(new DaPenTiCategory(p));
-            if (database != null)
+
+            if (!fromDatabase && database != null)
                 database.addCategory(p.first, p.second.toString());
         }
 
@@ -46,7 +57,7 @@ public class DaPenTi {
             categoryPrepared.onCategoryPrepared();
     }
 
-    static public List<Pair<String, URL>> getElementsWithQuery(String url, String query) {
+    private static List<Pair<String, URL>> getElementsWithQuery(String url, String query) {
         List<Pair<String, URL>> lp = new ArrayList<>();
         try {
             URL u = new URL(url);

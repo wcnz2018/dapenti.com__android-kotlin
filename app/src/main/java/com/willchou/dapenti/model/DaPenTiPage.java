@@ -32,9 +32,9 @@ public class DaPenTiPage extends Properties {
     static public final int PageTypeOriginal = 5;
 
     private String pageTitle;
-    URL pageUrl;
+    private URL pageUrl;
     private int pageType = PageTypeUnknown;
-    String orignalHtml;
+    private String orignalHtml;
 
     public interface onContentPrepared {
         void onContentPrepared();
@@ -194,11 +194,21 @@ public class DaPenTiPage extends Properties {
     private boolean doPrepareContent() {
         Log.d(TAG, "prepareContent with url: " + pageUrl.toString());
         try {
-            Document doc = Jsoup.parse(pageUrl, 5000);
-
             Database database = Database.getDatabase();
-            if (database != null)
-                database.updatePageContent(pageTitle, doc.toString());
+            Document doc = null;
+
+            if (database != null) {
+                String content = database.getPageContent(pageTitle);
+                if (content != null && !content.isEmpty()) {
+                    doc = Jsoup.parse(content, pageUrl.toString());
+                }
+            }
+
+            if (doc == null) {
+                doc = Jsoup.parse(pageUrl, 5000);
+                if (database != null)
+                    database.updatePageContent(pageTitle, doc.toString());
+            }
 
             if (checkByTitle(doc) || checkByContent(doc))
                 return true;
@@ -248,7 +258,7 @@ public class DaPenTiPage extends Properties {
             e.remove();
     }
 
-    public String getContent(Element contentElement) {
+    private String getContent(Element contentElement) {
         String html, innerHTML = contentElement.toString();
         innerHTML = innerHTML.replace("广告", "");
         innerHTML = innerHTML.replace("font-size:", "");
