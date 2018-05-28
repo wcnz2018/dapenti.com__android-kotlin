@@ -28,6 +28,20 @@ public class DaPenTiCategory {
     public boolean initiated() { return !pages.isEmpty(); }
     public String getCategoryName() { return categoryName; }
 
+    public void setPages(List<Pair<String, URL>> pair, boolean fromDatabase) {
+        pages.clear();
+        Database database = Database.getDatabase();
+        for (Pair<String, URL> p : pair) {
+            pages.add(new DaPenTiPage((p)));
+
+            if (!fromDatabase && database != null)
+                database.addPage(categoryName, p.first, p.second.toString());
+        }
+
+        if (categoryPrepared != null)
+            categoryPrepared.onCategoryPrepared(pages.size() - 1);
+    }
+
     public void preparePages() {
         List<Pair<String, URL>> subItemPair = new ArrayList<>();
 
@@ -44,14 +58,6 @@ public class DaPenTiCategory {
             fromDatabase = false;
         }
 
-        for (Pair<String, URL> p : subItemPair) {
-            pages.add(new DaPenTiPage((p)));
-
-            if (!fromDatabase && database != null)
-                database.addPage(categoryName, p.first, p.second.toString());
-        }
-
-        if (categoryPrepared != null)
-            categoryPrepared.onCategoryPrepared(pages.size() - 1);
+        setPages(subItemPair, fromDatabase);
     }
 }

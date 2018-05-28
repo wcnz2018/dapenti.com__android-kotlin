@@ -28,6 +28,8 @@ public class Database extends SQLiteOpenHelper {
     private static final String COLUMN_PAGE__ID = "id";
     private static final String COLUMN_PAGE__TITLE = "tile";
     private static final String COLUMN_PAGE__URL = "url";
+    // a page item can belong to multiple categories, eg 2,3,12,
+    // then the value of this field will be "-2-,-3-,-12-"
     private static final String COLUMN_PAGE__BELONG = "belong_category_id";
     private static final String COLUMN_PAGE__CREATE_TIME = "create_at";
     private static final String COLUMN_PAGE__CONTENT = "html_content";
@@ -59,12 +61,9 @@ public class Database extends SQLiteOpenHelper {
                 COLUMN_PAGE__ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 COLUMN_PAGE__TITLE + " TEXT UNIQUE NOT NULL," +
                 COLUMN_PAGE__URL + " TEXT NOT NULL," +
-                COLUMN_PAGE__BELONG + " INTERGER," +
+                COLUMN_PAGE__BELONG + " TEXT NOT NULL," +
                 COLUMN_PAGE__CREATE_TIME + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                COLUMN_PAGE__CONTENT + " TEXT," +
-                "FOREIGN KEY(" + COLUMN_PAGE__BELONG + ") REFERENCES "+
-                TABLE_CATEGORIES + "(" + COLUMN_CATEGORY__ID + ")" +
-                ");";
+                COLUMN_PAGE__CONTENT + " TEXT);";
         Log.d(TAG, "sql: " + sql);
         sqLiteDatabase.execSQL(sql);
 
@@ -106,6 +105,21 @@ public class Database extends SQLiteOpenHelper {
 
         cursor.close();
         return pageID;
+    }
+
+    private String getPageBelong(SQLiteDatabase db, int pageID) {
+        String sql = "SELECT " + COLUMN_PAGE__BELONG + " FROM " + TABLE_PAGES
+                + " WHERE " + COLUMN_PAGE__ID + " =? ";
+        Cursor cursor = db.rawQuery(sql, new String[]{"" + pageID});
+
+        String pageBelong = "";
+        while (cursor.moveToNext()) {
+            pageBelong = cursor.getString(0);
+            if (pageBelong != null && !pageBelong.isEmpty())
+                break;
+        }
+        cursor.close();
+        return pageBelong;
     }
 
     public void addCategory(String category, String url) {
@@ -157,6 +171,26 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
+    private void addPageCategory(SQLiteDatabase db, int pageID, int categoryID) {
+        String pageBelong = getPageBelong(db, pageID);
+        if (pageBelong == null)
+            return;
+
+        for (String s : pageBelong.split(",")) {
+            if (s.contains("_" + categoryID + "_")) {
+                Log.d(TAG, "categoryID already exists.");
+                return;
+            }
+        }
+
+        pageBelong += ",-" + categoryID + "-";
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_PAGE__BELONG, pageBelong);
+
+        db.update(TABLE_PAGES, values, COLUMN_PAGE__ID + "=?", new String[]{"" + pageID});
+    }
+
     public void addPage(String category, String page, String url) {
         synchronized (this) {
             SQLiteDatabase db = getWritableDatabase();
@@ -167,14 +201,17 @@ public class Database extends SQLiteOpenHelper {
                 return;
             }
 
+            int pageID = getPageID(db, page);
+
             if (getPageID(db, page) != -1) {
-                Log.d(TAG, "addPage with " + page + ", already exists");
+                Log.d(TAG, "addPage with " + page + ", already exists, update category id");
+                addPageCategory(db, pageID, categoryID);
                 db.close();
                 return;
             }
 
             ContentValues values = new ContentValues();
-            values.put(COLUMN_PAGE__BELONG, categoryID);
+            values.put(COLUMN_PAGE__BELONG, "-" + categoryID + "-");
             values.put(COLUMN_PAGE__TITLE, page);
             values.put(COLUMN_PAGE__URL, url);
 
@@ -200,7 +237,7 @@ public class Database extends SQLiteOpenHelper {
                 return;
             }
             Cursor cursor = db.query(TABLE_PAGES, new String[]{COLUMN_PAGE__TITLE, COLUMN_PAGE__URL},
-                    COLUMN_PAGE__BELONG + "=?", new String[]{"" + categoryID},
+                    COLUMN_PAGE__BELONG + " LIKE '%-" + categoryID + "-%'", null,
                     null, null,
                     COLUMN_PAGE__CREATE_TIME);
 

@@ -2,7 +2,6 @@ package com.willchou.dapenti.model;
 
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.util.Log;
 
 import com.willchou.dapenti.R;
 
