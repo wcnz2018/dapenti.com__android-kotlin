@@ -34,9 +34,13 @@ public class DaPenTi {
         if (urlPairs.isEmpty())
             return;
 
+        Database database = Database.getDatabase();
         daPenTiCategories = new ArrayList<>();
-        for (Pair<String, URL> p : urlPairs)
+        for (Pair<String, URL> p : urlPairs) {
             daPenTiCategories.add(new DaPenTiCategory(p));
+            if (database != null)
+                database.addCategory(p.first, p.second.toString());
+        }
 
         if (categoryPrepared != null)
             categoryPrepared.onCategoryPrepared();

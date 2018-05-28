@@ -33,8 +33,12 @@ public class DaPenTiCategory {
         String ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']";
         List<Pair<String, URL>> subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss);
 
+        Database database = Database.getDatabase();
         for (Pair<String, URL> p : subItemPair) {
             pages.add(new DaPenTiPage((p)));
+
+            if (database != null)
+                database.addPage(categoryName, p.first, p.second.toString());
         }
 
         if (categoryPrepared != null)

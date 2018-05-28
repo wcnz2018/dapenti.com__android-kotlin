@@ -2,6 +2,7 @@ package com.willchou.dapenti.view;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,7 @@ public class RecyclerViewAdapter
     @Override
     public int getItemCount() {
         DaPenTiCategory c = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
+        Log.d(TAG, "page.pages.size: " + c.pages.size());
         return c.pages.size();
     }
 

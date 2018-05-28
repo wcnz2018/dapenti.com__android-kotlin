@@ -170,19 +170,37 @@ public class DaPenTiPage extends Properties {
             contentPrepared.onContentPrepared();
     }
 
+    private boolean checkByTitle(Document doc) {
+        if (pageTitle.contains("【喷嚏图卦") && prepareLongReading(doc))
+            return true;
+
+        return false;
+    }
+
+    private boolean checkByContent(Document doc) {
+        // Note: order counts
+        if (preparePageVideo(doc))
+            return true;
+        if (preparePageNote(doc))
+            return true;
+        if (preparePagePicture(doc))
+            return true;
+        if (prepareLongReading(doc))
+            return true;
+
+        return false;
+    }
+
     private boolean doPrepareContent() {
         Log.d(TAG, "prepareContent with url: " + pageUrl.toString());
         try {
             Document doc = Jsoup.parse(pageUrl, 5000);
 
-            // Note: order counts
-            if (preparePageVideo(doc))
-                return true;
-            if (preparePageNote(doc))
-                return true;
-            if (preparePagePicture(doc))
-                return true;
-            if (prepareLongReading(doc))
+            Database database = Database.getDatabase();
+            if (database != null)
+                database.updatePageContent(pageTitle, doc.toString());
+
+            if (checkByTitle(doc) || checkByContent(doc))
                 return true;
 
             pageType = PageTypeOriginal;
@@ -233,6 +251,7 @@ public class DaPenTiPage extends Properties {
     public String getContent(Element contentElement) {
         String html, innerHTML = contentElement.toString();
         innerHTML = innerHTML.replace("广告", "");
+        innerHTML = innerHTML.replace("font-size:", "");
         html = "<html><head>" +
                 "<meta name=\"content-type\" content=\"text/html; charset=utf-8\">";
         html += "<style>" +

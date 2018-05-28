@@ -89,7 +89,7 @@ public class ListFragment extends Fragment {
         recyclerView = (RecyclerView) inflater.inflate(R.layout.penti_list,
                 container, false);
 
-        Log.d(TAG, "onCreateView： " + savedInstanceState
+        Log.d(TAG, "onCreateView：savedInstanceState: " + savedInstanceState
                 + ", index: " + daPenTiCategoryIndex);
         Log.d(TAG, "onCreateView: adapter: " + recyclerViewAdapter);
 
@@ -102,6 +102,7 @@ public class ListFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
+        Log.d(TAG, "setupRecyclerView with adapter: " + recyclerViewAdapter);
         if (recyclerViewAdapter == null)
             recyclerViewAdapter = new RecyclerViewAdapter(daPenTiCategoryIndex,
                     fullScreenViewPair,
@@ -112,6 +113,7 @@ public class ListFragment extends Fragment {
 
     private void prepareContent() {
         List<DaPenTiCategory> dptcs = DaPenTi.daPenTiCategories;
+        Log.d(TAG, "DPTCategoryies: " + dptcs);
         if (dptcs == null)
             return;
 

@@ -1,9 +1,12 @@
 package com.willchou.dapenti.presenter;
 
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceScreen;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 import com.hannesdorfmann.swipeback.Position;
@@ -46,6 +49,13 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
+        }
+
+        @Override
+        public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+                                             Preference preference) {
+            Log.d(TAG, "preference clicked: " + preference);
+            return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
     }
 }

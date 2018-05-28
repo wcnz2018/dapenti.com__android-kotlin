@@ -19,6 +19,7 @@ import android.view.View;
 import com.willchou.dapenti.R;
 import com.willchou.dapenti.model.DaPenTi;
 import com.willchou.dapenti.model.DaPenTiCategory;
+import com.willchou.dapenti.model.Database;
 import com.willchou.dapenti.model.Settings;
 import com.willchou.dapenti.view.EnhancedWebView;
 
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
         DaPenTi.storageDir = getFilesDir().getAbsolutePath();
         DaPenTi.categoryPrepared = () -> runOnUiThread(this::setupContent);
+        new Database(this);
 
         loadStaticEnv();
         new Thread(DaPenTi::prepareCategory).start();
