@@ -1,5 +1,7 @@
 package com.willchou.dapenti.presenter;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
@@ -55,6 +57,16 @@ public class SettingsActivity extends AppCompatActivity {
         public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
                                              Preference preference) {
             Log.d(TAG, "preference clicked: " + preference);
+
+            String aboutTitle = getActivity().getResources().getString(R.string.setting_other_about);
+            String title = preference.getTitle().toString();
+            if (title.equals(aboutTitle)) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(preference.getSummary().toString()));
+                startActivity(intent);
+                return true;
+            }
+
             return super.onPreferenceTreeClick(preferenceScreen, preference);
         }
     }

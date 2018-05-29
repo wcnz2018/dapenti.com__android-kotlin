@@ -19,17 +19,21 @@ public class DaPenTi {
     static public String storageDir;
     static public List<DaPenTiCategory> daPenTiCategories;
 
-    static private URL url = null;
-    static private String urlContent = null;
-    static private Document urlDocument = null;
-
     public interface onCategoryPrepared {
         void onCategoryPrepared();
     }
 
     static public onCategoryPrepared categoryPrepared;
 
-    static private boolean fetchFromWeb() {
+    private static DaPenTi daPenTi = null;
+
+    public DaPenTi() {
+        daPenTi = this;
+    }
+
+    static public DaPenTi getDaPenTi() { return daPenTi; }
+
+    private boolean fetchFromWeb() {
         String ss = "div.center_title > a, div.title > a, div.title > p > a";
         List<Pair<String, URL>> urlPairs = getElementsWithQuery(urlString, ss);
         if (urlPairs.isEmpty())
@@ -53,7 +57,7 @@ public class DaPenTi {
         return true;
     }
 
-    static private boolean fetchFromDatabase() {
+    private boolean fetchFromDatabase() {
         Database database = Database.getDatabase();
         if (database == null)
             return false;
@@ -72,10 +76,10 @@ public class DaPenTi {
         return true;
     }
 
-    static public boolean prepareCategory() {
+    public boolean prepareCategory(boolean fromWeb) {
         Log.d(TAG, "prepareCategory");
 
-        if (fetchFromDatabase()) {
+        if (!fromWeb && fetchFromDatabase()) {
             Log.d(TAG, "restore data from database");
             return true;
         }
@@ -83,7 +87,7 @@ public class DaPenTi {
         return fetchFromWeb();
     }
 
-    private static List<Pair<String, URL>> getElementsWithQuery(String url, String query) {
+    static private List<Pair<String, URL>> getElementsWithQuery(String url, String query) {
         try {
             return getElementsWithQuery(new URL(url), query);
         } catch (Exception e) { e.printStackTrace(); }
@@ -91,7 +95,7 @@ public class DaPenTi {
         return new ArrayList<>();
     }
 
-    private static List<Pair<String, URL>> getElementsWithQuery(URL url, String html, String query) {
+    static private List<Pair<String, URL>> getElementsWithQuery(URL url, String html, String query) {
         List<Pair<String, URL>> lp = new ArrayList<>();
 
         String us = url.toString();

@@ -2,9 +2,11 @@ package com.willchou.dapenti.presenter;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -29,6 +31,7 @@ public class ListFragment extends Fragment {
     private int daPenTiCategoryIndex = -1;
     private DaPenTiCategory daPenTiCategory;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
@@ -68,6 +71,7 @@ public class ListFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d(TAG, "onSaveInstanceState: index: " + daPenTiCategoryIndex);
         outState.putInt(BSCategoryIndex, daPenTiCategoryIndex);
         super.onSaveInstanceState(outState);
     }
@@ -86,8 +90,10 @@ public class ListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        recyclerView = (RecyclerView) inflater.inflate(R.layout.penti_list,
+        swipeRefreshLayout = (SwipeRefreshLayout) inflater.inflate(R.layout.penti_list,
                 container, false);
+
+        recyclerView = swipeRefreshLayout.findViewById(R.id.recycler_view);
 
         Log.d(TAG, "onCreateView：savedInstanceState: " + savedInstanceState
                 + ", index: " + daPenTiCategoryIndex);
@@ -97,18 +103,20 @@ public class ListFragment extends Fragment {
             daPenTiCategoryIndex = savedInstanceState.getInt(BSCategoryIndex);
 
         prepareContent();
-
-        return recyclerView;
+        return swipeRefreshLayout;
     }
 
     private void setupRecyclerView() {
         Log.d(TAG, "setupRecyclerView with adapter: " + recyclerViewAdapter);
+        swipeRefreshLayout.setRefreshing(false);
         if (recyclerViewAdapter == null)
             recyclerViewAdapter = new RecyclerViewAdapter(daPenTiCategoryIndex,
                     fullScreenViewPair,
                     fullScreenTriggered);
         recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
         recyclerView.setAdapter(recyclerViewAdapter);
+
+        recyclerViewAdapter.notifyDataSetChanged();
     }
 
     private void prepareContent() {
@@ -130,6 +138,10 @@ public class ListFragment extends Fragment {
         if (daPenTiCategory.initiated()) {
             setupRecyclerView();
         } else
-            new Thread(daPenTiCategory::preparePages).start();
+            new Thread(() -> daPenTiCategory.preparePages(false)).start();
+
+        swipeRefreshLayout.setOnRefreshListener(
+                () ->new Thread(() -> daPenTiCategory.preparePages(true)).start()
+        );
     }
 }

@@ -21,6 +21,8 @@ import com.willchou.dapenti.model.DaPenTiPage;
 import com.willchou.dapenti.model.Settings;
 import com.willchou.dapenti.presenter.DetailActivity;
 
+import org.w3c.dom.Attr;
+
 public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     static private final String TAG = "RecyclerViewHolder";
 
@@ -38,14 +40,10 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     private EnhancedWebView.onFullScreenTriggered fullScreenTriggered;
     private EnhancedWebView.FullScreenViewPair fullScreenViewPair;
 
-    private SharedPreferences prefs;
-
     RecyclerViewHolder(View v,
                        EnhancedWebView.onFullScreenTriggered fullScreenTriggered,
                        EnhancedWebView.FullScreenViewPair fullScreenViewPair) {
         super(v);
-        prefs =  PreferenceManager.getDefaultSharedPreferences(v.getContext());
-
         mView = v;
 
         this.fullScreenTriggered = fullScreenTriggered;
@@ -122,6 +120,8 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
     }
 
     private void showContent(View v, Boolean playVideo) {
+        Settings settings = Settings.getSettings();
+
         titleTextView.setBackgroundColor(Color.LTGRAY);
         switch (page.getPageType()) {
             case DaPenTiPage.PageTypeNote:
@@ -137,7 +137,7 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
                 descriptionTextView.setVisibility(View.VISIBLE);
                 descriptionTextView.setText(picture.description);
 
-                if (Settings.isImageEnabled()) {
+                if (settings != null && settings.isImageEnabled()) {
                     imageView.setImageDrawable(null);
                     imageView.setVisibility(View.VISIBLE);
                     Glide.with(v.getContext())
@@ -181,21 +181,28 @@ public class RecyclerViewHolder extends RecyclerView.ViewHolder {
 
                 context.startActivity(intent);
                 break;
+
+            default:
+                descriptionTextView.setVisibility(View.VISIBLE);
+                descriptionTextView.setText("没有识别到内容哦!");
+                break;
         }
 
-        switch (Settings.getFontSize()) {
-            case Settings.FontSizeSmall:
-                descriptionTextView.setTextSize(14);
-                break;
-            case Settings.FontSizeMedia:
-                descriptionTextView.setTextSize(15);
-                break;
-            case Settings.FontSizeBig:
-                descriptionTextView.setTextSize(17);
-                break;
-            case Settings.FontSizeSuperBig:
-                descriptionTextView.setTextSize(20);
-                break;
+        if (settings != null) {
+            switch (settings.getFontSize()) {
+                case Settings.FontSizeSmall:
+                    descriptionTextView.setTextSize(14);
+                    break;
+                case Settings.FontSizeMedia:
+                    descriptionTextView.setTextSize(15);
+                    break;
+                case Settings.FontSizeBig:
+                    descriptionTextView.setTextSize(17);
+                    break;
+                case Settings.FontSizeSuperBig:
+                    descriptionTextView.setTextSize(20);
+                    break;
+            }
         }
 
         mView.requestLayout();

@@ -73,7 +73,11 @@ public class DetailActivity extends AppCompatActivity {
     private void applyUserSettings() {
         WebSettings webSettings = webView.getSettings();
 
-        switch (Settings.getFontSize()) {
+        Settings settings = Settings.getSettings();
+        if (settings == null)
+            return;
+
+        switch (settings.getFontSize()) {
             case Settings.FontSizeSmall:
                 webSettings.setDefaultFontSize(15);
                 break;
@@ -106,7 +110,9 @@ public class DetailActivity extends AppCompatActivity {
                 .error(R.drawable.cat)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .priority(Priority.HIGH);
-        if (Settings.isImageEnabled()) {
+
+        Settings settings = Settings.getSettings();
+        if (settings != null && settings.isImageEnabled()) {
             Glide.with(this)
                     .load(coverString)
                     .apply(options)

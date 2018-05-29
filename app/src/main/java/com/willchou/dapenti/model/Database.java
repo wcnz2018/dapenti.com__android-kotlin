@@ -28,8 +28,6 @@ public class Database extends SQLiteOpenHelper {
     private static final String COLUMN_PAGE__ID = "id";
     private static final String COLUMN_PAGE__TITLE = "tile";
     private static final String COLUMN_PAGE__URL = "url";
-    // a page item can belong to multiple categories, eg 2,3,12,
-    // then the value of this field will be "-2-,-3-,-12-"
     private static final String COLUMN_PAGE__BELONG = "belong_category_id";
     private static final String COLUMN_PAGE__CREATE_TIME = "create_at";
     private static final String COLUMN_PAGE__CONTENT = "html_content";
@@ -73,6 +71,10 @@ public class Database extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
 
+    }
+
+    private String toDatabaseCategoryID(int categoryID) {
+        return "[" + categoryID + "]";
     }
 
     private int getCategoryID(SQLiteDatabase db, String title) {
@@ -177,13 +179,13 @@ public class Database extends SQLiteOpenHelper {
             return;
 
         for (String s : pageBelong.split(",")) {
-            if (s.contains("_" + categoryID + "_")) {
+            if (s.contains(toDatabaseCategoryID(categoryID))) {
                 Log.d(TAG, "categoryID already exists.");
                 return;
             }
         }
 
-        pageBelong += ",-" + categoryID + "-";
+        pageBelong += toDatabaseCategoryID(categoryID);
 
         ContentValues values = new ContentValues();
         values.put(COLUMN_PAGE__BELONG, pageBelong);
@@ -211,7 +213,7 @@ public class Database extends SQLiteOpenHelper {
             }
 
             ContentValues values = new ContentValues();
-            values.put(COLUMN_PAGE__BELONG, "-" + categoryID + "-");
+            values.put(COLUMN_PAGE__BELONG, toDatabaseCategoryID(categoryID));
             values.put(COLUMN_PAGE__TITLE, page);
             values.put(COLUMN_PAGE__URL, url);
 
@@ -237,8 +239,8 @@ public class Database extends SQLiteOpenHelper {
                 return;
             }
             Cursor cursor = db.query(TABLE_PAGES, new String[]{COLUMN_PAGE__TITLE, COLUMN_PAGE__URL},
-                    COLUMN_PAGE__BELONG + " LIKE '%-" + categoryID + "-%'", null,
-                    null, null,
+                    COLUMN_PAGE__BELONG + " LIKE '%" + toDatabaseCategoryID(categoryID) + "%'",
+                    null, null, null,
                     COLUMN_PAGE__CREATE_TIME);
 
             while (cursor.moveToNext()) {

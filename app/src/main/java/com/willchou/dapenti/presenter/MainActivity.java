@@ -36,22 +36,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setVisibility(View.GONE);
-
-        DaPenTi.storageDir = getFilesDir().getAbsolutePath();
-        DaPenTi.categoryPrepared = () -> runOnUiThread(this::setupContent);
-        new Database(this);
-
-        loadStaticEnv();
-        new Thread(DaPenTi::prepareCategory).start();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadStaticEnv();
+        Log.d(TAG, "onCreate");
+        initiateContent();
     }
 
     @Override
@@ -78,9 +64,15 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void loadStaticEnv() {
-        Settings.initiate(PreferenceManager.getDefaultSharedPreferences(this),
-                getResources());
+    private void initiateContent() {
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setVisibility(View.GONE);
+
+        DaPenTi.storageDir = getFilesDir().getAbsolutePath();
+        DaPenTi.categoryPrepared = () -> runOnUiThread(this::setupContent);
+
+        new Thread(() -> DaPenTi.getDaPenTi().prepareCategory(false)).start();
     }
 
     private void setupContent() {

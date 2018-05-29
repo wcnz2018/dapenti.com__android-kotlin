@@ -13,6 +13,7 @@
     <string name="pref_key_smart_content">pref_key_smart_content</string>
     <string name="pref_key_display_image">pref_key_display_image</string>
     <string name="pref_key_hide_empty">pref_key_hide_empty</string>
+    <string name="pref_key_clear_cache">pref_key_clear_cache</string>
 
     <string name="setting_category_general">基本设置</string>
     <string name="setting_general_font_size">阅读页面字体大小</string>
@@ -20,13 +21,15 @@
     <string name="setting_general_smart_content">智能识别内容</string>
     <string name="setting_general_display_image">显示图片</string>
     <string name="setting_general_hide_empty">隐藏内容为空的标签页</string>
+    <string name="setting_general_clear_cache">清除缓存</string>
 
     <string name="setting_summary_smart_content">开启后程序可自动提取视频、短评、意图等并将其显示在列表而非新页面中</string>
     <string name="setting_summary_display_image">打开或关闭图片显示</string>
 
     <string name="setting_category_other">其他</string>
-    <string name="setting_other_about">关于</string>
+    <string name="setting_other_about">打喷嚏官网</string>
     <string name="setting_other_author">作者</string>
 
+    <string name="setting_summary_about">http://www.dapenti.com/blog/index.asp</string>
     <string name="setting_summary_author">willchou158@hotmail.com</string>
 </resources>

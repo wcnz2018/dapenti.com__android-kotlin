@@ -32,7 +32,6 @@ public class RecyclerViewAdapter
     public void onBindViewHolder(@NonNull RecyclerViewHolder holder, int position) {
         DaPenTiCategory c = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         holder.update(c.pages.get(position));
-        //enterAnimation(holder.itemView);
     }
 
     @Override
@@ -60,15 +59,5 @@ public class RecyclerViewAdapter
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.penti_list_item, parent, false);
         return new RecyclerViewHolder(v, fullScreenTriggered, fullScreenViewPair);
-    }
-
-    private void enterAnimation(View view) {
-        // TODO: find Y
-        view.setTranslationY(1920);
-        view.animate()
-                .translationY(0)
-                .setInterpolator(new DecelerateInterpolator(3.f))
-                .setDuration(400)
-                .start();
     }
 }

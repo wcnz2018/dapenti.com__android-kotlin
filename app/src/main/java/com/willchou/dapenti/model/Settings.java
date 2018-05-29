@@ -6,20 +6,30 @@ import android.content.res.Resources;
 import com.willchou.dapenti.R;
 
 public class Settings {
-    static private Resources resources;
-    static private SharedPreferences prefs;
+    private Resources resources;
+    private SharedPreferences prefs;
 
     static public final int FontSizeSmall = 0;
     static public final int FontSizeMedia = 1;
     static public final int FontSizeBig = 2;
     static public final int FontSizeSuperBig = 3;
 
-    static public void initiate(SharedPreferences p, Resources r) {
-        prefs = p;
-        resources = r;
+    static private Settings settings = null;
+
+    public Settings() {
+        settings = this;
     }
 
-    static public int getFontSize() {
+    public void initiate(SharedPreferences p, Resources r) {
+        prefs = p;
+        resources = r;
+
+        settings = this;
+    }
+
+    static public Settings getSettings() { return settings; }
+
+    public int getFontSize() {
         String s = prefs.getString(resources.getString(R.string.pref_key_font_size), "");
 
         int fontSize = FontSizeMedia;
@@ -38,7 +48,7 @@ public class Settings {
         return fontSize;
     }
 
-    static public boolean isImageEnabled() {
+    public boolean isImageEnabled() {
         return prefs.getBoolean(resources.getString(R.string.pref_key_display_image), true);
     }
 }

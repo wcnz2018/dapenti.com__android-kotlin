@@ -34,17 +34,25 @@
             android:title="@string/setting_general_display_image"
             android:summary="@string/setting_summary_display_image" />
 
+        <!--
         <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_hide_empty"
             android:title="@string/setting_general_hide_empty" />
+            -->
+
+        <Preference
+            android:defaultValue="true"
+            android:key="@string/pref_key_clear_cache"
+            android:title="@string/setting_general_clear_cache" />
     </PreferenceCategory>
 
     <PreferenceCategory
         android:title="@string/setting_category_other">
 
         <Preference
-            android:title="@string/setting_other_about"/>
+            android:title="@string/setting_other_about"
+            android:summary="@string/setting_summary_about"/>
 
         <Preference
             android:title="@string/setting_other_author"

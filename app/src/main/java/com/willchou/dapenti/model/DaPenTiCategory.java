@@ -42,12 +42,12 @@ public class DaPenTiCategory {
             categoryPrepared.onCategoryPrepared(pages.size() - 1);
     }
 
-    public void preparePages() {
+    public void preparePages(boolean fromWeb) {
         List<Pair<String, URL>> subItemPair = new ArrayList<>();
 
         boolean fromDatabase = true;
         Database database = Database.getDatabase();
-        if (database != null)
+        if (!fromWeb && database != null)
             database.getPages(categoryName, subItemPair);
 
         if (subItemPair.isEmpty()) {
