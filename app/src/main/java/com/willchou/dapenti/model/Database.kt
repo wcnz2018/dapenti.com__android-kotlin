@@ -2,9 +2,9 @@ package com.willchou.dapenti.model
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.provider.ContactsContract
 import android.util.Log
 import android.util.Pair
 
@@ -17,20 +17,24 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         private const val DATABASE_VERSION = 1
 
         private const val TABLE_CATEGORIES = "categories"
-        private const val TABLE_PAGES = "pages"
-
         private const val COLUMN_CATEGORY__ID = "id"
         private const val COLUMN_CATEGORY__TITLE = "title"
         private const val COLUMN_CATEGORY__URL = "url"
         private const val COLUMN_CATEGORY__VISIBLE = "visible"
         private const val COLUMN_CATEGORY__DISPLAY_ORDER = "display_order"
 
+        private const val TABLE_PAGES = "pages"
         private const val COLUMN_PAGE__ID = "id"
         private const val COLUMN_PAGE__TITLE = "title"
         private const val COLUMN_PAGE__URL = "url"
-        private const val COLUMN_PAGE__BELONG = "belong_category_id"
-        private const val COLUMN_PAGE__CREATE_TIME = "create_at"
+        private const val COLUMN_PAGE__FAVORITE = "favorite"
         private const val COLUMN_PAGE__CONTENT = "html_content"
+
+        private const val TABLE_PAGE_INDEX = "page_index"
+        private const val COLUMN_PAGE_INDEX__ID = "id"
+        private const val COLUMN_PAGE_INDEX__CATEGORY_ID = "category_id"
+        private const val COLUMN_PAGE_INDEX__PAGE_ID = "page_id"
+        private const val COLUMN_PAGE_INDEX__CREATE_AT = "create_at"
 
         var database: Database? = null
     }
@@ -40,26 +44,33 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     }
 
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
-        var sql: String = "CREATE TABLE IF NOT EXISTS " + TABLE_CATEGORIES + "(" +
-                COLUMN_CATEGORY__ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COLUMN_CATEGORY__TITLE + " TEXT UNIQUE NOT NULL," +
-                COLUMN_CATEGORY__VISIBLE + " INTERGER NOT NULL DEFAULT 1," +
-                COLUMN_CATEGORY__URL + " TEXT NOT NULL," +
-                COLUMN_CATEGORY__DISPLAY_ORDER + " INTEGER DEFAULT 0);"
-        Log.d(TAG, "sql: $sql")
-        sqLiteDatabase.execSQL(sql)
-
-        sql = "CREATE TABLE IF NOT EXISTS " + TABLE_PAGES + "(" +
-                COLUMN_PAGE__ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COLUMN_PAGE__TITLE + " TEXT UNIQUE NOT NULL," +
-                COLUMN_PAGE__URL + " TEXT NOT NULL," +
-                COLUMN_PAGE__BELONG + " TEXT NOT NULL," +
-                COLUMN_PAGE__CREATE_TIME + " TIMESTAMP NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))," +
-                COLUMN_PAGE__CONTENT + " TEXT);"
-        Log.d(TAG, "sql: $sql")
-        sqLiteDatabase.execSQL(sql)
-
         Log.d(TAG, "onCreate")
+
+        var sql: String = "CREATE TABLE IF NOT EXISTS $TABLE_CATEGORIES (" +
+                "$COLUMN_CATEGORY__ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_CATEGORY__TITLE TEXT UNIQUE NOT NULL," +
+                "$COLUMN_CATEGORY__VISIBLE INTEGER NOT NULL DEFAULT 1," +
+                "$COLUMN_CATEGORY__URL TEXT NOT NULL," +
+                "$COLUMN_CATEGORY__DISPLAY_ORDER INTEGER DEFAULT 0);"
+        Log.d(TAG, "sql: $sql")
+        sqLiteDatabase.execSQL(sql)
+
+        sql = "CREATE TABLE IF NOT EXISTS $TABLE_PAGES (" +
+                "$COLUMN_PAGE__ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_PAGE__TITLE TEXT UNIQUE NOT NULL," +
+                "$COLUMN_PAGE__URL TEXT NOT NULL," +
+                "$COLUMN_PAGE__FAVORITE INTEGER DEFAULT 0," +
+                "$COLUMN_PAGE__CONTENT TEXT);"
+        Log.d(TAG, "sql: $sql")
+        sqLiteDatabase.execSQL(sql)
+
+        sql = "CREATE TABLE IF NOT EXISTS $TABLE_PAGE_INDEX (" +
+                "$COLUMN_PAGE_INDEX__ID INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "$COLUMN_PAGE_INDEX__CATEGORY_ID INTEGER NOT NULL," +
+                "$COLUMN_PAGE_INDEX__PAGE_ID INTEGER NOT NULL," +
+                "$COLUMN_PAGE_INDEX__CREATE_AT TIMESTAMP NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')));"
+        Log.d(TAG, "sql: $sql")
+        sqLiteDatabase.execSQL(sql)
     }
 
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) {
@@ -86,10 +97,10 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return categoryID
     }
 
-    private fun getPageID(db: SQLiteDatabase, page: String): Int {
+    private fun getPageID(db: SQLiteDatabase, pageTitle: String): Int {
         val sql = ("SELECT " + COLUMN_PAGE__ID + " FROM " + TABLE_PAGES
                 + " WHERE " + COLUMN_PAGE__TITLE + " =? ")
-        val cursor = db.rawQuery(sql, arrayOf(page))
+        val cursor = db.rawQuery(sql, arrayOf(pageTitle))
 
         var pageID = -1
         while (cursor.moveToNext()) {
@@ -102,6 +113,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return pageID
     }
 
+    /*
     private fun getPageBelong(db: SQLiteDatabase, pageID: Int): String? {
         val sql = ("SELECT " + COLUMN_PAGE__BELONG + " FROM " + TABLE_PAGES
                 + " WHERE " + COLUMN_PAGE__ID + " =? ")
@@ -116,6 +128,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         cursor.close()
         return pageBelong
     }
+    */
 
     fun addCategory(category: String, url: String) {
         Log.d(TAG, "addCategory: $category, url: $url")
@@ -148,8 +161,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
             for (i in pairs.indices) {
                 val p = pairs[i]
 
-                val CategoryID = getCategoryID(db, p.first)
-                if (CategoryID == -1) {
+                val categoryID = getCategoryID(db, p.first)
+                if (categoryID == -1) {
                     Log.d(TAG, "Unable to get categoryID: " + p.first)
                     continue
                 }
@@ -159,7 +172,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 values.put(COLUMN_CATEGORY__VISIBLE, if (p.second) "1" else "0")
 
                 db.update(TABLE_CATEGORIES, values,
-                        "$COLUMN_CATEGORY__ID=?", arrayOf(CategoryID.toString() + ""))
+                        "$COLUMN_CATEGORY__ID=?", arrayOf(categoryID.toString()))
             }
             db.close()
         }
@@ -216,6 +229,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         }
     }
 
+    /*
     private fun addPageCategory(db: SQLiteDatabase, pageID: Int, categoryID: Int) {
         var pageBelong: String? = getPageBelong(db, pageID) ?: return
 
@@ -233,6 +247,16 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
         db.update(TABLE_PAGES, values, "$COLUMN_PAGE__ID=?", arrayOf("" + pageID))
     }
+    */
+
+    private fun insertNewPage(db: SQLiteDatabase, pageTitle: String, pageUrl: String): Int {
+        val values = ContentValues()
+        values.put(COLUMN_PAGE__TITLE, pageTitle)
+        values.put(COLUMN_PAGE__URL, pageUrl)
+
+        db.insertOrThrow(TABLE_PAGES, null, values)
+        return getPageID(db, pageTitle)
+    }
 
     fun addPage(category: String, page: String, url: String) {
         synchronized(this) {
@@ -244,22 +268,21 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 return
             }
 
-            val pageID = getPageID(db, page)
+            var pageID = getPageID(db, page)
+            if (pageID == -1)
+                pageID = insertNewPage(db, page, url)
 
-            if (getPageID(db, page) != -1) {
-                Log.d(TAG, "addPage with $page, already exists, update category id")
-                addPageCategory(db, pageID, categoryID)
-                db.close()
+            if (pageID == -1) {
+                Log.d(TAG, "Unable to insert new page")
                 return
             }
 
             val values = ContentValues()
-            values.put(COLUMN_PAGE__BELONG, toDatabaseCategoryID(categoryID))
-            values.put(COLUMN_PAGE__TITLE, page)
-            values.put(COLUMN_PAGE__URL, url)
+            values.put(COLUMN_PAGE_INDEX__CATEGORY_ID, categoryID)
+            values.put(COLUMN_PAGE_INDEX__PAGE_ID, pageID)
 
             try {
-                db.insertOrThrow(TABLE_PAGES, null, values)
+                db.insertOrThrow(TABLE_PAGE_INDEX, null, values)
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -271,6 +294,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     fun getPages(category: String, pairs: MutableList<Pair<String, URL>>) {
         pairs.clear()
 
+        val dataBundleMap : HashMap<Int, Pair<String, URL>> = HashMap()
+
         synchronized(this) {
             val db = readableDatabase
             val categoryID = getCategoryID(db, category)
@@ -279,24 +304,36 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 db.close()
                 return
             }
-            val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__TITLE, COLUMN_PAGE__URL),
-                    COLUMN_PAGE__BELONG + " LIKE '%${toDatabaseCategoryID(categoryID)}%'",
-                    null, null, null,
-                    "$COLUMN_PAGE__CREATE_TIME DESC")
 
-            while (cursor.moveToNext()) {
-                try {
-                    pairs.add(Pair(cursor.getString(0), URL(cursor.getString(1))))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+            var cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
+                    "$COLUMN_PAGE_INDEX__CATEGORY_ID=?", arrayOf(categoryID.toString()),
+                    null, null,
+                    "$COLUMN_PAGE_INDEX__CREATE_AT DESC")
 
+            val pageIDs: MutableList<Int> = ArrayList()
+            while (cursor.moveToNext())
+                pageIDs.add(cursor.getInt(0))
+            cursor.close()
+
+            if (pageIDs.size == 0) {
+                db.close()
+                return
             }
 
-            Log.d(TAG, "getPages get size: ${pairs.size}")
+            cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__ID, COLUMN_PAGE__TITLE, COLUMN_PAGE__URL),
+                    "$COLUMN_PAGE__ID IN (${pageIDs.joinToString()})",
+                    null, null, null, null)
 
-            cursor.close()
-            db.close()
+            try {
+                while (cursor.moveToNext())
+                    dataBundleMap[cursor.getInt(0)] = Pair(cursor.getString(1), URL(cursor.getString(2)))
+            } catch (e: Exception) { e.printStackTrace() } finally {
+                cursor.close()
+                db.close()
+            }
+
+            for (i in pageIDs)
+                pairs.add(dataBundleMap[i]!!)
         }
     }
 

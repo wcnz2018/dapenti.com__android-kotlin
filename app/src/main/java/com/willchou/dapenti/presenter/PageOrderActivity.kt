@@ -130,9 +130,12 @@ class PageOrderActivity : AppCompatActivity() {
             holder.checkBox.isChecked = id.visible
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageOrderActivity.ViewHolder {
-            val view = LayoutInflater.from(baseContext).inflate(R.layout.page_list_item, parent, false)
-            return PageOrderActivity().ViewHolder(view, R.id.drag_image, false)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):
+                PageOrderActivity.ViewHolder {
+            val view = LayoutInflater
+                    .from(baseContext)
+                    .inflate(R.layout.page_list_item, parent, false)
+            return ViewHolder(view, R.id.drag_image, false, applyButton)
         }
 
         override fun getUniqueItemId(position: Int): Long {
@@ -140,7 +143,8 @@ class PageOrderActivity : AppCompatActivity() {
         }
     }
 
-    internal inner class ViewHolder(itemView: View, handleResId: Int, dragOnLongPress: Boolean) :
+    internal inner class ViewHolder(itemView: View, handleResId: Int, dragOnLongPress: Boolean,
+                                    private val triggerButton: View?) :
             DragItemAdapter.ViewHolder(itemView, handleResId, dragOnLongPress) {
         var textView: TextView = itemView.findViewById(R.id.drag_page_name)
         var checkBox: CheckBox = itemView.findViewById(R.id.visible_checkbox)
@@ -152,8 +156,8 @@ class PageOrderActivity : AppCompatActivity() {
 
             itemDetail!!.visible = checkBox.isChecked
 
-            if (applyButton!!.visibility != View.VISIBLE)
-                applyButton!!.visibility = View.VISIBLE
+            if (triggerButton?.visibility != View.VISIBLE)
+                triggerButton?.visibility = View.VISIBLE
         }
     }
 
