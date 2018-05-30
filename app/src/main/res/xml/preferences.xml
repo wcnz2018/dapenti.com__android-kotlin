@@ -34,6 +34,11 @@
             android:title="@string/setting_general_display_image"
             android:summary="@string/setting_summary_display_image" />
 
+        <Preference
+            android:key="@string/pref_key_order_page"
+            android:title="@string/setting_general_order_page"
+            android:summary="@string/setting_summary_order_page" />
+
         <!--
         <SwitchPreference
             android:defaultValue="false"
@@ -42,7 +47,6 @@
             -->
 
         <Preference
-            android:defaultValue="true"
             android:key="@string/pref_key_clear_cache"
             android:title="@string/setting_general_clear_cache" />
     </PreferenceCategory>

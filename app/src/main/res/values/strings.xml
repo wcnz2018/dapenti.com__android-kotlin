@@ -2,6 +2,9 @@
     <string name="app_name">打喷嚏</string>
     <string name="title_activity_detail">喷嚏一下</string>
     <string name="title_activity_settings">设置</string>
+    <string name="title_activity_page">标签页设置</string>
+
+    <string name="button_apply">应用</string>
 
     <string name="action_mode_night">夜间模式</string>
     <string name="action_mode_day">夜间模式</string>
@@ -13,6 +16,7 @@
     <string name="pref_key_smart_content">pref_key_smart_content</string>
     <string name="pref_key_display_image">pref_key_display_image</string>
     <string name="pref_key_hide_empty">pref_key_hide_empty</string>
+    <string name="pref_key_order_page">pref_key_order_page</string>
     <string name="pref_key_clear_cache">pref_key_clear_cache</string>
 
     <string name="setting_category_general">基本设置</string>
@@ -21,9 +25,11 @@
     <string name="setting_general_smart_content">智能识别内容</string>
     <string name="setting_general_display_image">显示图片</string>
     <string name="setting_general_hide_empty">隐藏内容为空的标签页</string>
+    <string name="setting_general_order_page">标签页排序和隐藏</string>
     <string name="setting_general_clear_cache">清除缓存</string>
 
     <string name="setting_summary_smart_content">开启后程序可自动提取视频、短评、意图等并将其显示在列表而非新页面中</string>
+    <string name="setting_summary_order_page">点击可对标签页排序，可显示或隐藏标签页</string>
     <string name="setting_summary_display_image">打开或关闭图片显示</string>
 
     <string name="setting_category_other">其他</string>

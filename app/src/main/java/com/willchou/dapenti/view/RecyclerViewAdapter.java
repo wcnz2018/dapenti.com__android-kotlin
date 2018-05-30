@@ -30,13 +30,20 @@ public class RecyclerViewAdapter
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerViewHolder holder, int position) {
-        DaPenTiCategory c = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
-        holder.update(c.pages.get(position));
+        DaPenTi daPenTi = DaPenTi.getDaPenTi();
+        if (daPenTi != null) {
+            DaPenTiCategory c = daPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
+            holder.update(c.pages.get(position));
+        }
     }
 
     @Override
     public int getItemCount() {
-        DaPenTiCategory c = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
+        DaPenTi daPenTi = DaPenTi.getDaPenTi();
+        if (daPenTi == null)
+            return 0;
+
+        DaPenTiCategory c = daPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         Log.d(TAG, "page.pages.size: " + c.pages.size());
         return c.pages.size();
     }

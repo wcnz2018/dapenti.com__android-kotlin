@@ -1,5 +1,7 @@
 package com.willchou.dapenti.presenter;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.preference.Preference;
@@ -14,10 +16,10 @@ import android.view.View;
 import com.hannesdorfmann.swipeback.Position;
 import com.hannesdorfmann.swipeback.SwipeBack;
 import com.willchou.dapenti.R;
+import com.willchou.dapenti.model.Settings;
 
 public class SettingsActivity extends AppCompatActivity {
     static private final String TAG = "SettingsActivity";
-    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,14 +30,13 @@ public class SettingsActivity extends AppCompatActivity {
                 .setContentView(R.layout.activity_settings)
                 .setSwipeBackView(R.layout.swipeback_default);
 
-        toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setTitle(R.string.title_activity_settings);
         toolbar.setNavigationOnClickListener((View v) -> onBackPressed());
 
         getFragmentManager()
                 .beginTransaction()
-                .replace(R.id.setting_content, new SettingsFragment())
+                .replace(R.id.setting_content, new SettingsFragment(this))
                 .commit();
     }
 
@@ -46,7 +47,14 @@ public class SettingsActivity extends AppCompatActivity {
                 R.anim.swipeback_stack_right_out);
     }
 
+    @SuppressLint("ValidFragment")
     public static class SettingsFragment extends PreferenceFragment {
+        private Context context;
+
+        SettingsFragment (Context c) {
+            this.context = c;
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -58,7 +66,7 @@ public class SettingsActivity extends AppCompatActivity {
                                              Preference preference) {
             Log.d(TAG, "preference clicked: " + preference);
 
-            String aboutTitle = getActivity().getResources().getString(R.string.setting_other_about);
+            String aboutTitle = getResources().getString(R.string.setting_other_about);
             String title = preference.getTitle().toString();
             if (title.equals(aboutTitle)) {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -67,7 +75,16 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             }
 
-            return super.onPreferenceTreeClick(preferenceScreen, preference);
+            String key = preference.getKey();
+            if (key == null)
+                return super.onPreferenceTreeClick(preferenceScreen, preference);
+
+            if (key.equals(getResources().getString(R.string.pref_key_order_page))) {
+                Intent intent = new Intent(context, PageOrderActivity.class);
+                startActivity(intent);
+            }
+
+            return true;
         }
     }
 }

@@ -17,7 +17,7 @@ public class DaPenTi {
     static private final String TAG = "DaPenTi";
 
     static public String storageDir;
-    static public List<DaPenTiCategory> daPenTiCategories;
+    public List<DaPenTiCategory> daPenTiCategories;
 
     public interface onCategoryPrepared {
         void onCategoryPrepared();
@@ -63,7 +63,7 @@ public class DaPenTi {
             return false;
 
         List<Pair<String, URL>> urlPairs = new ArrayList<>();
-        database.getCategories(urlPairs);
+        database.getCategories(urlPairs, true);
         if (urlPairs.isEmpty())
             return false;
 

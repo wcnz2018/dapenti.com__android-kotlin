@@ -26,7 +26,7 @@ public class Database extends SQLiteOpenHelper {
     private static final String COLUMN_CATEGORY__DISPLAY_ORDER = "display_order";
 
     private static final String COLUMN_PAGE__ID = "id";
-    private static final String COLUMN_PAGE__TITLE = "tile";
+    private static final String COLUMN_PAGE__TITLE = "title";
     private static final String COLUMN_PAGE__URL = "url";
     private static final String COLUMN_PAGE__BELONG = "belong_category_id";
     private static final String COLUMN_PAGE__CREATE_TIME = "create_at";
@@ -60,7 +60,7 @@ public class Database extends SQLiteOpenHelper {
                 COLUMN_PAGE__TITLE + " TEXT UNIQUE NOT NULL," +
                 COLUMN_PAGE__URL + " TEXT NOT NULL," +
                 COLUMN_PAGE__BELONG + " TEXT NOT NULL," +
-                COLUMN_PAGE__CREATE_TIME + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                COLUMN_PAGE__CREATE_TIME + " TIMESTAMP NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))," +
                 COLUMN_PAGE__CONTENT + " TEXT);";
         Log.d(TAG, "sql: " + sql);
         sqLiteDatabase.execSQL(sql);
@@ -149,14 +149,44 @@ public class Database extends SQLiteOpenHelper {
         }
     }
 
-    public void getCategories(List<Pair<String, URL>> pairs) {
+    public void updateCategoriesOrderAndVisible(List<Pair<String, Boolean>> pairs) {
+        synchronized (this) {
+            SQLiteDatabase db = getWritableDatabase();
+            for (int i = 0; i < pairs.size(); ++ i) {
+                Pair<String, Boolean> p = pairs.get(i);
+
+                int CategoryID = getCategoryID(db, p.first);
+                if (CategoryID == -1) {
+                    Log.d(TAG, "Unable to get categoryID: " + p.first);
+                    continue;
+                }
+
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_CATEGORY__DISPLAY_ORDER, i + "");
+                values.put(COLUMN_CATEGORY__VISIBLE, p.second ? "1" : "0");
+
+                db.update(TABLE_CATEGORIES, values,
+                        COLUMN_CATEGORY__ID + "=?", new String[]{CategoryID + ""});
+            }
+            db.close();
+        }
+    }
+
+    public void getCategories(List<Pair<String, URL>> pairs, boolean visibleOnly) {
         pairs.clear();
+
+        String selection = null;
+        String selectionArg[] = null;
+
+        if (visibleOnly) {
+            selection = COLUMN_CATEGORY__VISIBLE + "=?";
+            selectionArg = new String[]{"1"};
+        }
 
         synchronized (this) {
             SQLiteDatabase db = getReadableDatabase();
             Cursor cursor = db.query(TABLE_CATEGORIES, new String[]{COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__URL},
-                    COLUMN_CATEGORY__VISIBLE + "=?", new String[]{"1"},
-                    null, null,
+                    selection, selectionArg, null, null,
                     COLUMN_CATEGORY__DISPLAY_ORDER);
 
             while (cursor.moveToNext()) {
@@ -167,6 +197,22 @@ public class Database extends SQLiteOpenHelper {
             }
 
             Log.d(TAG, "getCategories get size: " + pairs.size());
+
+            cursor.close();
+            db.close();
+        }
+    }
+
+    public void getCategoryVisible(List<Pair<String, Boolean>> pairs) {
+        pairs.clear();
+
+        synchronized (this) {
+            SQLiteDatabase db = getReadableDatabase();
+            Cursor cursor = db.query(TABLE_CATEGORIES, new String[]{COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__VISIBLE},
+                    null, null, null, null, null);
+
+            while (cursor.moveToNext())
+                pairs.add(new Pair<>(cursor.getString(0), cursor.getInt(1) == 1));
 
             cursor.close();
             db.close();
@@ -241,7 +287,7 @@ public class Database extends SQLiteOpenHelper {
             Cursor cursor = db.query(TABLE_PAGES, new String[]{COLUMN_PAGE__TITLE, COLUMN_PAGE__URL},
                     COLUMN_PAGE__BELONG + " LIKE '%" + toDatabaseCategoryID(categoryID) + "%'",
                     null, null, null,
-                    COLUMN_PAGE__CREATE_TIME);
+                    COLUMN_PAGE__CREATE_TIME + " DESC");
 
             while (cursor.moveToNext()) {
                 try {

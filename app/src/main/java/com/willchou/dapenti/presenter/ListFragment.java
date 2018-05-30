@@ -63,8 +63,14 @@ public class ListFragment extends Fragment {
 
     ListFragment setDaPenTiItemIndex(int daPenTiCategoryIndex,
                                      EnhancedWebView.FullScreenViewPair fullScreenViewPair) {
+        DaPenTi daPenTi = DaPenTi.getDaPenTi();
+        if (daPenTi == null) {
+            Log.e(TAG, "Unable to get data model");
+            return this;
+        }
+
         this.daPenTiCategoryIndex = daPenTiCategoryIndex;
-        this.daPenTiCategory = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
+        this.daPenTiCategory = daPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         this.fullScreenViewPair = fullScreenViewPair;
         return this;
     }
@@ -80,7 +86,7 @@ public class ListFragment extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
-            Log.d(TAG, "isVisibleToUser: " + daPenTiCategory.getCategoryName());
+            //Log.d(TAG, "isVisibleToUser: " + daPenTiCategory.getCategoryName());
             //prepareContent();
         }
     }
@@ -92,6 +98,7 @@ public class ListFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         swipeRefreshLayout = (SwipeRefreshLayout) inflater.inflate(R.layout.penti_list,
                 container, false);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary);
 
         recyclerView = swipeRefreshLayout.findViewById(R.id.recycler_view);
 
@@ -120,7 +127,11 @@ public class ListFragment extends Fragment {
     }
 
     private void prepareContent() {
-        List<DaPenTiCategory> dptcs = DaPenTi.daPenTiCategories;
+        DaPenTi daPenTi = DaPenTi.getDaPenTi();
+        if (daPenTi == null)
+            return;
+
+        List<DaPenTiCategory> dptcs = daPenTi.daPenTiCategories;
         Log.d(TAG, "DPTCategoryies: " + dptcs);
         if (dptcs == null)
             return;
@@ -128,7 +139,7 @@ public class ListFragment extends Fragment {
         if (daPenTiCategoryIndex < 0 || daPenTiCategoryIndex >= dptcs.size())
             return;
 
-        daPenTiCategory = DaPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
+        daPenTiCategory = daPenTi.daPenTiCategories.get(daPenTiCategoryIndex);
         daPenTiCategory.categoryPrepared = index -> {
             Log.d(TAG, "new page prepared, index: " + index);
             if (getActivity() != null)

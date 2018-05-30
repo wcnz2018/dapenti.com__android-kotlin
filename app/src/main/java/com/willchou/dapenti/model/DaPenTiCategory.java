@@ -28,14 +28,17 @@ public class DaPenTiCategory {
     public boolean initiated() { return !pages.isEmpty(); }
     public String getCategoryName() { return categoryName; }
 
-    public void setPages(List<Pair<String, URL>> pair, boolean fromDatabase) {
+    private void setPages(List<Pair<String, URL>> pair, boolean fromDatabase) {
         pages.clear();
         Database database = Database.getDatabase();
-        for (Pair<String, URL> p : pair) {
+        for (Pair<String, URL> p : pair)
             pages.add(new DaPenTiPage((p)));
 
-            if (!fromDatabase && database != null)
+        if (!fromDatabase && database != null) {
+            for (int i = pair.size() - 1; i >= 0; -- i) {
+                Pair<String, URL> p = pair.get(i);
                 database.addPage(categoryName, p.first, p.second.toString());
+            }
         }
 
         if (categoryPrepared != null)

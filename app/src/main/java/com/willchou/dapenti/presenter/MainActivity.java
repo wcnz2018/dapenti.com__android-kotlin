@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupContent() {
+        Log.d(TAG, "setupContent");
         toolbar.setVisibility(View.VISIBLE);
 
         TabLayout tabLayout = findViewById(R.id.tabs);
@@ -93,8 +94,14 @@ public class MainActivity extends AppCompatActivity {
         viewPair.nonVideoLayout = findViewById(R.id.coordinatorLayout);
         viewPair.videoLayout = findViewById(R.id.fullscreenVideo);
 
-        for (int i = 0; i < DaPenTi.daPenTiCategories.size(); i ++) {
-            DaPenTiCategory c = DaPenTi.daPenTiCategories.get(i);
+        DaPenTi daPenTi = DaPenTi.getDaPenTi();
+        if (daPenTi == null) {
+            Log.e(TAG, "Unable to get data model");
+            return;
+        }
+
+        for (int i = 0; i < daPenTi.daPenTiCategories.size(); i ++) {
+            DaPenTiCategory c = daPenTi.daPenTiCategories.get(i);
             adapter.addFragment(c.getCategoryName(),
                     new ListFragment().setDaPenTiItemIndex(i, viewPair));
         }

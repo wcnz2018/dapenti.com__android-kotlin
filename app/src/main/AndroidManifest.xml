@@ -5,12 +5,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".DPTApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:name=".DPTApplication"
         android:theme="@style/AppTheme">
         <activity
             android:name=".presenter.MainActivity"
@@ -23,16 +23,21 @@
         </activity>
         <activity
             android:name=".presenter.DetailActivity"
-            android:screenOrientation="portrait"
             android:hardwareAccelerated="true"
             android:label="@string/title_activity_detail"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
         <activity
             android:name=".presenter.SettingsActivity"
-            android:screenOrientation="portrait"
             android:label="@string/title_activity_settings"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".presenter.PageOrderActivity"
+            android:label="@string/title_activity_page"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
