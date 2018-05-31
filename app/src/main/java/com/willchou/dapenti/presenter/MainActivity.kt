@@ -1,27 +1,27 @@
 package com.willchou.dapenti.presenter
 
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.*
-
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
+import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.EnhancedWebView
-import java.lang.ref.WeakReference
-
-import java.util.ArrayList
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
+        const val BROADCAST_MODE_CHANGED = "com.willchou.NIGHT_MODE_CHANGED"
     }
 
     private var toolbar: Toolbar? = null
@@ -45,17 +45,34 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Log.d(TAG, "onResume")
         DaPenTi.daPenTi?.daPenTiEventListener = null
+        EnhancedWebView.enhancedWebViewCallback = null
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_detail, menu)
+        val nightMode = Settings.settings?.nightMode
+
+        if (nightMode != null) {
+            val item = menu.findItem(R.id.action_mode)
+            item.setTitle(if (nightMode) R.string.action_mode_day else R.string.action_mode_night)
+        }
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         Log.d(TAG, "item clicked: " + item.title)
         when (item.itemId) {
-            R.id.action_mode -> return true
+            R.id.action_mode -> {
+                var nightMode = Settings.settings?.nightMode!!
+                Log.d(TAG, "nightMode: $nightMode")
+                nightMode = !nightMode
+                Log.d(TAG, "nightMode: $nightMode")
+                Settings.settings?.nightMode = nightMode
+                item.setTitle(if (nightMode) R.string.action_mode_night else R.string.action_mode_day)
+
+                sendBroadcast(Intent(BROADCAST_MODE_CHANGED))
+                return true
+            }
 
             R.id.action_favorite -> {
                 val intent = Intent(this, FavoriteActivity::class.java)
@@ -73,14 +90,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListener() {
+        Log.d(TAG, "setupListener")
         DaPenTi.daPenTi?.daPenTiEventListener = object : DaPenTi.DaPenTiEventListener {
             override fun onCategoryPrepared() {
                 runOnUiThread({ setupContent(); })
             }
         }
 
-        EnhancedWebView.fullScreenVideoLayout = WeakReference(findViewById(R.id.fullscreenVideo))
-        EnhancedWebView.fullScreenTriggered = object : EnhancedWebView.EnhancedWebViewCallback {
+        EnhancedWebView.enhancedWebViewCallback = object : EnhancedWebView.EnhancedWebViewCallback {
             override fun fullscreenTriggered(fullscreen: Boolean) {
                 if (fullscreen) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -93,6 +110,11 @@ class MainActivity : AppCompatActivity() {
                     window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
                     //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
+            }
+
+            @SuppressLint("WrongViewCast")
+            override fun getFullScreenVideoLayout(): ViewGroup {
+                return findViewById(R.id.fullscreenVideo)
             }
         }
     }

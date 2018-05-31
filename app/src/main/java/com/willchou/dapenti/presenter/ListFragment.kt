@@ -1,5 +1,10 @@
 package com.willchou.dapenti.presenter
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
@@ -9,12 +14,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
+import com.squareup.haha.perflib.Main
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiCategory
-import com.willchou.dapenti.view.EnhancedWebView
+import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.RecyclerViewAdapter
-import java.lang.ref.WeakReference
 
 class ListFragment : Fragment() {
     companion object {
@@ -26,6 +30,19 @@ class ListFragment : Fragment() {
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
     private var recyclerView: RecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
+
+    private var mContext: Context? = null
+
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                MainActivity.BROADCAST_MODE_CHANGED -> {
+                    checkNightMode()
+                    recyclerViewAdapter?.notifyDataSetChanged()
+                }
+            }
+        }
+    }
 
     internal fun setDaPenTiCategory(daPenTiCategory: DaPenTiCategory):
             ListFragment {
@@ -42,16 +59,29 @@ class ListFragment : Fragment() {
         }
     }
 
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        mContext = context
+    }
+
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause: ${daPenTiCategory?.categoryName}")
+        swipeRefreshLayout!!.isRefreshing = false
         daPenTiCategory?.categoryEventListener = null
     }
 
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: ${daPenTiCategory?.categoryName}")
+        swipeRefreshLayout!!.isRefreshing = false
         setupListener()
+
+        checkNightMode()
+
+        val filter = IntentFilter()
+        filter.addAction(MainActivity.BROADCAST_MODE_CHANGED)
+        mContext?.registerReceiver(broadcastReceiver, filter)
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -71,6 +101,16 @@ class ListFragment : Fragment() {
         return swipeRefreshLayout
     }
 
+    private fun checkNightMode() {
+        val nightMode = Settings.settings?.nightMode
+        if (nightMode != null && nightMode)
+            recyclerView?.setBackgroundColor(Color.rgb(48, 48, 48))
+        else
+            recyclerView?.setBackgroundColor(Color.WHITE)
+
+        recyclerView?.adapter = recyclerViewAdapter
+    }
+
     private fun setupRecyclerView() {
         Log.d(TAG, "setupRecyclerView with adapter: $recyclerViewAdapter")
         swipeRefreshLayout!!.isRefreshing = false
@@ -83,8 +123,6 @@ class ListFragment : Fragment() {
     }
 
     private fun setupListener() {
-        System.gc()
-
         Log.d(TAG, "setupListener: ${daPenTiCategory?.categoryName}")
         daPenTiCategory?.categoryEventListener =
                 object : DaPenTiCategory.CategoryEventListener {
@@ -97,6 +135,8 @@ class ListFragment : Fragment() {
 
     private fun prepareContent() {
         setupListener()
+        if (daPenTiCategory == null)
+            return;
 
         if (daPenTiCategory!!.initiated()) {
             setupRecyclerView()

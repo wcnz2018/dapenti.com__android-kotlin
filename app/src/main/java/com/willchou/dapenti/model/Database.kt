@@ -240,6 +240,17 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 return
             }
 
+            val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__ID),
+                    "$COLUMN_PAGE_INDEX__PAGE_ID=? AND $COLUMN_PAGE_INDEX__CATEGORY_ID=?",
+                    arrayOf(pageID.toString(), categoryID.toString()),
+                    null, null, null)
+            if (cursor.count != 0) {
+                Log.d(TAG, "Index already exist($category -> $page)")
+                cursor.close()
+                return
+            }
+            cursor.close()
+
             val values = ContentValues()
             values.put(COLUMN_PAGE_INDEX__CATEGORY_ID, categoryID)
             values.put(COLUMN_PAGE_INDEX__PAGE_ID, pageID)

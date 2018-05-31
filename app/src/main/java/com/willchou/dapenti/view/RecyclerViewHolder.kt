@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.support.design.widget.Snackbar
+import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
@@ -27,14 +28,23 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         private const val PageProperty_WebView = "pp_webview"
     }
 
+    private val cardView: CardView = mView.findViewById(R.id.cardView)
+
     private val titleTextView: TextView = mView.findViewById(R.id.title)
     private val descriptionTextView: TextView = mView.findViewById(R.id.description)
     private val imageView: ImageView = mView.findViewById(R.id.image)
     private val favoriteImage: ImageView = mView.findViewById(R.id.page_favorite_iv)
     private val videoLayout: LinearLayout = mView.findViewById(R.id.webViewLayout)
 
+    private var foregroundColor: Int = Color.BLACK
+    private var backgroundColor: Int = Color.WHITE
+
     private var page: DaPenTiPage? = null
     private var enhancedWebView: EnhancedWebView? = null
+
+    init {
+        checkNightMode()
+    }
 
     private val pageEventListener = object : DaPenTiPage.PageEventListener {
         override fun onContentPrepared() {
@@ -45,6 +55,29 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             Log.d(TAG, "onFavoriteChanged: $favorite")
             favoriteImage.visibility = if (favorite) View.VISIBLE else View.GONE
         }
+    }
+
+    private fun checkNightMode() {
+        val nightMode = Settings.settings?.nightMode
+        backgroundColor = Color.WHITE
+        foregroundColor = Color.BLACK
+        if (nightMode != null && nightMode) {
+            backgroundColor = Color.rgb(66, 66, 66)
+            foregroundColor = Color.rgb(213, 213, 213)
+        }
+
+        cardView.setCardBackgroundColor(backgroundColor)
+        /*
+        mView.setBackgroundColor(backgroundColor)
+        titleTextView.setBackgroundColor(backgroundColor)
+        descriptionTextView.setBackgroundColor(backgroundColor)
+        imageView.setBackgroundColor(backgroundColor)
+        videoLayout.setBackgroundColor(backgroundColor)
+        */
+
+        titleTextView.setTextColor(foregroundColor)
+        descriptionTextView.setTextColor(foregroundColor)
+        videoLayout.setBackgroundColor(backgroundColor)
     }
 
     internal fun update(page: DaPenTiPage) {
@@ -107,7 +140,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun hideContent() {
-        titleTextView.setBackgroundColor(Color.WHITE)
+        titleTextView.setTextColor(foregroundColor)
+        titleTextView.setBackgroundColor(backgroundColor)
+
         descriptionTextView.visibility = View.GONE
         descriptionTextView.text = ""
 
@@ -125,7 +160,13 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun showContent(v: View, playVideo: Boolean?) {
         val settings = Settings.settings
 
-        titleTextView.setBackgroundColor(Color.LTGRAY)
+        // reverse color
+        if (settings?.nightMode != null && !settings.nightMode)
+            titleTextView.setBackgroundColor(Color.GRAY)
+        else
+            titleTextView.setBackgroundColor(foregroundColor)
+        titleTextView.setTextColor(backgroundColor)
+
         when (page!!.pageType) {
             DaPenTiPage.PageTypeNote -> {
                 val notes = page!!.pageNotes
@@ -170,9 +211,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }
 
             DaPenTiPage.PageTypeLongReading -> {
-                // show content with next click
+                // show content in next click
                 page!!.remove(PageProperty_Expanded)
-                titleTextView.setBackgroundColor(Color.WHITE)
+                titleTextView.setBackgroundColor(backgroundColor)
                 val pageLongReading = page!!.pageLongReading
 
                 val context = v.context

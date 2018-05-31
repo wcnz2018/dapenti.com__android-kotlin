@@ -2,11 +2,13 @@ package com.willchou.dapenti.model
 
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.util.Log
 
 import com.willchou.dapenti.R
 
 class Settings {
     companion object {
+        const val TAG = "Setting"
         const val FontSizeSmall = 0
         const val FontSizeMedia = 1
         const val FontSizeBig = 2
@@ -46,4 +48,16 @@ class Settings {
 
     val isImageEnabled: Boolean
         get() = prefs!!.getBoolean(resources!!.getString(R.string.pref_key_display_image), true)
+
+    var nightMode: Boolean = false
+        set(nm) {
+            field = nm
+            Log.d(TAG, "setNightMode: $nm")
+            val editor = prefs!!.edit()
+            editor.putBoolean(resources!!.getString(R.string.pref_key_night_mode), nm)
+            editor.apply()
+        }
+        get() {
+            return prefs!!.getBoolean(resources!!.getString(R.string.pref_key_night_mode), false)
+        }
 }

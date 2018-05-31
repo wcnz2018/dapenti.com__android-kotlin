@@ -17,8 +17,9 @@ class EnhancedWebView : VideoEnabledWebView {
     companion object {
         private const val TAG = "DWebView"
 
-        var fullScreenTriggered: EnhancedWebViewCallback? = null
-        var fullScreenVideoLayout: WeakReference<ViewGroup>? = null
+        // Note: need to set to null in onPause() to prevent memory leak
+        //       reassign in onResume() or somewhere
+        var enhancedWebViewCallback: EnhancedWebViewCallback? = null
     }
 
     private var loadFinished: Boolean = false
@@ -26,6 +27,7 @@ class EnhancedWebView : VideoEnabledWebView {
 
     interface EnhancedWebViewCallback {
         fun fullscreenTriggered(fullscreen: Boolean)
+        fun getFullScreenVideoLayout(): ViewGroup
     }
 
     var smallScreenVideoLayout: ViewGroup? = null
@@ -46,10 +48,11 @@ class EnhancedWebView : VideoEnabledWebView {
 
     fun prepareFullScreen() {
         val client = VideoEnabledWebChromeClient(smallScreenVideoLayout!!,
-                fullScreenVideoLayout?.get()!!, null, this)
+                enhancedWebViewCallback!!.getFullScreenVideoLayout(),
+                null, this)
         client.setOnToggledFullscreen(object : VideoEnabledWebChromeClient.ToggledFullscreenCallback {
             override fun toggledFullscreen(fullscreen: Boolean) {
-                fullScreenTriggered!!.fullscreenTriggered(fullscreen)
+                enhancedWebViewCallback!!.fullscreenTriggered(fullscreen)
             }
         })
         webChromeClient = client
