@@ -17,7 +17,6 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.presenter.DetailActivity
-import java.lang.ref.WeakReference
 
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
@@ -96,12 +95,14 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     internal fun attachedToWindow() {
         Log.d(TAG, "attachToWindow: " + page!!.pageTitle)
+        page?.pageEventListener = pageEventListener
         if (page?.getProperty(PageProperty_Expanded) != null)
             showContent(mView, false)
     }
 
     internal fun detachedFromWindow() {
         Log.d(TAG, "detachedFromWindow: ${page?.pageTitle}")
+        page?.pageEventListener = null
         hideContent()
     }
 
