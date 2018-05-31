@@ -211,9 +211,11 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }
 
             DaPenTiPage.PageTypeLongReading -> {
+                titleTextView.setTextColor(foregroundColor)
+                titleTextView.setBackgroundColor(backgroundColor)
+
                 // show content in next click
                 page!!.remove(PageProperty_Expanded)
-                titleTextView.setBackgroundColor(backgroundColor)
                 val pageLongReading = page!!.pageLongReading
 
                 val context = v.context

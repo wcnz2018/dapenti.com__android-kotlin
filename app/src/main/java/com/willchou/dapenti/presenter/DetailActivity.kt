@@ -134,6 +134,9 @@ class DetailActivity : AppCompatActivity() {
                     .into(coverImageView!!)
         }
 
+        if (settings != null && settings.nightMode)
+            webView?.nightMode = true
+
         webView?.loadDataWithBaseURL(null, htmlString,
                 "text/html", "UTF-8", null)
     }

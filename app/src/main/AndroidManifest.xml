@@ -32,7 +32,8 @@
             android:name=".presenter.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/SettingTheme"/>
         <activity
             android:name=".presenter.PageOrderActivity"
             android:label="@string/title_activity_page"

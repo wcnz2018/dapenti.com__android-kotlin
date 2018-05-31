@@ -8,7 +8,6 @@
     <item
         android:id="@+id/action_favorite"
         android:title="@string/action_my_collection"/>
-
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"/>

@@ -49,26 +49,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        Log.d(TAG, "onCreateOptionsMenu")
         menuInflater.inflate(R.menu.menu_detail, menu)
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        Log.d(TAG, "onPrepareOptionsMenu")
         val nightMode = Settings.settings?.nightMode
 
         if (nightMode != null) {
-            val item = menu.findItem(R.id.action_mode)
-            item.setTitle(if (nightMode) R.string.action_mode_day else R.string.action_mode_night)
+            val item = menu?.findItem(R.id.action_mode)
+            item?.setTitle(if (nightMode) R.string.action_mode_day else R.string.action_mode_night)
         }
-        return true
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         Log.d(TAG, "item clicked: " + item.title)
         when (item.itemId) {
             R.id.action_mode -> {
-                var nightMode = Settings.settings?.nightMode!!
-                Log.d(TAG, "nightMode: $nightMode")
-                nightMode = !nightMode
-                Log.d(TAG, "nightMode: $nightMode")
+                val nightMode = !Settings.settings?.nightMode!!
                 Settings.settings?.nightMode = nightMode
-                item.setTitle(if (nightMode) R.string.action_mode_night else R.string.action_mode_day)
 
                 sendBroadcast(Intent(BROADCAST_MODE_CHANGED))
                 return true
