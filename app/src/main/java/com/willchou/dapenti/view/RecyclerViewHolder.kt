@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
@@ -16,10 +17,9 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.presenter.DetailActivity
+import java.lang.ref.WeakReference
 
-class RecyclerViewHolder internal constructor(private val mView: View,
-                                              private val fullScreenTriggered: EnhancedWebView.onFullScreenTriggered,
-                                              private val fullScreenViewPair: EnhancedWebView.FullScreenViewPair)
+class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
     companion object {
         private const val TAG = "RecyclerViewHolder"
@@ -31,17 +31,33 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private val titleTextView: TextView = mView.findViewById(R.id.title)
     private val descriptionTextView: TextView = mView.findViewById(R.id.description)
     private val imageView: ImageView = mView.findViewById(R.id.image)
+    private val favoriteImage: ImageView = mView.findViewById(R.id.page_favorite_iv)
     private val videoLayout: LinearLayout = mView.findViewById(R.id.webViewLayout)
 
     private var page: DaPenTiPage? = null
     private var enhancedWebView: EnhancedWebView? = null
 
+    private val pageEventListener = object : DaPenTiPage.PageEventListener {
+        override fun onContentPrepared() {
+            Handler(Looper.getMainLooper()).post { triggerContent(mView) }
+        }
+
+        override fun onFavoriteChanged(favorite: Boolean) {
+            Log.d(TAG, "onFavoriteChanged: $favorite")
+            favoriteImage.visibility = if (favorite) View.VISIBLE else View.GONE
+        }
+    }
+
     internal fun update(page: DaPenTiPage) {
         this.page = page
+        page.pageEventListener = pageEventListener
+
         this.enhancedWebView = page.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
 
         titleTextView.text = page.pageTitle
-        Log.d(TAG, "update(reuse view): " + page.pageTitle)
+        Log.d(TAG, "update(reuse view): ${page.pageTitle}, favorite: ${page.getFavorite()}")
+
+        favoriteImage.visibility = if (page.getFavorite()) View.VISIBLE else View.GONE
 
         hideContent()
         if (page.getProperty(PageProperty_Expanded) != null)
@@ -50,14 +66,21 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         mView.setOnClickListener { v: View ->
             if (page.initiated())
                 triggerContent(v)
-            else {
-                page.contentPrepared = object : DaPenTiPage.onContentPrepared {
-                    override fun onContentPrepared() {
-                        Handler(Looper.getMainLooper()).post { triggerContent(v) }
-                    }
-                }
+            else
                 Thread(Runnable { page.prepareContent() }).start()
-            }
+        }
+
+        mView.setOnLongClickListener { v: View ->
+            Log.d(TAG, "long press: $v")
+            val newFavorite = !page.getFavorite();
+            page.setFavorite(newFavorite)
+
+            var s = "已从收藏中移除"
+            if (newFavorite)
+                s = "已加入收藏"
+            Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
+
+            true
         }
     }
 
@@ -67,9 +90,8 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun setupFullScreenWebView() {
-        enhancedWebView?.fullScreenTriggered = fullScreenTriggered
-        fullScreenViewPair.nonVideoLayout = enhancedWebView?.parent as ViewGroup?
-        enhancedWebView?.prepareFullScreen(fullScreenViewPair)
+        enhancedWebView?.smallScreenVideoLayout = enhancedWebView?.parent as ViewGroup?
+        enhancedWebView?.prepareFullScreen()
     }
 
     internal fun attachedToWindow() {
@@ -84,6 +106,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun hideContent() {
+        titleTextView.setBackgroundColor(Color.WHITE)
         descriptionTextView.visibility = View.GONE
         descriptionTextView.text = ""
 
@@ -95,7 +118,6 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         detachWebView()
         enhancedWebView?.pauseVideo()
 
-        titleTextView.setBackgroundColor(Color.WHITE)
         mView.requestLayout()
     }
 

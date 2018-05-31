@@ -11,70 +11,47 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.view.EnhancedWebView
 import com.willchou.dapenti.view.RecyclerViewAdapter
+import java.lang.ref.WeakReference
 
 class ListFragment : Fragment() {
     companion object {
         private const val TAG = "ListFragment"
-        private const val BSCategoryIndex = "daPenTiCategoryIndex"
     }
 
-    private var daPenTiCategoryIndex = -1
     private var daPenTiCategory: DaPenTiCategory? = null
 
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
     private var recyclerView: RecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
 
-    private var fullScreenViewPair: EnhancedWebView.FullScreenViewPair? = null
-
-    private val fullScreenTriggered = object : EnhancedWebView.onFullScreenTriggered {
-        override fun triggered(fullscreen: Boolean) {
-            val window = activity!!.window
-
-            if (fullscreen) {
-                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE
-                //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            } else {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            }
-        }
-    }
-
-    internal fun setDaPenTiItemIndex(daPenTiCategoryIndex: Int,
-                                     fullScreenViewPair: EnhancedWebView.FullScreenViewPair): ListFragment {
-        val daPenTi = DaPenTi.daPenTi
-        if (daPenTi == null) {
-            Log.e(TAG, "Unable to get data model")
-            return this
-        }
-
-        this.daPenTiCategoryIndex = daPenTiCategoryIndex
-        this.daPenTiCategory = daPenTi.daPenTiCategories.get(daPenTiCategoryIndex)
-        this.fullScreenViewPair = fullScreenViewPair
+    internal fun setDaPenTiCategory(daPenTiCategory: DaPenTiCategory):
+            ListFragment {
+        this.daPenTiCategory = daPenTiCategory
         return this
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        Log.d(TAG, "onSaveInstanceState: index: $daPenTiCategoryIndex")
-        outState.putInt(BSCategoryIndex, daPenTiCategoryIndex)
-        super.onSaveInstanceState(outState)
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isVisibleToUser) {
-            //Log.d(TAG, "isVisibleToUser: " + daPenTiCategory.getCategoryName());
+            Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}");
             //prepareContent();
+            setupListener()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(TAG, "onPause: ${daPenTiCategory?.categoryName}")
+        daPenTiCategory?.categoryEventListener = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume: ${daPenTiCategory?.categoryName}")
+        setupListener()
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -86,12 +63,9 @@ class ListFragment : Fragment() {
 
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
 
-        Log.d(TAG, "onCreateView：savedInstanceState: $savedInstanceState"
-                + ", index: $daPenTiCategoryIndex")
-        Log.d(TAG, "onCreateView: adapter: $recyclerViewAdapter")
-
-        if (savedInstanceState != null)
-            daPenTiCategoryIndex = savedInstanceState.getInt(BSCategoryIndex)
+        Log.d(TAG, "onCreateView(${daPenTiCategory?.categoryName}): " +
+                "adapter: $recyclerViewAdapter," +
+                "Bundle: $savedInstanceState")
 
         prepareContent()
         return swipeRefreshLayout
@@ -101,35 +75,28 @@ class ListFragment : Fragment() {
         Log.d(TAG, "setupRecyclerView with adapter: $recyclerViewAdapter")
         swipeRefreshLayout!!.isRefreshing = false
         if (recyclerViewAdapter == null)
-            recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategoryIndex,
-                    fullScreenViewPair!!, fullScreenTriggered)
+            recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
         recyclerView!!.adapter = recyclerViewAdapter
 
         recyclerViewAdapter!!.notifyDataSetChanged()
     }
 
+    private fun setupListener() {
+        System.gc()
+
+        Log.d(TAG, "setupListener: ${daPenTiCategory?.categoryName}")
+        daPenTiCategory?.categoryEventListener =
+                object : DaPenTiCategory.CategoryEventListener {
+                    override fun onCategoryPrepared(index: Int) {
+                        Log.d(TAG, "new page prepared, index: $index")
+                        activity!!.runOnUiThread { setupRecyclerView() }
+                    }
+                }
+    }
+
     private fun prepareContent() {
-        val daPenTi = DaPenTi.daPenTi ?: return
-
-        val dptcs = daPenTi.daPenTiCategories
-        Log.d(TAG, "DPTCategories: $dptcs")
-
-        if (daPenTiCategoryIndex < 0 || daPenTiCategoryIndex >= dptcs.size)
-            return
-
-        daPenTiCategory = daPenTi.daPenTiCategories[daPenTiCategoryIndex]
-        if (daPenTiCategory == null) {
-            Log.d(TAG, "Unable to fetch daPenTiCagetory")
-            return
-        }
-
-        daPenTiCategory?.categoryPrepared = object : DaPenTiCategory.onCategoryPrepared {
-            override fun onCategoryPrepared(index: Int) {
-                Log.d(TAG, "new page prepared, index: $index")
-                activity!!.runOnUiThread { setupRecyclerView(); }
-            }
-        }
+        setupListener()
 
         if (daPenTiCategory!!.initiated()) {
             setupRecyclerView()

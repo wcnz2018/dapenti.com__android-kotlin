@@ -45,7 +45,7 @@ class PageOrderActivity : AppCompatActivity() {
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { v: View -> onBackPressed() }
+        toolbar.setNavigationOnClickListener { onBackPressed() }
 
         setupData()
         setupLayout()
@@ -154,7 +154,7 @@ class PageOrderActivity : AppCompatActivity() {
             super.onItemClicked(view)
             checkBox.toggle()
 
-            itemDetail!!.visible = checkBox.isChecked
+            itemDetail?.visible = checkBox.isChecked
 
             if (triggerButton?.visibility != View.VISIBLE)
                 triggerButton?.visibility = View.VISIBLE

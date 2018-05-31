@@ -30,7 +30,7 @@ class SettingsActivity : AppCompatActivity() {
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { v: View -> onBackPressed() }
+        toolbar.setNavigationOnClickListener { onBackPressed() }
 
         fragmentManager
                 .beginTransaction()

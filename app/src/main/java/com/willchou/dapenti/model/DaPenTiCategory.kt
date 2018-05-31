@@ -1,6 +1,8 @@
 package com.willchou.dapenti.model
 
+import android.util.Log
 import android.util.Pair
+import java.lang.ref.WeakReference
 
 import java.net.URL
 import java.util.ArrayList
@@ -15,9 +17,11 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
 
     var pages: MutableList<DaPenTiPage> = ArrayList()
 
-    var categoryPrepared: onCategoryPrepared? = null
+    // Note: need to set to null in onPause() to prevent memory leak
+    //       reassign in onResume() or somewhere
+    var categoryEventListener: CategoryEventListener? = null
 
-    interface onCategoryPrepared {
+    interface CategoryEventListener {
         fun onCategoryPrepared(index: Int)
     }
 
@@ -25,38 +29,53 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
         return !pages.isEmpty()
     }
 
-    private fun setPages(pair: List<Pair<String, URL>>, fromDatabase: Boolean) {
+    private fun setPages(pageInfoList: List<Database.PageInfo>, fromDatabase: Boolean) {
         pages.clear()
         val database = Database.database
-        for (p in pair)
-            pages.add(DaPenTiPage(p))
 
-        if (!fromDatabase && database != null) {
-            for (i in pair.indices.reversed()) {
-                val p = pair[i]
-                database.addPage(categoryName, p.first, p.second.toString())
+        for (pageInfo in pageInfoList) {
+            var page = DaPenTi.daPenTi?.daPenTiPageMap?.get(pageInfo.pageTitle)
+            if (page != null)
+                pages.add(page)
+            else {
+                page = DaPenTiPage(pageInfo.pageTitle, pageInfo.pageUrl, pageInfo.isFavorite)
+                DaPenTi.daPenTi?.daPenTiPageMap?.put(pageInfo.pageTitle, page)
+                pages.add(page)
             }
         }
 
-        categoryPrepared?.onCategoryPrepared(pages.size - 1);
+        if (!fromDatabase && database != null) {
+            for (pageInfo in pageInfoList.reversed())
+                database.addPage(categoryName, pageInfo.pageTitle, pageInfo.pageUrl.toString())
+        }
+
+        Log.d(TAG, "categoryEventListener: $categoryEventListener")
+        categoryEventListener?.onCategoryPrepared(pages.size - 1)
     }
 
     fun preparePages(fromWeb: Boolean) {
-        var subItemPair: MutableList<Pair<String, URL>> = ArrayList()
+        val pageInfoList: MutableList<Database.PageInfo> = ArrayList()
 
         var fromDatabase = true
         val database = Database.database
-        if (!fromWeb && database != null)
-            database.getPages(categoryName, subItemPair)
+        if (!fromWeb && database != null) {
+            database.getPages(categoryName, pageInfoList)
+        }
 
-        if (subItemPair.isEmpty()) {
+        if (pageInfoList.isEmpty()) {
             //String ss = "div > ul > li > a";
             val ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']"
-            subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss)
+            val subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss)
+
+            for (p in subItemPair) {
+                val favorite = Database.database?.getPageFavorite(p.first)
+                val pi = Database.PageInfo(p.first, p.second,favorite != null && favorite)
+                pageInfoList.add(pi)
+            }
 
             fromDatabase = false
         }
 
-        setPages(subItemPair, fromDatabase)
+        setPages(pageInfoList, fromDatabase)
     }
 }

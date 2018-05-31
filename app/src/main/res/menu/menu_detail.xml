@@ -6,7 +6,7 @@
         android:id="@+id/action_mode"
         android:title="@string/action_mode_night" />
     <item
-        android:id="@+id/action_collection"
+        android:id="@+id/action_favorite"
         android:title="@string/action_my_collection"/>
 
     <item

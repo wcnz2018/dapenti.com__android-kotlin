@@ -1,18 +1,21 @@
 package com.willchou.dapenti.model
 
 import android.util.Log
-import android.util.Pair
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.lang.ref.WeakReference
 
 import java.net.URL
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.Properties
 
-class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
+class DaPenTiPage internal constructor(val pageTitle: String,
+                                       private val pageUrl: URL,
+                                       private var favorite: Boolean)
+    : Properties() {
     companion object {
         private const val TAG = "DaPenTiPage"
 
@@ -24,13 +27,12 @@ class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
         const val PageTypeOriginal = 5
     }
 
-    val pageTitle: String = p.first
-    private val pageUrl: URL = p.second
-
     var pageType = PageTypeUnknown
     private var originalHtml: String? = null
 
-    var contentPrepared: onContentPrepared? = null
+    // Note: need to set to null in onPause() to prevent memory leak
+    //       reassign in onResume() or somewhere
+    var pageEventListener: PageEventListener? = null
 
     var pageLongReading = PageLongReading()
     var pageNotes = PageNotes()
@@ -45,8 +47,9 @@ class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
     fun getObjectProperty(k: String): Any? { return mapObject[k] }
     fun removeObjectProperty(k: String) { mapObject.remove(k) }
 
-    interface onContentPrepared {
+    interface PageEventListener {
         fun onContentPrepared()
+        fun onFavoriteChanged(favorite: Boolean)
     }
 
     class PageLongReading {
@@ -70,6 +73,14 @@ class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
 
     fun initiated(): Boolean {
         return pageType != PageTypeUnknown
+    }
+
+    fun getFavorite():Boolean { return favorite }
+    fun setFavorite(f:Boolean) {
+        favorite = f
+        Database.database?.setPageFavorite(pageTitle, f)
+
+        pageEventListener?.onFavoriteChanged(f)
     }
 
     private fun getFirstElement(doc: Document, s: String): Element? {
@@ -133,7 +144,7 @@ class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
 
         e = es.first()
 
-        val sl = arrayOf("img", "video", "br")
+        val sl = arrayOf("img", "video")
         for (s in sl)
             if (e!!.select(s).size > 0)
                 return false
@@ -156,15 +167,23 @@ class DaPenTiPage internal constructor(p: Pair<String, URL>) : Properties() {
 
     fun prepareContent() {
         synchronized(TAG) {
-            if (doPrepareContent() && contentPrepared != null)
-                contentPrepared!!.onContentPrepared()
+            if (doPrepareContent())
+                pageEventListener?.onContentPrepared()
         }
     }
 
     private fun checkByTitle(doc: Document): Boolean {
-        return pageTitle.contains("【喷嚏图卦")
-                && prepareLongReading(doc)
+        if (pageTitle.contains("【喷嚏图卦") && prepareLongReading(doc))
+            return true
 
+        val isShortNotes: Boolean = pageTitle.contains("【最右】") ||
+                pageTitle.contains("【喷嚏】") ||
+                pageTitle.contains("【段子】") ||
+                pageTitle.contains("【喷嚏一下】")
+        if (isShortNotes && preparePageNote(doc))
+            return true
+
+        return false
     }
 
     private fun checkByContent(doc: Document): Boolean {

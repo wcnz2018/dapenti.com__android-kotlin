@@ -38,6 +38,11 @@
             android:label="@string/title_activity_page"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".presenter.FavoriteActivity"
+            android:label="@string/title_activity_favorite"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

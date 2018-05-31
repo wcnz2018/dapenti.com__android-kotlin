@@ -1,9 +1,12 @@
 package com.willchou.dapenti.presenter
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.View
@@ -17,6 +20,8 @@ import com.bumptech.glide.request.RequestOptions
 import com.hannesdorfmann.swipeback.Position
 import com.hannesdorfmann.swipeback.SwipeBack
 import com.willchou.dapenti.R
+import com.willchou.dapenti.model.DaPenTi
+import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.EnhancedWebView
 
@@ -26,11 +31,15 @@ class DetailActivity : AppCompatActivity() {
         const val EXTRA_HTML = "extra_string_html"
         const val EXTRA_COVER_URL = "extra_string_cover"
         const val EXTRA_TITLE = "extra_string_title"
+        const val EXTRA_PAGE_INDEX = "extra_string_page_index"
     }
 
     //private DaPenTi.DaPenTiContent daPenTiContent;
     private var webView: EnhancedWebView? = null
     private var coverImageView: ImageView? = null
+    private var floatingActionButton: FloatingActionButton? = null
+
+    private var daPenTiPage: DaPenTiPage? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,15 +51,21 @@ class DetailActivity : AppCompatActivity() {
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { v: View -> onBackPressed() }
+        toolbar.setNavigationOnClickListener { onBackPressed() }
 
         coverImageView = findViewById(R.id.coverImage)
         webView = findViewById(R.id.webview)
 
-        val fab = findViewById<FloatingActionButton>(R.id.fab)
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+        floatingActionButton = findViewById(R.id.fab)
+        floatingActionButton?.setOnClickListener { view ->
+            val newFavorite = !daPenTiPage!!.getFavorite();
+            daPenTiPage!!.setFavorite(newFavorite)
+            updateFavorite(newFavorite)
+
+            var s = "已从收藏中移除"
+            if (newFavorite)
+                s = "已加入收藏"
+            Snackbar.make(view, s, Snackbar.LENGTH_SHORT).show()
         }
 
         prepareContent()
@@ -65,6 +80,16 @@ class DetailActivity : AppCompatActivity() {
         super.onBackPressed()
         overridePendingTransition(R.anim.swipeback_stack_to_front,
                 R.anim.swipeback_stack_right_out)
+    }
+
+    private fun updateFavorite(favorite: Boolean) {
+        val drawable = ContextCompat.getDrawable(this,
+                if (favorite) R.drawable.favorite else R.drawable.not_favorite
+        )
+        floatingActionButton?.setImageDrawable(drawable)
+
+        //val color = if (favorite) Color.WHITE else Color.MAGENTA
+        //floatingActionButton?.backgroundTintList = ColorStateList.valueOf(color)
     }
 
     private fun applyUserSettings() {
@@ -84,6 +109,9 @@ class DetailActivity : AppCompatActivity() {
         val htmlString = intent.getStringExtra(EXTRA_HTML)
         val titleString = intent.getStringExtra(EXTRA_TITLE)
         val coverString = intent.getStringExtra(EXTRA_COVER_URL)
+
+        daPenTiPage = DaPenTi.daPenTi?.findPageByTitle(titleString)
+        updateFavorite(daPenTiPage!!.getFavorite())
 
         val collapsingToolbarLayout = findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)
         collapsingToolbarLayout.title = titleString

@@ -1,37 +1,34 @@
 package com.willchou.dapenti.view
 
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.util.AttributeSet
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
-import android.webkit.ConsoleMessage
 import android.webkit.SslErrorHandler
-import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.lang.ref.WeakReference
 
 class EnhancedWebView : VideoEnabledWebView {
-    var fullScreenTriggered: onFullScreenTriggered? = null
+    companion object {
+        private const val TAG = "DWebView"
+
+        var fullScreenTriggered: EnhancedWebViewCallback? = null
+        var fullScreenVideoLayout: WeakReference<ViewGroup>? = null
+    }
 
     private var loadFinished: Boolean = false
     var playOnLoadFinished = false
 
-    interface onFullScreenTriggered {
-        fun triggered(fullscreen: Boolean)
+    interface EnhancedWebViewCallback {
+        fun fullscreenTriggered(fullscreen: Boolean)
     }
 
-    class FullScreenViewPair {
-        var nonVideoLayout: ViewGroup? = null
-        var videoLayout: ViewGroup? = null
-    }
+    var smallScreenVideoLayout: ViewGroup? = null
 
     constructor(context: Context) : super(context) {
         setup()
@@ -47,12 +44,12 @@ class EnhancedWebView : VideoEnabledWebView {
         setup()
     }
 
-    fun prepareFullScreen(p: FullScreenViewPair) {
-        val client = VideoEnabledWebChromeClient(p.nonVideoLayout!!,
-                p.videoLayout!!, null, this)
+    fun prepareFullScreen() {
+        val client = VideoEnabledWebChromeClient(smallScreenVideoLayout!!,
+                fullScreenVideoLayout?.get()!!, null, this)
         client.setOnToggledFullscreen(object : VideoEnabledWebChromeClient.ToggledFullscreenCallback {
             override fun toggledFullscreen(fullscreen: Boolean) {
-                fullScreenTriggered!!.triggered(fullscreen)
+                fullScreenTriggered!!.fullscreenTriggered(fullscreen)
             }
         })
         webChromeClient = client
@@ -108,9 +105,5 @@ class EnhancedWebView : VideoEnabledWebView {
         playOnLoadFinished = false
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()")
-    }
-
-    companion object {
-        private val TAG = "DWebView"
     }
 }

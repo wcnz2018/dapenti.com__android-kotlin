@@ -2,8 +2,10 @@ package com.willchou.dapenti.model
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.pdf.PdfDocument
 import android.provider.ContactsContract
 import android.util.Log
 import android.util.Pair
@@ -43,6 +45,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         database = this
     }
 
+    class PageInfo(val pageTitle: String, val pageUrl: URL, val isFavorite: Boolean)
+
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
         Log.d(TAG, "onCreate")
 
@@ -73,13 +77,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         sqLiteDatabase.execSQL(sql)
     }
 
-    override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) {
-
-    }
-
-    private fun toDatabaseCategoryID(categoryID: Int): String {
-        return "[$categoryID]"
-    }
+    override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) { }
 
     private fun getCategoryID(db: SQLiteDatabase, title: String): Int {
         val sql = ("SELECT " + COLUMN_CATEGORY__ID + " FROM " + TABLE_CATEGORIES
@@ -112,23 +110,6 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         cursor.close()
         return pageID
     }
-
-    /*
-    private fun getPageBelong(db: SQLiteDatabase, pageID: Int): String? {
-        val sql = ("SELECT " + COLUMN_PAGE__BELONG + " FROM " + TABLE_PAGES
-                + " WHERE " + COLUMN_PAGE__ID + " =? ")
-        val cursor = db.rawQuery(sql, arrayOf("" + pageID))
-
-        var pageBelong: String? = ""
-        while (cursor.moveToNext()) {
-            pageBelong = cursor.getString(0)
-            if (pageBelong != null && !pageBelong.isEmpty())
-                break
-        }
-        cursor.close()
-        return pageBelong
-    }
-    */
 
     fun addCategory(category: String, url: String) {
         Log.d(TAG, "addCategory: $category, url: $url")
@@ -229,32 +210,14 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         }
     }
 
-    /*
-    private fun addPageCategory(db: SQLiteDatabase, pageID: Int, categoryID: Int) {
-        var pageBelong: String? = getPageBelong(db, pageID) ?: return
-
-        for (s in pageBelong!!.split(",".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()) {
-            if (s.contains(toDatabaseCategoryID(categoryID))) {
-                Log.d(TAG, "categoryID already exists.")
-                return
-            }
-        }
-
-        pageBelong += toDatabaseCategoryID(categoryID)
-
-        val values = ContentValues()
-        values.put(COLUMN_PAGE__BELONG, pageBelong)
-
-        db.update(TABLE_PAGES, values, "$COLUMN_PAGE__ID=?", arrayOf("" + pageID))
-    }
-    */
-
     private fun insertNewPage(db: SQLiteDatabase, pageTitle: String, pageUrl: String): Int {
         val values = ContentValues()
         values.put(COLUMN_PAGE__TITLE, pageTitle)
         values.put(COLUMN_PAGE__URL, pageUrl)
 
-        db.insertOrThrow(TABLE_PAGES, null, values)
+        try {
+            db.insertOrThrow(TABLE_PAGES, null, values)
+        } catch (e : Exception) { e.printStackTrace() }
         return getPageID(db, pageTitle)
     }
 
@@ -291,10 +254,41 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         }
     }
 
-    fun getPages(category: String, pairs: MutableList<Pair<String, URL>>) {
+    fun setPageFavorite(pageTitle: String, favorite: Boolean) {
+        synchronized(this) {
+            val db = writableDatabase
+            val values = ContentValues()
+            values.put(COLUMN_PAGE__FAVORITE, if (favorite) "1" else "0")
+            db.update(TABLE_PAGES, values, "$COLUMN_PAGE__TITLE=?", arrayOf(pageTitle))
+            db.close()
+        }
+    }
+
+    fun getPageFavorite(pageTitle: String): Boolean {
+        synchronized(this) {
+            val db = readableDatabase
+            val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__FAVORITE), "$COLUMN_PAGE__TITLE=?",
+                    arrayOf(pageTitle), null, null, null)
+
+            var favorite = false
+            while (cursor.moveToNext()) {
+                val b = cursor.getInt(0)
+                if (b == 0 || b == 1) {
+                    favorite = b == 1
+                    break
+                }
+            }
+            cursor.close()
+            db.close()
+
+            return favorite
+        }
+    }
+
+    fun getPages(category: String, pairs: MutableList<PageInfo>) {
         pairs.clear()
 
-        val dataBundleMap : HashMap<Int, Pair<String, URL>> = HashMap()
+        val dataBundleMap : HashMap<Int, PageInfo> = HashMap()
 
         synchronized(this) {
             val db = readableDatabase
@@ -320,13 +314,15 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 return
             }
 
-            cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__ID, COLUMN_PAGE__TITLE, COLUMN_PAGE__URL),
+            cursor = db.query(TABLE_PAGES,
+                    arrayOf(COLUMN_PAGE__ID, COLUMN_PAGE__TITLE, COLUMN_PAGE__URL, COLUMN_PAGE__FAVORITE),
                     "$COLUMN_PAGE__ID IN (${pageIDs.joinToString()})",
                     null, null, null, null)
 
             try {
                 while (cursor.moveToNext())
-                    dataBundleMap[cursor.getInt(0)] = Pair(cursor.getString(1), URL(cursor.getString(2)))
+                    dataBundleMap[cursor.getInt(0)] =
+                            PageInfo(cursor.getString(1), URL(cursor.getString(2)), cursor.getInt(3) == 1)
             } catch (e: Exception) { e.printStackTrace() } finally {
                 cursor.close()
                 db.close()
