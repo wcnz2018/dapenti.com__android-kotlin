@@ -31,6 +31,16 @@ class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
         holder.detachedFromWindow()
     }
 
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        Log.d(TAG, "onAttachedToRecyclerView")
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        Log.d(TAG, "onDetachedFromRecyclerView")
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
         Log.d(TAG, "onCreateViewHolder")
         val v = LayoutInflater.from(parent.context)

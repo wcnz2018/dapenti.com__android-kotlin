@@ -44,6 +44,26 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     init {
         checkNightMode()
+
+        mView.setOnClickListener { v: View ->
+            if (page!!.initiated())
+                triggerContent(v)
+            else
+                Thread(Runnable { page!!.prepareContent() }).start()
+        }
+
+        mView.setOnLongClickListener { v: View ->
+            Log.d(TAG, "long press: $v")
+            val newFavorite = !page!!.getFavorite();
+            page!!.setFavorite(newFavorite)
+
+            var s = "已从收藏中移除"
+            if (newFavorite)
+                s = "已加入收藏"
+            Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
+
+            true
+        }
     }
 
     private val pageEventListener = object : DaPenTiPage.PageEventListener {
@@ -78,42 +98,20 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         titleTextView.setTextColor(foregroundColor)
         descriptionTextView.setTextColor(foregroundColor)
         videoLayout.setBackgroundColor(backgroundColor)
+        enhancedWebView?.setBackgroundColor(backgroundColor)
     }
 
     internal fun update(page: DaPenTiPage) {
         this.page = page
-        page.pageEventListener = pageEventListener
 
-        this.enhancedWebView = page.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
+        //titleTextView.text = page.pageTitle
+        //Log.d(TAG, "update(reuse view): ${page.pageTitle}, favorite: ${page.getFavorite()}")
 
-        titleTextView.text = page.pageTitle
-        Log.d(TAG, "update(reuse view): ${page.pageTitle}, favorite: ${page.getFavorite()}")
-
-        favoriteImage.visibility = if (page.getFavorite()) View.VISIBLE else View.GONE
-
+        /*
         hideContent()
         if (page.getProperty(PageProperty_Expanded) != null)
             showContent(mView, false)
-
-        mView.setOnClickListener { v: View ->
-            if (page.initiated())
-                triggerContent(v)
-            else
-                Thread(Runnable { page.prepareContent() }).start()
-        }
-
-        mView.setOnLongClickListener { v: View ->
-            Log.d(TAG, "long press: $v")
-            val newFavorite = !page.getFavorite();
-            page.setFavorite(newFavorite)
-
-            var s = "已从收藏中移除"
-            if (newFavorite)
-                s = "已加入收藏"
-            Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
-
-            true
-        }
+        */
     }
 
     private fun detachWebView() {
@@ -127,10 +125,15 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     internal fun attachedToWindow() {
+        titleTextView.text = page!!.pageTitle
+
         Log.d(TAG, "attachToWindow: " + page!!.pageTitle)
-        page?.pageEventListener = pageEventListener
         if (page?.getProperty(PageProperty_Expanded) != null)
             showContent(mView, false)
+
+        page?.pageEventListener = pageEventListener
+        this.enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
+        favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
     internal fun detachedFromWindow() {

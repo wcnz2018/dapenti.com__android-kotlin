@@ -32,6 +32,7 @@ class ListFragment : Fragment() {
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
 
     private var mContext: Context? = null
+    var recycledViewPool: RecyclerView.RecycledViewPool? = null
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -53,7 +54,7 @@ class ListFragment : Fragment() {
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isVisibleToUser) {
-            Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}");
+            Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}")
             //prepareContent();
             setupListener()
         }
@@ -92,6 +93,7 @@ class ListFragment : Fragment() {
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary)
 
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
+        recyclerView?.recycledViewPool = recycledViewPool
 
         Log.d(TAG, "onCreateView(${daPenTiCategory?.categoryName}): " +
                 "adapter: $recyclerViewAdapter," +
@@ -136,7 +138,7 @@ class ListFragment : Fragment() {
     private fun prepareContent() {
         setupListener()
         if (daPenTiCategory == null)
-            return;
+            return
 
         if (daPenTiCategory!!.initiated()) {
             setupRecyclerView()

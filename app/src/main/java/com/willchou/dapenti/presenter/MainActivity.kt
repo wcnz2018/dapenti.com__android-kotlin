@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.*
@@ -162,10 +163,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal class Adapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
-        private val mFragments = ArrayList<Fragment>()
+        private val mFragments = ArrayList<ListFragment>()
         private val mFragmentTitles = ArrayList<String>()
+        private val recycledViewPool = RecyclerView.RecycledViewPool()
 
-        fun addFragment(title: String, fragment: Fragment) {
+        fun addFragment(title: String, fragment: ListFragment) {
             mFragmentTitles.add(title)
             mFragments.add(fragment)
 
@@ -173,7 +175,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getItem(position: Int): Fragment {
-            return mFragments[position]
+            val fragment = mFragments[position]
+            fragment.recycledViewPool = recycledViewPool
+            return fragment
         }
 
         override fun getPageTitle(position: Int): CharSequence? {

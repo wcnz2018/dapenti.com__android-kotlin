@@ -54,13 +54,6 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
-                <com.willchou.dapenti.view.EnhancedWebView
-                    android:id="@+id/webview"
-                    android:visibility="gone"
-                    android:background="#333333"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
             </LinearLayout>
 
         </LinearLayout>

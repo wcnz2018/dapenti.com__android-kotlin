@@ -17,6 +17,7 @@ import com.willchou.dapenti.view.EnhancedWebView
 import com.willchou.dapenti.view.RecyclerViewAdapter
 
 class FavoriteActivity : AppCompatActivity() {
+    private var recyclerView: RecyclerView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +27,23 @@ class FavoriteActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
+        recyclerView = findViewById(R.id.recycler_view)
+
         setupRecyclerView()
         setupEnhancedWebView()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupEnhancedWebView()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // release those listeners(in ViewHolder or webView) to prevent memory leak
+        recyclerView?.adapter = null
+        EnhancedWebView.enhancedWebViewCallback = null
     }
 
     private fun setupRecyclerView() {
@@ -35,8 +51,7 @@ class FavoriteActivity : AppCompatActivity() {
         if (pageList == null)
             finish()
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView?.layoutManager = LinearLayoutManager(this)
 
         val nightMode = Settings.settings?.nightMode
         if (nightMode != null && nightMode)
@@ -44,7 +59,7 @@ class FavoriteActivity : AppCompatActivity() {
         else
             recyclerView?.setBackgroundColor(Color.WHITE)
 
-        recyclerView.adapter = RecyclerViewAdapter(pageList!!)
+        recyclerView?.adapter = RecyclerViewAdapter(pageList!!)
     }
 
     private fun setupEnhancedWebView() {
