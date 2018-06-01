@@ -1,7 +1,5 @@
 package com.willchou.dapenti.presenter
 
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
 import android.support.design.widget.FloatingActionButton
@@ -9,9 +7,7 @@ import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
-import android.view.View
 import android.widget.ImageView
-
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -31,7 +27,7 @@ class DetailActivity : AppCompatActivity() {
         const val EXTRA_HTML = "extra_string_html"
         const val EXTRA_COVER_URL = "extra_string_cover"
         const val EXTRA_TITLE = "extra_string_title"
-        const val EXTRA_PAGE_INDEX = "extra_string_page_index"
+        //const val EXTRA_PAGE_INDEX = "extra_string_page_index"
     }
 
     //private DaPenTi.DaPenTiContent daPenTiContent;
@@ -133,9 +129,6 @@ class DetailActivity : AppCompatActivity() {
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(coverImageView!!)
         }
-
-        if (settings != null && settings.nightMode)
-            webView?.nightMode = true
 
         webView?.loadDataWithBaseURL(null, htmlString,
                 "text/html", "UTF-8", null)

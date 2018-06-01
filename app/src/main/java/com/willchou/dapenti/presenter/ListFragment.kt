@@ -93,7 +93,6 @@ class ListFragment : Fragment() {
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary)
 
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
-        recyclerView?.recycledViewPool = recycledViewPool
 
         Log.d(TAG, "onCreateView(${daPenTiCategory?.categoryName}): " +
                 "adapter: $recyclerViewAdapter," +
@@ -119,6 +118,7 @@ class ListFragment : Fragment() {
         if (recyclerViewAdapter == null)
             recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
+        recyclerView!!.recycledViewPool = recycledViewPool
         recyclerView!!.adapter = recyclerViewAdapter
 
         recyclerViewAdapter!!.notifyDataSetChanged()

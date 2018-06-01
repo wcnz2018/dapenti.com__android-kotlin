@@ -9,6 +9,10 @@ import com.willchou.dapenti.R
 class Settings {
     companion object {
         const val TAG = "Setting"
+        const val nightModeStyle =
+                "body {color:#d2d2d2 !important;background-color:#424242}" +
+                        "a {color:white;}"
+
         const val FontSizeSmall = 0
         const val FontSizeMedia = 1
         const val FontSizeBig = 2
@@ -60,4 +64,7 @@ class Settings {
         get() {
             return prefs!!.getBoolean(resources!!.getString(R.string.pref_key_night_mode), false)
         }
+
+    val viewModeCSSStyle: String
+        get() = if (nightMode) nightModeStyle else ""
 }

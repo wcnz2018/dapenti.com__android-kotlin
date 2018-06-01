@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
 
 class RecyclerViewHolder internal constructor(private val mView: View)
@@ -25,7 +26,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         private const val TAG = "RecyclerViewHolder"
 
         private const val PageProperty_Expanded = "pp_expand"
-        private const val PageProperty_WebView = "pp_webview"
+        private const val PageProperty_WebView = "pp_webView"
     }
 
     private val cardView: CardView = mView.findViewById(R.id.cardView)
@@ -40,11 +41,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private var backgroundColor: Int = Color.WHITE
 
     private var page: DaPenTiPage? = null
-    private var enhancedWebView: EnhancedWebView? = null
 
     init {
-        checkNightMode()
-
         mView.setOnClickListener { v: View ->
             if (page!!.initiated())
                 triggerContent(v)
@@ -86,53 +84,28 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             foregroundColor = Color.rgb(213, 213, 213)
         }
 
-        cardView.setCardBackgroundColor(backgroundColor)
-        /*
-        mView.setBackgroundColor(backgroundColor)
-        titleTextView.setBackgroundColor(backgroundColor)
-        descriptionTextView.setBackgroundColor(backgroundColor)
-        imageView.setBackgroundColor(backgroundColor)
-        videoLayout.setBackgroundColor(backgroundColor)
-        */
-
         titleTextView.setTextColor(foregroundColor)
         descriptionTextView.setTextColor(foregroundColor)
-        videoLayout.setBackgroundColor(backgroundColor)
-        enhancedWebView?.setBackgroundColor(backgroundColor)
+
+        cardView.setCardBackgroundColor(backgroundColor)
+        Log.d(TAG, "change cardView background to ${String.format("#%06X", backgroundColor)}")
     }
 
     internal fun update(page: DaPenTiPage) {
         this.page = page
-
-        //titleTextView.text = page.pageTitle
-        //Log.d(TAG, "update(reuse view): ${page.pageTitle}, favorite: ${page.getFavorite()}")
-
-        /*
-        hideContent()
-        if (page.getProperty(PageProperty_Expanded) != null)
-            showContent(mView, false)
-        */
-    }
-
-    private fun detachWebView() {
-        val d = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
-        (d?.parent as ViewGroup?)?.removeView(d);
-    }
-
-    private fun setupFullScreenWebView() {
-        enhancedWebView?.smallScreenVideoLayout = enhancedWebView?.parent as ViewGroup?
-        enhancedWebView?.prepareFullScreen()
     }
 
     internal fun attachedToWindow() {
+        Log.d(TAG, "attachToWindow: " + page!!.pageTitle)
+
+        checkNightMode()
         titleTextView.text = page!!.pageTitle
 
-        Log.d(TAG, "attachToWindow: " + page!!.pageTitle)
         if (page?.getProperty(PageProperty_Expanded) != null)
             showContent(mView, false)
 
         page?.pageEventListener = pageEventListener
-        this.enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
+
         favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
@@ -143,86 +116,116 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun hideContent() {
-        titleTextView.setTextColor(foregroundColor)
-        titleTextView.setBackgroundColor(backgroundColor)
+        markExpanded(false)
+        hideDescription()
+        hideImage()
+        hideVideo()
+    }
 
+    private fun markExpanded(expanded: Boolean) {
+        if (expanded) {
+            titleTextView.setTextColor(backgroundColor)
+            titleTextView.setBackgroundColor(Color.GRAY)
+        } else {
+            titleTextView.setTextColor(foregroundColor)
+            titleTextView.setBackgroundColor(0)
+        }
+    }
+
+    private fun hideDescription() {
         descriptionTextView.visibility = View.GONE
-        descriptionTextView.text = ""
+    }
 
+    private fun showDescription(s: String?) {
+        when (settings?.fontSize) {
+            Settings.FontSizeSmall -> descriptionTextView.textSize = 14f
+            Settings.FontSizeMedia -> descriptionTextView.textSize = 15f
+            Settings.FontSizeBig -> descriptionTextView.textSize = 17f
+            Settings.FontSizeSuperBig -> descriptionTextView.textSize = 20f
+        }
+
+        if (s != null)
+            descriptionTextView.text = s
+        else
+            descriptionTextView.text = "没有识别到内容哦!"
+        descriptionTextView.visibility = View.VISIBLE
+    }
+
+    private fun hideImage() {
         imageView.visibility = View.GONE
         imageView.setImageDrawable(null)
+    }
 
-        videoLayout.visibility = View.GONE
+    private fun showImage(v: View, imageUrl: String?) {
+        imageView.setImageDrawable(null)
+        if (settings != null && settings!!.isImageEnabled) {
+            Glide.with(v.context)
+                    .load(imageUrl)
+                    .into(imageView)
+            imageView.visibility = View.VISIBLE
+        }
+    }
 
-        detachWebView()
+    private fun hideVideo() {
+        val enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
         enhancedWebView?.pauseVideo()
 
-        mView.requestLayout()
+        videoLayout.visibility = View.GONE
+        videoLayout.removeAllViews()
+    }
+
+    private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
+        var enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
+        if (enhancedWebView == null) {
+            enhancedWebView = EnhancedWebView(v.context)
+            page!!.setObjectProperty(PageProperty_WebView, enhancedWebView)
+
+            enhancedWebView.playOnLoadFinished = autoPlay
+            enhancedWebView.loadDataWithBaseURL("", contentHtml,
+                    "text/html", "UTF-8", null)
+        } else {
+            // the enhancedWebView may be possessed by another videoLayout
+            // when we jump to favorite activity, detach it from parent anyway
+            val p = enhancedWebView.parent as ViewGroup?
+            p?.removeView(enhancedWebView)
+        }
+
+        videoLayout.addView(enhancedWebView)
+
+        enhancedWebView.smallScreenVideoLayout = videoLayout
+        enhancedWebView.prepareFullScreen()
+
+        videoLayout.visibility = View.VISIBLE
+
+        if (autoPlay)
+            enhancedWebView.startVideo()
     }
 
     private fun showContent(v: View, playVideo: Boolean?) {
-        val settings = Settings.settings
-
-        // reverse color
-        if (settings?.nightMode != null && !settings.nightMode)
-            titleTextView.setBackgroundColor(Color.GRAY)
-        else
-            titleTextView.setBackgroundColor(foregroundColor)
-        titleTextView.setTextColor(backgroundColor)
-
+        markExpanded(true)
         when (page!!.pageType) {
-            DaPenTiPage.PageTypeNote -> {
-                val notes = page!!.pageNotes
-
-                descriptionTextView.visibility = View.VISIBLE
-                descriptionTextView.text = notes.content
-            }
+            DaPenTiPage.PageTypeNote ->
+                showDescription(page!!.pageNotes.content)
 
             DaPenTiPage.PageTypePicture -> {
                 val picture = page!!.pagePicture
-
-                descriptionTextView.visibility = View.VISIBLE
-                descriptionTextView.text = picture.description
-
-                if (settings != null && settings.isImageEnabled) {
-                    imageView.setImageDrawable(null)
-                    imageView.visibility = View.VISIBLE
-                    Glide.with(v.context)
-                            .load(picture.imageUrl)
-                            .into(imageView)
-                }
+                showDescription(picture.description)
+                showImage(v, picture.imageUrl)
             }
 
             DaPenTiPage.PageTypeVideo -> {
-                if (enhancedWebView == null) {
-                    enhancedWebView = EnhancedWebView(v.context)
-
-                    val pageVideo = page!!.pageVideo
-                    page!!.setObjectProperty(PageProperty_WebView, enhancedWebView!!)
-
-                    enhancedWebView!!.playOnLoadFinished = playVideo!!
-                    enhancedWebView!!.loadDataWithBaseURL("", pageVideo.contentHtml!!,
-                            "text/html", "UTF-8", null)
-                } else if (playVideo!!)
-                    enhancedWebView!!.startVideo()
-
-                detachWebView()
-                videoLayout.addView(enhancedWebView)
-                videoLayout.visibility = View.VISIBLE
-
-                setupFullScreenWebView()
+                val pageVideo = page!!.pageVideo
+                showVideo(v, pageVideo.contentHtml!!, playVideo != null && playVideo)
             }
 
             DaPenTiPage.PageTypeLongReading -> {
-                titleTextView.setTextColor(foregroundColor)
-                titleTextView.setBackgroundColor(backgroundColor)
+                markExpanded(false)
 
                 // show content in next click
                 page!!.remove(PageProperty_Expanded)
                 val pageLongReading = page!!.pageLongReading
 
                 val context = v.context
-
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra(DetailActivity.EXTRA_HTML, pageLongReading.contentHtml)
                 intent.putExtra(DetailActivity.EXTRA_COVER_URL, pageLongReading.coverImageUrl)
@@ -232,33 +235,22 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }
 
             else -> {
-                descriptionTextView.visibility = View.VISIBLE
-                descriptionTextView.text = "没有识别到内容哦!"
+                showDescription(null)
             }
         }
-
-        if (settings != null) {
-            when (settings.fontSize) {
-                Settings.FontSizeSmall -> descriptionTextView.textSize = 14f
-                Settings.FontSizeMedia -> descriptionTextView.textSize = 15f
-                Settings.FontSizeBig -> descriptionTextView.textSize = 17f
-                Settings.FontSizeSuperBig -> descriptionTextView.textSize = 20f
-            }
-        }
-
-        mView.requestLayout()
     }
 
     private fun triggerContent(v: View) {
         Log.d(TAG, "update with pageType: " + page!!.pageType)
 
-        if (page!!.getProperty(PageProperty_Expanded) != null) {
+        val expanded = page!!.getProperty(PageProperty_Expanded) != null
+
+        if (expanded) {
             page!!.remove(PageProperty_Expanded)
             hideContent()
-            return
+        } else {
+            page!!.setProperty(PageProperty_Expanded, "yes")
+            showContent(v, true)
         }
-
-        page!!.setProperty(PageProperty_Expanded, "yes")
-        showContent(v, true)
     }
 }

@@ -11,14 +11,11 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import com.willchou.dapenti.model.Settings
 
 class EnhancedWebView : VideoEnabledWebView {
     companion object {
         private const val TAG = "DWebView"
-        private const val nightModeStyle =
-                "body {color:#d2d2d2 !important;background-color:#424242}" +
-                "a {color:white;}"
-
 
         // Note: need to set to null in onPause() to prevent memory leak
         //       reassign in onResume() or somewhere
@@ -34,8 +31,6 @@ class EnhancedWebView : VideoEnabledWebView {
     }
 
     var smallScreenVideoLayout: ViewGroup? = null
-
-    var nightMode: Boolean = false
 
     constructor(context: Context) : super(context) {
         setup()
@@ -87,7 +82,10 @@ class EnhancedWebView : VideoEnabledWebView {
                 // TODO:
             }
 
-            private fun injectStyleSheet(view: WebView, style: String) {
+            private fun injectStyleSheet(view: WebView, style: String?) {
+                if (style == null)
+                    return
+
                 view.loadUrl("javascript:" +
                         "var style = document.createElement('style');" +
                         "style.innerHTML=\"$style\";" +
@@ -96,9 +94,11 @@ class EnhancedWebView : VideoEnabledWebView {
 
             override fun onPageFinished(view: WebView, url: String) {
                 Log.d(TAG, "onPageFinished")
-                if (nightMode) {
-                    injectStyleSheet(view, nightModeStyle)
-                }
+
+                // webView may use it's cache to present content,
+                // day/night mode from new html which belongs to the same url
+                // does not have effect any more, we change it manually after load finished
+                injectStyleSheet(view, Settings.settings?.viewModeCSSStyle)
 
                 loadFinished = true
                 if (playOnLoadFinished) {

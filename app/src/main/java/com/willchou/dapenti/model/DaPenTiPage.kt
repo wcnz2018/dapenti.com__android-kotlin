@@ -285,7 +285,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
                 "\n" +
                 "  z-index: 4;\n" +
                 "  visibility: visible;\n" +
-                "}" +
+                "}" + Settings.settings?.viewModeCSSStyle +
                 "</style>"
         html += "<script type=\"text/javascript\">\n" +
                 "  document.addEventListener(\"DOMContentLoaded\", function(event) {\n" +

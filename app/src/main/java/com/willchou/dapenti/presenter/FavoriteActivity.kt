@@ -41,7 +41,7 @@ class FavoriteActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        // release those listeners(in ViewHolder or webView) to prevent memory leak
+        // release those listeners to prevent memory leak
         recyclerView?.adapter = null
         EnhancedWebView.enhancedWebViewCallback = null
     }
