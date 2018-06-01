@@ -30,10 +30,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     var pageType = PageTypeUnknown
     private var originalHtml: String? = null
 
-    // Note: need to set to null in onPause() to prevent memory leak
-    //       reassign in onResume() or somewhere
-    var pageEventListener: PageEventListener? = null
-
     var pageLongReading = PageLongReading()
     var pageNotes = PageNotes()
     var pagePicture = PagePicture()
@@ -45,12 +41,22 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     private val mapObject = HashMap<String, Any>()
     fun setObjectProperty(k: String, o: Any) { mapObject[k] = o }
     fun getObjectProperty(k: String): Any? { return mapObject[k] }
-    fun removeObjectProperty(k: String) { mapObject.remove(k) }
+    fun removeAllObjectProperties() { mapObject.clear() }
 
     interface PageEventListener {
         fun onContentPrepared()
         fun onFavoriteChanged(favorite: Boolean)
     }
+
+    // Note: need to set to null in onPause() to prevent memory leak
+    //       reassign in onResume() or somewhere
+    var pageEventListener: PageEventListener? = null
+        set(value) {
+            field = value
+            if (pageTitle.contains("罗大佑"))
+                Exception().printStackTrace()
+        }
+    fun resetEventListener() { pageEventListener = null }
 
     class PageLongReading {
         var contentHtml: String? = null
@@ -167,8 +173,10 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     fun prepareContent() {
         synchronized(TAG) {
-            if (doPrepareContent())
+            if (doPrepareContent()) {
+                Log.d(TAG, "pageEventListener: $pageEventListener")
                 pageEventListener?.onContentPrepared()
+            }
         }
     }
 

@@ -83,6 +83,29 @@ class DaPenTi {
     // Note: need to set to null in onPause() to prevent memory leak
     //       reassign in onResume() or somewhere
     var daPenTiEventListener: DaPenTiEventListener? = null
+    fun resetEventListener() { daPenTiEventListener = null }
+
+    fun resetAllCategoryEventListener() {
+        for (c in daPenTiCategories)
+            c.resetEventListener()
+    }
+
+    fun resetAllPageEventListener() {
+        for (p in daPenTiPageMap)
+            p.value.resetEventListener()
+    }
+
+    fun removeAllPageProperties() {
+        for (p in daPenTiPageMap)
+            p.value.removeAllObjectProperties()
+    }
+
+    fun releaseAllReferences() {
+        resetEventListener()
+        resetAllCategoryEventListener()
+        resetAllPageEventListener()
+        removeAllPageProperties()
+    }
 
     init {
         daPenTi = this

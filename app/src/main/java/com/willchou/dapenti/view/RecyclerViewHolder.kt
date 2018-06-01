@@ -12,8 +12,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
@@ -32,6 +34,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private val cardView: CardView = mView.findViewById(R.id.cardView)
 
     private val titleTextView: TextView = mView.findViewById(R.id.title)
+    private val progressBar: ProgressBar = mView.findViewById(R.id.progressBar)
     private val descriptionTextView: TextView = mView.findViewById(R.id.description)
     private val imageView: ImageView = mView.findViewById(R.id.image)
     private val favoriteImage: ImageView = mView.findViewById(R.id.page_favorite_iv)
@@ -46,8 +49,14 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         mView.setOnClickListener { v: View ->
             if (page!!.initiated())
                 triggerContent(v)
-            else
+            else {
+                setExpand(true, false)
+                Handler().postDelayed({
+                    if (!page!!.initiated())
+                        showProgressBar()
+                }, 500)
                 Thread(Runnable { page!!.prepareContent() }).start()
+            }
         }
 
         mView.setOnLongClickListener { v: View ->
@@ -66,7 +75,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     private val pageEventListener = object : DaPenTiPage.PageEventListener {
         override fun onContentPrepared() {
-            Handler(Looper.getMainLooper()).post { triggerContent(mView) }
+            Handler(Looper.getMainLooper()).post {
+                hideProgressBar()
+                triggerContent(mView)
+            }
         }
 
         override fun onFavoriteChanged(favorite: Boolean) {
@@ -93,42 +105,51 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     internal fun update(page: DaPenTiPage) {
         this.page = page
+        Log.d(TAG, "update with page ${page.pageTitle}")
     }
 
     internal fun attachedToWindow() {
-        Log.d(TAG, "attachToWindow: " + page!!.pageTitle)
+        Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
+                "expanded: ${pageExpanded()}")
+
+        page?.pageEventListener = pageEventListener
+        Log.d(TAG, "pageEventListener: ${page?.pageEventListener}")
 
         checkNightMode()
         titleTextView.text = page!!.pageTitle
 
-        if (page?.getProperty(PageProperty_Expanded) != null)
+        if (pageExpanded())
             showContent(mView, false)
-
-        page?.pageEventListener = pageEventListener
 
         favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
     internal fun detachedFromWindow() {
         Log.d(TAG, "detachedFromWindow: ${page?.pageTitle}")
-        page?.pageEventListener = null
-        hideContent()
+        hideContent(false)
+
+        page?.resetEventListener()
     }
 
-    private fun hideContent() {
-        markExpanded(false)
-        hideDescription()
-        hideImage()
-        hideVideo()
+    private fun pageExpanded(): Boolean {
+        return page?.getProperty(PageProperty_Expanded) != null
     }
 
-    private fun markExpanded(expanded: Boolean) {
-        if (expanded) {
+    private fun setExpand(expand: Boolean, saveState: Boolean) {
+        Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
+
+        if (expand) {
             titleTextView.setTextColor(backgroundColor)
             titleTextView.setBackgroundColor(Color.GRAY)
+
+            if (saveState)
+                page!!.setProperty(PageProperty_Expanded, "yes")
         } else {
             titleTextView.setTextColor(foregroundColor)
             titleTextView.setBackgroundColor(0)
+
+            if (saveState)
+                page!!.remove(PageProperty_Expanded)
         }
     }
 
@@ -166,9 +187,39 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         }
     }
 
+    private fun hideProgressBar() {
+        progressBar.visibility = View.GONE
+    }
+
+    private fun showProgressBar() {
+        progressBar.visibility = View.VISIBLE
+    }
+
+    private fun initEnhancedWebView(enhancedWebView: EnhancedWebView?) {
+        enhancedWebView?.smallScreenVideoLayout = videoLayout
+        enhancedWebView?.prepareFullScreen()
+        enhancedWebView?.enhancedWebViewContentEventListener =
+                object : EnhancedWebView.EnhancedWebViewContentEventListener {
+                    override fun onLoadFinished() {
+                        hideProgressBar()
+                        videoLayout.visibility = View.VISIBLE
+                    }
+
+                    override fun onLoadFailed() {
+                        Log.d(TAG, "onLoadFailed")
+                    }
+                }
+    }
+
+    private fun unInitEnhancedWebView(enhancedWebView: EnhancedWebView?) {
+        enhancedWebView?.pauseVideo()
+        enhancedWebView?.smallScreenVideoLayout = null
+        enhancedWebView?.enhancedWebViewContentEventListener = null
+    }
+
     private fun hideVideo() {
         val enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
-        enhancedWebView?.pauseVideo()
+        unInitEnhancedWebView(enhancedWebView)
 
         videoLayout.visibility = View.GONE
         videoLayout.removeAllViews()
@@ -177,32 +228,45 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
         var enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
         if (enhancedWebView == null) {
-            enhancedWebView = EnhancedWebView(v.context)
-            page!!.setObjectProperty(PageProperty_WebView, enhancedWebView)
+            enhancedWebView = EnhancedWebView(DaPenTiApplication.getAppContext())
+            initEnhancedWebView(enhancedWebView)
 
             enhancedWebView.playOnLoadFinished = autoPlay
             enhancedWebView.loadDataWithBaseURL("", contentHtml,
                     "text/html", "UTF-8", null)
+
+            showProgressBar()
+            videoLayout.visibility = View.GONE
+
+            page!!.setObjectProperty(PageProperty_WebView, enhancedWebView)
         } else {
             // the enhancedWebView may be possessed by another videoLayout
             // when we jump to favorite activity, detach it from parent anyway
             val p = enhancedWebView.parent as ViewGroup?
             p?.removeView(enhancedWebView)
+
+            initEnhancedWebView(enhancedWebView)
+
+            hideProgressBar()
+            videoLayout.visibility = View.VISIBLE
         }
 
         videoLayout.addView(enhancedWebView)
-
-        enhancedWebView.smallScreenVideoLayout = videoLayout
-        enhancedWebView.prepareFullScreen()
-
-        videoLayout.visibility = View.VISIBLE
 
         if (autoPlay)
             enhancedWebView.startVideo()
     }
 
+    private fun hideContent(saveExpandState: Boolean) {
+        setExpand(false, saveExpandState)
+        hideDescription()
+        hideImage()
+        hideVideo()
+        hideProgressBar()
+    }
+
     private fun showContent(v: View, playVideo: Boolean?) {
-        markExpanded(true)
+        setExpand(true, true)
         when (page!!.pageType) {
             DaPenTiPage.PageTypeNote ->
                 showDescription(page!!.pageNotes.content)
@@ -219,10 +283,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }
 
             DaPenTiPage.PageTypeLongReading -> {
-                markExpanded(false)
+                setExpand(false, true)
 
-                // show content in next click
-                page!!.remove(PageProperty_Expanded)
                 val pageLongReading = page!!.pageLongReading
 
                 val context = v.context
@@ -243,14 +305,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun triggerContent(v: View) {
         Log.d(TAG, "update with pageType: " + page!!.pageType)
 
-        val expanded = page!!.getProperty(PageProperty_Expanded) != null
-
-        if (expanded) {
-            page!!.remove(PageProperty_Expanded)
-            hideContent()
-        } else {
-            page!!.setProperty(PageProperty_Expanded, "yes")
+        if (pageExpanded())
+            hideContent(true)
+        else
             showContent(v, true)
-        }
     }
 }

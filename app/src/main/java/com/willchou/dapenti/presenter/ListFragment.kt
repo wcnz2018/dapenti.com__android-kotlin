@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -15,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.squareup.haha.perflib.Main
+import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
@@ -31,7 +33,6 @@ class ListFragment : Fragment() {
     private var recyclerView: RecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
 
-    private var mContext: Context? = null
     var recycledViewPool: RecyclerView.RecycledViewPool? = null
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -60,16 +61,15 @@ class ListFragment : Fragment() {
         }
     }
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        mContext = context
-    }
-
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause: ${daPenTiCategory?.categoryName}")
         swipeRefreshLayout!!.isRefreshing = false
-        daPenTiCategory?.categoryEventListener = null
+
+        daPenTiCategory?.resetEventListener()
+        //daPenTiCategory?.resetAllPageEventListener()
+
+        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
     }
 
     override fun onResume() {
@@ -80,9 +80,12 @@ class ListFragment : Fragment() {
 
         checkNightMode()
 
+        // if we back from favorite activity, expanded videos need to be replaced
+        restoreVideoState()
+
         val filter = IntentFilter()
         filter.addAction(MainActivity.BROADCAST_MODE_CHANGED)
-        mContext?.registerReceiver(broadcastReceiver, filter)
+        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
     }
 
     override fun onCreateView(inflater: LayoutInflater,
@@ -109,7 +112,19 @@ class ListFragment : Fragment() {
         else
             recyclerView?.setBackgroundColor(Color.WHITE)
 
-        recyclerView?.adapter = recyclerViewAdapter
+        //recyclerView?.adapter = recyclerViewAdapter
+    }
+
+    private fun restoreVideoState() {
+        val lm = recyclerView?.layoutManager as LinearLayoutManager? ?: return
+
+        val first = lm.findFirstVisibleItemPosition()
+        val last = lm.findLastVisibleItemPosition()
+
+        Log.d(TAG, "restoreVideoState: visible position $first -> $last")
+
+        for (pos in first..last)
+            recyclerViewAdapter?.notifyItemChanged(pos)
     }
 
     private fun setupRecyclerView() {

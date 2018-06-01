@@ -17,12 +17,16 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
 
     var pages: MutableList<DaPenTiPage> = ArrayList()
 
+    interface CategoryEventListener {
+        fun onCategoryPrepared(index: Int)
+    }
     // Note: need to set to null in onPause() to prevent memory leak
     //       reassign in onResume() or somewhere
     var categoryEventListener: CategoryEventListener? = null
-
-    interface CategoryEventListener {
-        fun onCategoryPrepared(index: Int)
+    fun resetEventListener() { categoryEventListener = null }
+    fun resetAllPageEventListener() {
+        for (p in pages)
+            p.resetEventListener()
     }
 
     fun initiated(): Boolean {
@@ -66,6 +70,12 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
             //String ss = "div > ul > li > a";
             val ss = "li>a[href^='more.asp?name='],span>a[href^='more.asp?name=']"
             val subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss)
+
+            if (subItemPair.isEmpty()) {
+                Log.d(TAG, "categoryEventListener: $categoryEventListener")
+                categoryEventListener?.onCategoryPrepared(pages.size - 1)
+                return
+            }
 
             for (p in subItemPair) {
                 val favorite = Database.database?.getPageFavorite(p.first)

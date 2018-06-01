@@ -37,16 +37,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
         Log.d(TAG, "onResume")
+
         setupListener()
     }
 
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "onResume")
-        DaPenTi.daPenTi?.daPenTiEventListener = null
+        Log.d(TAG, "onPause")
+
+        //DaPenTi.daPenTi?.resetEventListener()
+        //DaPenTi.daPenTi?.resetAllCategoryEventListener()
+
         EnhancedWebView.enhancedWebViewCallback = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy")
+
+        DaPenTi.daPenTi?.releaseAllReferences()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -169,15 +179,16 @@ class MainActivity : AppCompatActivity() {
 
         fun addFragment(title: String, fragment: ListFragment) {
             mFragmentTitles.add(title)
+
+            fragment.recycledViewPool = recycledViewPool
             mFragments.add(fragment)
 
             Log.d(TAG, "title: $title, fragment: $fragment")
         }
 
         override fun getItem(position: Int): Fragment {
-            val fragment = mFragments[position]
-            fragment.recycledViewPool = recycledViewPool
-            return fragment
+            Log.d(TAG, "Adapter getItem: $position")
+            return mFragments[position]
         }
 
         override fun getPageTitle(position: Int): CharSequence? {

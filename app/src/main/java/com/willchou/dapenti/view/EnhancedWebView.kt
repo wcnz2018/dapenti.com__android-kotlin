@@ -30,6 +30,12 @@ class EnhancedWebView : VideoEnabledWebView {
         fun getFullScreenVideoLayout(): ViewGroup
     }
 
+    interface EnhancedWebViewContentEventListener {
+        fun onLoadFinished()
+        fun onLoadFailed()
+    }
+    var enhancedWebViewContentEventListener: EnhancedWebViewContentEventListener? = null
+
     var smallScreenVideoLayout: ViewGroup? = null
 
     constructor(context: Context) : super(context) {
@@ -79,7 +85,7 @@ class EnhancedWebView : VideoEnabledWebView {
             override fun onReceivedHttpError(view: WebView, request: WebResourceRequest,
                                              errorResponse: WebResourceResponse) {
                 Log.d(TAG, "onReceivedHttpError")
-                // TODO:
+                enhancedWebViewContentEventListener?.onLoadFailed()
             }
 
             private fun injectStyleSheet(view: WebView, style: String?) {
@@ -106,8 +112,7 @@ class EnhancedWebView : VideoEnabledWebView {
                     startVideo()
                 }
 
-                //view.loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()");
-                // TODO: 退出等待
+                enhancedWebViewContentEventListener?.onLoadFinished()
             }
 
             override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {

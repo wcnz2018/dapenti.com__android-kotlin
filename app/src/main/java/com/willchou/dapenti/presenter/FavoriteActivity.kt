@@ -7,17 +7,23 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
+import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.EnhancedWebView
 import com.willchou.dapenti.view.RecyclerViewAdapter
 
 class FavoriteActivity : AppCompatActivity() {
+    companion object {
+        private const val TAG = "FavoriteActivity"
+    }
     private var recyclerView: RecyclerView? = null
+    private var favoriteList: List<DaPenTiPage>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +34,10 @@ class FavoriteActivity : AppCompatActivity() {
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
         recyclerView = findViewById(R.id.recycler_view)
+
+        favoriteList = DaPenTi.daPenTi?.getFavoritePages()
+        if (favoriteList == null)
+            finish()
 
         setupRecyclerView()
         setupEnhancedWebView()
@@ -40,17 +50,17 @@ class FavoriteActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        Log.d(TAG, "onPause")
 
         // release those listeners to prevent memory leak
         recyclerView?.adapter = null
+        //for (page in favoriteList!!)
+        //    page.resetEventListener()
+
         EnhancedWebView.enhancedWebViewCallback = null
     }
 
     private fun setupRecyclerView() {
-        val pageList = DaPenTi.daPenTi?.getFavoritePages()
-        if (pageList == null)
-            finish()
-
         recyclerView?.layoutManager = LinearLayoutManager(this)
 
         val nightMode = Settings.settings?.nightMode
@@ -59,7 +69,7 @@ class FavoriteActivity : AppCompatActivity() {
         else
             recyclerView?.setBackgroundColor(Color.WHITE)
 
-        recyclerView?.adapter = RecyclerViewAdapter(pageList!!)
+        recyclerView?.adapter = RecyclerViewAdapter(favoriteList!!)
     }
 
     private fun setupEnhancedWebView() {
