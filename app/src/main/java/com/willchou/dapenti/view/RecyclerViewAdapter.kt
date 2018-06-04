@@ -12,6 +12,7 @@ import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
+import com.willchou.dapenti.model.Settings
 
 class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
     : RecyclerView.Adapter<RecyclerViewHolder>() {
@@ -71,7 +72,7 @@ class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
             if (s == RecyclerViewHolder.Bind_Favorite)
                 holder.checkFavorite()
             if (s == RecyclerViewHolder.Bind_PlayVideo)
-                holder.setupContent(true)
+                holder.setupContent(Settings.settings!!.canPlayVideo())
         }
     }
 

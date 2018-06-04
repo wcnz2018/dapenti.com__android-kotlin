@@ -23,15 +23,15 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     }
 
     var pageType = PageTypeUnknown
-    private var originalHtml: String? = null
+    //private var originalHtml: String? = null
 
     var pageLongReading = PageLongReading()
     var pageNotes = PageNotes()
     var pagePicture = PagePicture()
     var pageVideo = PageVideo()
 
-    internal var contentElement: Element? = null
-    internal var coverImageUrl: String? = null
+    //internal var contentElement: Element? = null
+    //internal var coverImageUrl: String? = null
     // Properties
     private val mapObject = HashMap<String, Any>()
     fun setObjectProperty(k: String, o: Any) { mapObject[k] = o }
@@ -151,6 +151,17 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         return true
     }
 
+    private fun prepareoriginal(doc: Document): Boolean {
+        val e = getFirstElement(doc, "body") ?: return false
+
+        pageLongReading = PageLongReading()
+        pageLongReading.contentHtml = getContent(e)
+        pageLongReading.coverImageUrl = getCoverImageUrl(e)
+
+        pageType = PageTypeLongReading
+        return true
+    }
+
     fun prepareContent() {
         synchronized(TAG) {
             if (doPrepareContent())
@@ -205,10 +216,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
             if (checkByTitle(doc!!) || checkByContent(doc))
                 return true
 
-            pageType = PageTypeOriginal
-            originalHtml = doc.toString()
-
-            return true
+            return prepareoriginal(doc)
         } catch (e: Exception) {
             e.printStackTrace()
             return false
@@ -280,7 +288,12 @@ class DaPenTiPage internal constructor(val pageTitle: String,
                 "    })\n" +
                 "  });\n" +
                 "</script>"
-        html += "</head><body>$innerHTML</body></html>"
+
+        if (innerHTML.startsWith("<body>"))
+            html += "</head>$innerHTML</html>"
+        else
+            html += "</head><body>$innerHTML</body></html>"
+
         Log.d(TAG, "html content: \n$html")
         return html
     }

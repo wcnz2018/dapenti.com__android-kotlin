@@ -12,9 +12,10 @@ class DaPenTi {
         private const val urlString = "http://www.dapenti.com/blog/index.asp"
         private const val TAG = "DaPenTi"
 
-        const val ACTION_CATEGORY_PREPARED = "com.willchou.depenti.categoryPrepared"
-        const val ACTION_PAGE_PREPARED = "com.willchou.depenti.pagePrepared"
-        const val ACTION_PAGE_FAVORITE = "com.willchou.depenti.pageFavorite"
+        const val ACTION_CATEGORY_PREPARED = "com.willchou.dapenti.categoryPrepared"
+        const val ACTION_CATEGORY_ERROR = "com.willchou.dapenti.categoryError"
+        const val ACTION_PAGE_PREPARED = "com.willchou.dapenti.pagePrepared"
+        const val ACTION_PAGE_FAVORITE = "com.willchou.dapenti.pageFavorite"
 
         const val EXTRA_PAGE_TITLE = "extra_page_title"
         const val EXTRA_CATEGORY_TITLE = "extra_category_title"
@@ -26,6 +27,14 @@ class DaPenTi {
             Log.d(TAG, "notifyCategoryChanged: $categoryTitle")
 
             val intent = Intent(ACTION_CATEGORY_PREPARED)
+            intent.putExtra(EXTRA_CATEGORY_TITLE, categoryTitle)
+            DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        }
+
+        fun notifyCategoryError(categoryTitle: String?) {
+            Log.d(TAG, "notifyCategoryError: $categoryTitle")
+
+            val intent = Intent(ACTION_CATEGORY_ERROR)
             intent.putExtra(EXTRA_CATEGORY_TITLE, categoryTitle)
             DaPenTiApplication.getAppContext().sendBroadcast(intent)
         }
@@ -74,7 +83,8 @@ class DaPenTi {
                     if (t.isEmpty() || u.isEmpty())
                         continue
 
-                    if (!u.contains(url.protocol))
+                    //if (!u.contains(url.protocol))
+                    if (!u.contains("http"))
                         u = "$prefix/$u"
 
                     Log.d(TAG, "title: $t, urlString: $u")
@@ -108,6 +118,10 @@ class DaPenTi {
         daPenTi = this
     }
 
+    fun initiated(): Boolean {
+        return !daPenTiCategories.isEmpty()
+    }
+
     fun findPageByTitle(pageTitle: String): DaPenTiPage? {
         for (page in daPenTiPageMap) {
             if (page.key == pageTitle)
@@ -129,8 +143,10 @@ class DaPenTi {
     private fun fetchFromWeb(): Boolean {
         val ss = "div.center_title > a, div.title > a, div.title > p > a"
         val urlPairs = getElementsWithQuery(urlString, ss)
-        if (urlPairs.isEmpty())
+        if (urlPairs.isEmpty()) {
+            notifyCategoryError(null)
             return false
+        }
 
         val database = Database.database
         daPenTiCategories = ArrayList()

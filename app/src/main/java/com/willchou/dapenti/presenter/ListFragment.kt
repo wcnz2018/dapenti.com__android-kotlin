@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
@@ -134,6 +135,7 @@ class ListFragment : Fragment() {
         swipeRefreshLayout!!.isRefreshing = false
         if (recyclerViewAdapter == null)
             recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
+
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
         recyclerView!!.recycledViewPool = recycledViewPool
         recyclerView!!.adapter = recyclerViewAdapter
@@ -152,7 +154,10 @@ class ListFragment : Fragment() {
         if (daPenTiCategory!!.initiated()) {
             setupRecyclerView()
         } else {
-            swipeRefreshLayout?.isRefreshing = true
+            Handler().postDelayed({
+                if (!daPenTiCategory!!.initiated())
+                    swipeRefreshLayout?.isRefreshing = true
+            }, 500)
             Thread { daPenTiCategory!!.preparePages(false) }.start()
         }
 

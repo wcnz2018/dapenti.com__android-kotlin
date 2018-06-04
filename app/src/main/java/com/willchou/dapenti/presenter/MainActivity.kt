@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Handler
+import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -16,6 +18,9 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.*
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
@@ -29,7 +34,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var toolbar: Toolbar? = null
+    private var tabLayout: TabLayout? = null
 
+    private var waitLayout: LinearLayout? = null
+    private var waitTextView: TextView? = null
+    private var waitProgressBar: ProgressBar? = null
+
+    private var loadAlreadyFailed: Boolean = false
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -37,6 +48,21 @@ class MainActivity : AppCompatActivity() {
                     val title = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
                     if (title == null)
                         setupContent()
+                }
+
+                DaPenTi.ACTION_CATEGORY_ERROR -> {
+                    loadAlreadyFailed = true
+                    showWait(true)
+                }
+
+                Settings.ACTION_PLAY_ON_MOBILE_DATA -> {
+                    Snackbar.make(findViewById(android.R.id.content),
+                            "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
+                            .setAction(R.string.title_activity_settings, {
+
+                                val i = Intent(context!!, SettingsActivity::class.java)
+                                context.startActivity(i)
+                            }).show()
                 }
             }
         }
@@ -48,7 +74,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initiateContent()
-        registerReceiver(broadcastReceiver, IntentFilter(DaPenTi.ACTION_CATEGORY_PREPARED))
+
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
+        intentFilter.addAction(DaPenTi.ACTION_CATEGORY_ERROR)
+        intentFilter.addAction(Settings.ACTION_PLAY_ON_MOBILE_DATA)
+        registerReceiver(broadcastReceiver, intentFilter)
     }
 
     override fun onResume() {
@@ -140,27 +171,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showWait(failed: Boolean) {
+        waitLayout?.visibility = View.VISIBLE
+
+        if (failed) {
+            waitProgressBar?.visibility = View.GONE
+            waitTextView?.visibility = View.VISIBLE
+        } else {
+            waitProgressBar?.visibility = View.VISIBLE
+            waitTextView?.visibility = View.GONE
+        }
+    }
+
+    private fun hideWait() {
+        waitLayout?.visibility = View.GONE
+    }
+
     private fun initiateContent() {
+        waitLayout = findViewById(R.id.waitLayout)
+        waitTextView = findViewById(R.id.waitTextView)
+        waitProgressBar = findViewById(R.id.waitProgressBar)
+
+        tabLayout = findViewById(R.id.tabs)
+        tabLayout!!.visibility = View.GONE
+
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
-        toolbar?.visibility = View.GONE
 
         DaPenTi.storageDir = filesDir.absolutePath
 
         setupListener()
+
+        Handler().postDelayed({
+            if (!DaPenTi.daPenTi!!.initiated() && !loadAlreadyFailed)
+                showWait(false)
+        }, 500)
+
         Thread { DaPenTi.daPenTi?.prepareCategory(false) }.start()
     }
 
     private fun setupContent() {
         Log.d(TAG, "setupContent")
-        toolbar?.visibility = View.VISIBLE
+        if (!DaPenTi.daPenTi!!.initiated()) {
+            showWait(true)
+            return
+        }
 
-        val tabLayout = findViewById<TabLayout>(R.id.tabs)
-        tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+        hideWait()
+
+        tabLayout!!.visibility = View.VISIBLE
+        tabLayout!!.tabMode = TabLayout.MODE_SCROLLABLE
 
         val viewPager = findViewById<ViewPager>(R.id.viewpager)
         setupViewPager(viewPager)
-        tabLayout.setupWithViewPager(viewPager)
+        tabLayout?.setupWithViewPager(viewPager)
     }
 
     private fun setupViewPager(viewPager: ViewPager) {

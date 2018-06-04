@@ -20,6 +20,7 @@ import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
+import com.willchou.dapenti.presenter.SettingsActivity
 
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
@@ -44,6 +45,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     private var foregroundColor: Int = Color.BLACK
     private var backgroundColor: Int = Color.WHITE
+
+    //private var mobilePlayVideoWarned = false
 
     private var page: DaPenTiPage? = null
 
@@ -81,7 +84,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
-    fun checkNightMode() {
+    private fun checkNightMode() {
         val nightMode = Settings.settings?.nightMode
         backgroundColor = Color.WHITE
         foregroundColor = Color.BLACK
@@ -102,12 +105,12 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         Log.d(TAG, "update with page ${page.pageTitle}")
     }
 
-    fun setupContent(playVideo: Boolean) {
+    fun setupContent(playVideoIfPossible: Boolean) {
         titleTextView.text = page!!.pageTitle
 
         //checkFavorite()
         if (pageExpanded())
-            showContent(mView, playVideo)
+            showContent(mView, playVideoIfPossible)
     }
 
     internal fun attachedToWindow() {
@@ -151,7 +154,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         descriptionTextView.visibility = View.GONE
     }
 
-    private fun showDescription(s: String?) {
+    private fun showDescription(s: String?, centerAlign: Boolean) {
         when (settings?.fontSize) {
             Settings.FontSizeSmall -> descriptionTextView.textSize = 14f
             Settings.FontSizeMedia -> descriptionTextView.textSize = 15f
@@ -159,10 +162,16 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             Settings.FontSizeSuperBig -> descriptionTextView.textSize = 20f
         }
 
-        if (s != null)
+        if (s != null) {
             descriptionTextView.text = s
-        else
+            if (centerAlign)
+                descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+            else
+                descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_TEXT_START
+        } else {
             descriptionTextView.text = "没有识别到内容哦!"
+            descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+        }
         descriptionTextView.visibility = View.VISIBLE
     }
 
@@ -221,7 +230,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
-        Log.d(TAG, "showVideo for ${page?.pageTitle}")
+        Log.d(TAG, "showVideo for ${page?.pageTitle}, autoPlay: $autoPlay")
 
         var enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
         if (enhancedWebView == null) {
@@ -262,23 +271,27 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         hideProgressBar()
     }
 
-    private fun showContent(v: View, playVideo: Boolean?) {
+    private fun showContent(v: View, playVideoIfPossible: Boolean) {
         setExpand(true, true)
         hideProgressBar()
 
         when (page!!.pageType) {
             DaPenTiPage.PageTypeNote ->
-                showDescription(page!!.pageNotes.content)
+                showDescription(page!!.pageNotes.content, false)
 
             DaPenTiPage.PageTypePicture -> {
                 val picture = page!!.pagePicture
-                showDescription(picture.description)
+                showDescription(picture.description, false)
                 showImage(v, picture.imageUrl)
             }
 
             DaPenTiPage.PageTypeVideo -> {
-                val pageVideo = page!!.pageVideo
-                showVideo(v, pageVideo.contentHtml!!, playVideo != null && playVideo)
+                val canPlayVideo = Settings.settings!!.canPlayVideo()
+                if (canPlayVideo) {
+                    val pageVideo = page!!.pageVideo
+                    showVideo(v, pageVideo.contentHtml!!, playVideoIfPossible)
+                } else
+                    showDescription("已设置当前条件下不播放视频...", true)
             }
 
             DaPenTiPage.PageTypeLongReading -> {
@@ -296,7 +309,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }
 
             else -> {
-                showDescription(null)
+                showDescription(null, true)
             }
         }
     }
