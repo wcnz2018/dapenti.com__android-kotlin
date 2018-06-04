@@ -1,22 +1,50 @@
 package com.willchou.dapenti.model
 
+import android.content.Intent
 import android.util.Log
 import android.util.Pair
+import com.willchou.dapenti.DaPenTiApplication
 import org.jsoup.Jsoup
-import java.lang.ref.WeakReference
 import java.net.URL
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class DaPenTi {
     companion object {
         private const val urlString = "http://www.dapenti.com/blog/index.asp"
         private const val TAG = "DaPenTi"
 
-        var storageDir: String? = null
+        const val ACTION_CATEGORY_PREPARED = "com.willchou.depenti.categoryPrepared"
+        const val ACTION_PAGE_PREPARED = "com.willchou.depenti.pagePrepared"
+        const val ACTION_PAGE_FAVORITE = "com.willchou.depenti.pageFavorite"
 
+        const val EXTRA_PAGE_TITLE = "extra_page_title"
+        const val EXTRA_CATEGORY_TITLE = "extra_category_title"
+
+        var storageDir: String? = null
         var daPenTi: DaPenTi? = null
+
+        fun notifyCategoryChanged(categoryTitle: String?) {
+            Log.d(TAG, "notifyCategoryChanged: $categoryTitle")
+
+            val intent = Intent(ACTION_CATEGORY_PREPARED)
+            intent.putExtra(EXTRA_CATEGORY_TITLE, categoryTitle)
+            DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        }
+
+        fun notifyPageChanged(pageTitle: String) {
+            Log.d(TAG, "notifyPageChanged: $pageTitle")
+
+            val intent = Intent(ACTION_PAGE_PREPARED)
+            intent.putExtra(EXTRA_PAGE_TITLE, pageTitle)
+            DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        }
+
+        fun notifyPageFavorite(pageTitle: String) {
+            Log.d(TAG, "notifyFavoriteChanged: $pageTitle")
+
+            val intent = Intent(ACTION_PAGE_FAVORITE)
+            intent.putExtra(EXTRA_PAGE_TITLE, pageTitle)
+            DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        }
 
         private fun getElementsWithQuery(url: String, query: String): List<Pair<String, URL>> {
             try {
@@ -76,37 +104,6 @@ class DaPenTi {
     var daPenTiCategories: MutableList<DaPenTiCategory> = ArrayList()
     var daPenTiPageMap: MutableMap<String, DaPenTiPage> = HashMap()
 
-    interface DaPenTiEventListener {
-        fun onCategoryPrepared()
-    }
-
-    // Note: need to set to null in onPause() to prevent memory leak
-    //       reassign in onResume() or somewhere
-    var daPenTiEventListener: DaPenTiEventListener? = null
-    fun resetEventListener() { daPenTiEventListener = null }
-
-    fun resetAllCategoryEventListener() {
-        for (c in daPenTiCategories)
-            c.resetEventListener()
-    }
-
-    fun resetAllPageEventListener() {
-        for (p in daPenTiPageMap)
-            p.value.resetEventListener()
-    }
-
-    fun removeAllPageProperties() {
-        for (p in daPenTiPageMap)
-            p.value.removeAllObjectProperties()
-    }
-
-    fun releaseAllReferences() {
-        resetEventListener()
-        resetAllCategoryEventListener()
-        resetAllPageEventListener()
-        removeAllPageProperties()
-    }
-
     init {
         daPenTi = this
     }
@@ -146,8 +143,7 @@ class DaPenTi {
             database?.addCategory(p.first, p.second.toString())
         }
 
-        daPenTiEventListener?.onCategoryPrepared()
-
+        notifyCategoryChanged(null)
         return true
     }
 
@@ -163,8 +159,7 @@ class DaPenTi {
         for (p in urlPairs)
             daPenTiCategories.add(DaPenTiCategory(p))
 
-        daPenTiEventListener?.onCategoryPrepared()
-
+        notifyCategoryChanged(null)
         return true
     }
 

@@ -2,10 +2,8 @@ package com.willchou.dapenti.model
 
 import android.util.Log
 import android.util.Pair
-import java.lang.ref.WeakReference
-
 import java.net.URL
-import java.util.ArrayList
+import java.util.*
 
 class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
     companion object {
@@ -16,18 +14,6 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
     private val categoryUrl: URL = p.second
 
     var pages: MutableList<DaPenTiPage> = ArrayList()
-
-    interface CategoryEventListener {
-        fun onCategoryPrepared(index: Int)
-    }
-    // Note: need to set to null in onPause() to prevent memory leak
-    //       reassign in onResume() or somewhere
-    var categoryEventListener: CategoryEventListener? = null
-    fun resetEventListener() { categoryEventListener = null }
-    fun resetAllPageEventListener() {
-        for (p in pages)
-            p.resetEventListener()
-    }
 
     fun initiated(): Boolean {
         return !pages.isEmpty()
@@ -53,8 +39,7 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
                 database.addPage(categoryName, pageInfo.pageTitle, pageInfo.pageUrl.toString())
         }
 
-        Log.d(TAG, "categoryEventListener: $categoryEventListener")
-        categoryEventListener?.onCategoryPrepared(pages.size - 1)
+        DaPenTi.notifyCategoryChanged(categoryName)
     }
 
     fun preparePages(fromWeb: Boolean) {
@@ -62,9 +47,8 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
 
         var fromDatabase = true
         val database = Database.database
-        if (!fromWeb && database != null) {
+        if (!fromWeb && database != null)
             database.getPages(categoryName, pageInfoList)
-        }
 
         if (pageInfoList.isEmpty()) {
             //String ss = "div > ul > li > a";
@@ -72,8 +56,8 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
             val subItemPair = DaPenTi.getElementsWithQuery(categoryUrl, ss)
 
             if (subItemPair.isEmpty()) {
-                Log.d(TAG, "categoryEventListener: $categoryEventListener")
-                categoryEventListener?.onCategoryPrepared(pages.size - 1)
+                Log.d(TAG, "Unable to fetch from web: $categoryUrl")
+                DaPenTi.notifyCategoryChanged(categoryName)
                 return
             }
 

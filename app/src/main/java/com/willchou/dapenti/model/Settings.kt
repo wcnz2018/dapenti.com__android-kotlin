@@ -10,8 +10,8 @@ class Settings {
     companion object {
         const val TAG = "Setting"
         const val nightModeStyle =
-                "body {color:#d2d2d2 !important;background-color:#424242}" +
-                        "a {color:white;}"
+                "body {color:#d2d2d2 !important;background-color:#424242 !important}" +
+                        "a {color:white; !important}"
 
         const val FontSizeSmall = 0
         const val FontSizeMedia = 1

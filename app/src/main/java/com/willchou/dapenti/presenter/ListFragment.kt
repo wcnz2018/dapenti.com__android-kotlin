@@ -8,16 +8,15 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.squareup.haha.perflib.Main
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
+import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.RecyclerViewAdapter
@@ -38,9 +37,16 @@ class ListFragment : Fragment() {
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                MainActivity.BROADCAST_MODE_CHANGED -> {
+                MainActivity.ACTION_READING_MODE_CHANGED -> {
                     checkNightMode()
                     recyclerViewAdapter?.notifyDataSetChanged()
+                }
+
+                DaPenTi.ACTION_CATEGORY_PREPARED -> {
+                    val categoryTitle = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
+                    Log.d(TAG, "onReceive: $categoryTitle")
+                    if (categoryTitle == daPenTiCategory?.categoryName)
+                        activity!!.runOnUiThread { setupRecyclerView() }
                 }
             }
         }
@@ -54,39 +60,50 @@ class ListFragment : Fragment() {
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
-        if (isVisibleToUser) {
-            Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}")
-            //prepareContent();
-            setupListener()
-        }
+        Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}")
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate: ${daPenTiCategory?.categoryName}")
+
+        val filter = IntentFilter()
+        filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
+        filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
+        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: ${daPenTiCategory?.categoryName}")
+
+        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
     }
 
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause: ${daPenTiCategory?.categoryName}")
         swipeRefreshLayout!!.isRefreshing = false
-
-        daPenTiCategory?.resetEventListener()
-        //daPenTiCategory?.resetAllPageEventListener()
-
-        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
     }
 
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume: ${daPenTiCategory?.categoryName}")
         swipeRefreshLayout!!.isRefreshing = false
-        setupListener()
 
         checkNightMode()
-
-        // if we back from favorite activity, expanded videos need to be replaced
         restoreVideoState()
-
-        val filter = IntentFilter()
-        filter.addAction(MainActivity.BROADCAST_MODE_CHANGED)
-        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
     }
+
+    private fun restoreVideoState() {
+        val lm = recyclerView?.layoutManager as LinearLayoutManager? ?: return
+
+        val first = lm.findFirstVisibleItemPosition()
+        val last = lm.findLastVisibleItemPosition()
+
+        recyclerViewAdapter?.notifyItemRangeChanged(first, last - first)
+    }
+
 
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
@@ -111,24 +128,9 @@ class ListFragment : Fragment() {
             recyclerView?.setBackgroundColor(Color.rgb(48, 48, 48))
         else
             recyclerView?.setBackgroundColor(Color.WHITE)
-
-        //recyclerView?.adapter = recyclerViewAdapter
-    }
-
-    private fun restoreVideoState() {
-        val lm = recyclerView?.layoutManager as LinearLayoutManager? ?: return
-
-        val first = lm.findFirstVisibleItemPosition()
-        val last = lm.findLastVisibleItemPosition()
-
-        Log.d(TAG, "restoreVideoState: visible position $first -> $last")
-
-        for (pos in first..last)
-            recyclerViewAdapter?.notifyItemChanged(pos)
     }
 
     private fun setupRecyclerView() {
-        Log.d(TAG, "setupRecyclerView with adapter: $recyclerViewAdapter")
         swipeRefreshLayout!!.isRefreshing = false
         if (recyclerViewAdapter == null)
             recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
@@ -136,29 +138,23 @@ class ListFragment : Fragment() {
         recyclerView!!.recycledViewPool = recycledViewPool
         recyclerView!!.adapter = recyclerViewAdapter
 
+        Log.d(TAG, "setupRecyclerView(${daPenTiCategory?.categoryName})" +
+                " with adapter: $recyclerViewAdapter")
+        Log.d(TAG, "data.size: ${daPenTiCategory?.pages?.size}")
+
         recyclerViewAdapter!!.notifyDataSetChanged()
     }
 
-    private fun setupListener() {
-        Log.d(TAG, "setupListener: ${daPenTiCategory?.categoryName}")
-        daPenTiCategory?.categoryEventListener =
-                object : DaPenTiCategory.CategoryEventListener {
-                    override fun onCategoryPrepared(index: Int) {
-                        Log.d(TAG, "new page prepared, index: $index")
-                        activity!!.runOnUiThread { setupRecyclerView() }
-                    }
-                }
-    }
-
     private fun prepareContent() {
-        setupListener()
         if (daPenTiCategory == null)
             return
 
         if (daPenTiCategory!!.initiated()) {
             setupRecyclerView()
-        } else
+        } else {
+            swipeRefreshLayout?.isRefreshing = true
             Thread { daPenTiCategory!!.preparePages(false) }.start()
+        }
 
         swipeRefreshLayout!!.setOnRefreshListener {
             Thread { daPenTiCategory!!.preparePages(true) }.start()

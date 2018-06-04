@@ -1,16 +1,11 @@
 package com.willchou.dapenti.model
 
 import android.util.Log
-
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.lang.ref.WeakReference
-
 import java.net.URL
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.Properties
+import java.util.*
 
 class DaPenTiPage internal constructor(val pageTitle: String,
                                        private val pageUrl: URL,
@@ -43,21 +38,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     fun getObjectProperty(k: String): Any? { return mapObject[k] }
     fun removeAllObjectProperties() { mapObject.clear() }
 
-    interface PageEventListener {
-        fun onContentPrepared()
-        fun onFavoriteChanged(favorite: Boolean)
-    }
-
-    // Note: need to set to null in onPause() to prevent memory leak
-    //       reassign in onResume() or somewhere
-    var pageEventListener: PageEventListener? = null
-        set(value) {
-            field = value
-            if (pageTitle.contains("罗大佑"))
-                Exception().printStackTrace()
-        }
-    fun resetEventListener() { pageEventListener = null }
-
     class PageLongReading {
         var contentHtml: String? = null
         var coverImageUrl: String? = null
@@ -86,7 +66,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         favorite = f
         Database.database?.setPageFavorite(pageTitle, f)
 
-        pageEventListener?.onFavoriteChanged(f)
+        DaPenTi.notifyPageFavorite(pageTitle)
     }
 
     private fun getFirstElement(doc: Document, s: String): Element? {
@@ -173,10 +153,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     fun prepareContent() {
         synchronized(TAG) {
-            if (doPrepareContent()) {
-                Log.d(TAG, "pageEventListener: $pageEventListener")
-                pageEventListener?.onContentPrepared()
-            }
+            if (doPrepareContent())
+                DaPenTi.notifyPageChanged(pageTitle)
         }
     }
 

@@ -34,18 +34,20 @@
             android:label="@string/title_activity_settings"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/SettingTheme"/>
+            android:theme="@style/ColorTheme"/>
         <activity
             android:name=".presenter.PageOrderActivity"
             android:label="@string/title_activity_page"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/ColorTheme"/>
         <activity
             android:name=".presenter.FavoriteActivity"
             android:label="@string/title_activity_favorite"
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/ColorTheme"/>
     </application>
 
 </manifest>

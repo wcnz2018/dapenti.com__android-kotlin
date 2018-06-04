@@ -6,11 +6,7 @@ import android.net.http.SslError
 import android.util.AttributeSet
 import android.util.Log
 import android.view.ViewGroup
-import android.webkit.SslErrorHandler
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import com.willchou.dapenti.model.Settings
 
 class EnhancedWebView : VideoEnabledWebView {
@@ -64,6 +60,12 @@ class EnhancedWebView : VideoEnabledWebView {
         webChromeClient = client
     }
 
+    fun releaseReference() {
+        webChromeClient = VideoEnabledWebChromeClient()
+        smallScreenVideoLayout = null
+        enhancedWebViewContentEventListener = null
+    }
+
     private fun setup() {
         loadFinished = false
 
@@ -99,7 +101,7 @@ class EnhancedWebView : VideoEnabledWebView {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
-                Log.d(TAG, "onPageFinished")
+                Log.d(TAG, "onPageFinished, playOnLoadFinished: $playOnLoadFinished")
 
                 // webView may use it's cache to present content,
                 // day/night mode from new html which belongs to the same url

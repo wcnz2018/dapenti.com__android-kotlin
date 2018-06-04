@@ -1,7 +1,10 @@
 package com.willchou.dapenti.presenter
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
@@ -22,17 +25,30 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
-        const val BROADCAST_MODE_CHANGED = "com.willchou.NIGHT_MODE_CHANGED"
+        const val ACTION_READING_MODE_CHANGED = "com.willchou.NIGHT_MODE_CHANGED"
     }
 
     private var toolbar: Toolbar? = null
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                DaPenTi.ACTION_CATEGORY_PREPARED -> {
+                    val title = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
+                    if (title == null)
+                        setupContent()
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.d(TAG, "onCreate")
         initiateContent()
+        registerReceiver(broadcastReceiver, IntentFilter(DaPenTi.ACTION_CATEGORY_PREPARED))
     }
 
     override fun onResume() {
@@ -46,9 +62,6 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Log.d(TAG, "onPause")
 
-        //DaPenTi.daPenTi?.resetEventListener()
-        //DaPenTi.daPenTi?.resetAllCategoryEventListener()
-
         EnhancedWebView.enhancedWebViewCallback = null
     }
 
@@ -56,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
 
-        DaPenTi.daPenTi?.releaseAllReferences()
+        unregisterReceiver(broadcastReceiver)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -83,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                 val nightMode = !Settings.settings?.nightMode!!
                 Settings.settings?.nightMode = nightMode
 
-                sendBroadcast(Intent(BROADCAST_MODE_CHANGED))
+                sendBroadcast(Intent(ACTION_READING_MODE_CHANGED))
                 return true
             }
 
@@ -104,11 +117,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListener() {
         Log.d(TAG, "setupListener")
-        DaPenTi.daPenTi?.daPenTiEventListener = object : DaPenTi.DaPenTiEventListener {
-            override fun onCategoryPrepared() {
-                runOnUiThread({ setupContent(); })
-            }
-        }
 
         EnhancedWebView.enhancedWebViewCallback = object : EnhancedWebView.EnhancedWebViewCallback {
             override fun fullscreenTriggered(fullscreen: Boolean) {
