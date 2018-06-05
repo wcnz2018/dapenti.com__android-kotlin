@@ -131,9 +131,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun setExpand(expand: Boolean, saveState: Boolean) {
         Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
 
-        if (page?.pageTitle!!.contains("现实中见义勇为") && !saveState)
-            Exception().printStackTrace()
-
         if (expand) {
             titleTextView.setTextColor(backgroundColor)
             titleTextView.setBackgroundColor(Color.GRAY)

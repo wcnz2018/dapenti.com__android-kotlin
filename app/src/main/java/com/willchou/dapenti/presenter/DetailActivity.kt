@@ -7,6 +7,7 @@ import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.webkit.WebView
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
@@ -19,7 +20,6 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.VideoWebView
 
 class DetailActivity : AppCompatActivity() {
     companion object {
@@ -31,7 +31,7 @@ class DetailActivity : AppCompatActivity() {
     }
 
     //private DaPenTi.DaPenTiContent daPenTiContent;
-    private var webView: VideoWebView? = null
+    private var webView: WebView? = null
     private var coverImageView: ImageView? = null
     private var floatingActionButton: FloatingActionButton? = null
 

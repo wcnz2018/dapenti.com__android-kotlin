@@ -9,7 +9,7 @@
     tools:context=".presenter.DetailActivity"
     tools:showIn="@layout/activity_detail">
 
-    <com.willchou.dapenti.view.EnhancedWebView
+    <WebView
         android:id="@+id/webview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

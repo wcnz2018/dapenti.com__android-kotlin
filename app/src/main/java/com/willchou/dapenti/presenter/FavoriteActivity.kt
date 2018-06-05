@@ -1,16 +1,12 @@
 package com.willchou.dapenti.presenter
 
-import android.annotation.SuppressLint
 import android.graphics.Color
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
@@ -46,6 +42,12 @@ class FavoriteActivity : AppCompatActivity() {
         super.onResume()
 
         restoreVideoState()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        recyclerView?.adapter = null
     }
 
     private fun setupRecyclerView() {

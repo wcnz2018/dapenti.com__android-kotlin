@@ -42,13 +42,6 @@
 
     </android.support.design.widget.CoordinatorLayout>
 
-    <RelativeLayout
-        android:id="@+id/fullscreenVideo"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#000000"
-        android:visibility="invisible" />
-
     <LinearLayout
         android:id="@+id/waitLayout"
         android:orientation="vertical"

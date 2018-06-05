@@ -24,11 +24,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-    <RelativeLayout
-        android:id="@+id/fullscreenVideo"
-        android:background="#000000"
-        android:visibility="invisible"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
 </android.support.constraint.ConstraintLayout>
