@@ -14,6 +14,9 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     companion object {
         private const val TAG = "DaPenTiPage"
 
+        const val PageProperty_Expanded = "pp_expand"
+        const val PageProperty_WebView = "pp_webView"
+
         const val PageTypeUnknown = 0
         const val PageTypeLongReading = 1
         const val PageTypeNote = 2
@@ -24,6 +27,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     var pageType = PageTypeUnknown
     //private var originalHtml: String? = null
+
+    var doc: Document? = null
 
     var pageLongReading = PageLongReading()
     var pageNotes = PageNotes()
@@ -169,6 +174,14 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         }
     }
 
+    fun checkSmartContent(): Boolean {
+        if (Settings.settings!!.smartContentEnabled)
+            if (checkByTitle(doc!!) || checkByContent(doc!!))
+                return true
+
+        return prepareoriginal(doc!!)
+    }
+
     private fun checkByTitle(doc: Document): Boolean {
         if (pageTitle.contains("【喷嚏图卦") && prepareLongReading(doc))
             return true
@@ -199,7 +212,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         Log.d(TAG, "prepareContent with url: " + pageUrl.toString())
         try {
             val database = Database.database
-            var doc: Document? = null
 
             if (database != null) {
                 val content = database.getPageContent(pageTitle)
@@ -213,10 +225,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
                 database?.updatePageContent(pageTitle, doc!!.toString())
             }
 
-            if (checkByTitle(doc!!) || checkByContent(doc))
-                return true
-
-            return prepareoriginal(doc)
+            return checkSmartContent()
         } catch (e: Exception) {
             e.printStackTrace()
             return false

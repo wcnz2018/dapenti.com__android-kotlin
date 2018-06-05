@@ -12,6 +12,7 @@
         <item>big</item>
         <item>super</item>
     </string-array>
+
     <string-array name="play_entries_list">
         <item>使用移动流量及WiFi时</item>
         <item>仅使用WiFi时</item>
@@ -21,5 +22,18 @@
         <item>mobileAndWiFi</item>
         <item>WiFi</item>
         <item>none</item>
+    </string-array>
+
+    <string-array name="clearCache_entries_list">
+        <item>不清除</item>
+        <item>一周以前</item>
+        <item>一个月以前</item>
+        <item>所有</item>
+    </string-array>
+    <string-array name="clearCache_entries_value">
+        <item>none</item>
+        <item>weekAgo</item>
+        <item>monthAgo</item>
+        <item>all</item>
     </string-array>
 </resources>

@@ -19,7 +19,7 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.EnhancedWebView
+import com.willchou.dapenti.view.VideoWebView
 
 class DetailActivity : AppCompatActivity() {
     companion object {
@@ -31,7 +31,7 @@ class DetailActivity : AppCompatActivity() {
     }
 
     //private DaPenTi.DaPenTiContent daPenTiContent;
-    private var webView: EnhancedWebView? = null
+    private var webView: VideoWebView? = null
     private var coverImageView: ImageView? = null
     private var floatingActionButton: FloatingActionButton? = null
 

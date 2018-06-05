@@ -66,6 +66,9 @@ class Settings {
     val isImageEnabled: Boolean
         get() = prefs!!.getBoolean(resources!!.getString(R.string.pref_key_display_image), true)
 
+    val smartContentEnabled: Boolean
+        get() = prefs!!.getBoolean(resources!!.getString(R.string.pref_key_smart_content), true)
+
     var nightMode: Boolean = false
         set(nm) {
             field = nm
@@ -81,7 +84,7 @@ class Settings {
     val viewModeCSSStyle: String
         get() = if (nightMode) nightModeStyle else dayModeStyle
 
-    fun getDataType(): Int {
+    private fun getDataType(): Int {
         val context = DaPenTiApplication.getAppContext()
         val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val info = manager.activeNetworkInfo
@@ -94,7 +97,7 @@ class Settings {
         return DataTypeNone
     }
 
-    fun notifyPlayOnMobileData() {
+    private fun notifyPlayOnMobileData() {
         val intent = Intent(ACTION_PLAY_ON_MOBILE_DATA)
         DaPenTiApplication.getAppContext().sendBroadcast(intent)
     }

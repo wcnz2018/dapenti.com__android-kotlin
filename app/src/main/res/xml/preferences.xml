@@ -23,16 +23,18 @@
             android:dialogTitle="@string/setting_general_auto_play" />
 
         <CheckBoxPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="@string/pref_key_smart_content"
             android:title="@string/setting_general_smart_content"
             android:summary="@string/setting_summary_smart_content" />
 
+        <!--
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_display_image"
             android:title="@string/setting_general_display_image"
             android:summary="@string/setting_summary_display_image" />
+            -->
 
         <Preference
             android:key="@string/pref_key_order_page"
@@ -46,9 +48,12 @@
             android:title="@string/setting_general_hide_empty" />
             -->
 
-        <Preference
+        <ListPreference
             android:key="@string/pref_key_clear_cache"
-            android:title="@string/setting_general_clear_cache" />
+            android:title="@string/setting_general_clear_cache"
+            android:entries="@array/clearCache_entries_list"
+            android:entryValues="@array/clearCache_entries_value"
+            android:dialogTitle="@string/setting_general_clear_cache" />
     </PreferenceCategory>
 
     <PreferenceCategory

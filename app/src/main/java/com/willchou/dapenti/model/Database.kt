@@ -2,19 +2,20 @@ package com.willchou.dapenti.model
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.graphics.pdf.PdfDocument
-import android.provider.ContactsContract
 import android.util.Log
 import android.util.Pair
-
+import com.willchou.dapenti.DaPenTiApplication
 import java.net.URL
+import java.util.*
 
 class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val TAG = "DaPenTiDatabase"
+        const val ACTION_DATA_CLEARED = "com.willchou.dapenti.dataCleared"
+
         private const val DATABASE_NAME = "daPenTi.db"
         private const val DATABASE_VERSION = 1
 
@@ -134,6 +135,13 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
                 db.close()
             }
         }
+    }
+
+    fun clearDataBefore(date: Date) {
+        // TODO: finish me
+
+        val intent = Intent(ACTION_DATA_CLEARED)
+        DaPenTiApplication.getAppContext().sendBroadcast(intent)
     }
 
     fun updateCategoriesOrderAndVisible(pairs: List<Pair<String, Boolean>>) {

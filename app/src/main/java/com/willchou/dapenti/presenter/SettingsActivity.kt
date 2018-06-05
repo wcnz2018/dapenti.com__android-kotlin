@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceFragment
+import android.preference.PreferenceManager
 import android.preference.PreferenceScreen
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
@@ -13,6 +14,7 @@ import android.util.Log
 import android.view.View
 import com.hannesdorfmann.swipeback.Position
 import com.hannesdorfmann.swipeback.SwipeBack
+import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 
 class SettingsActivity : AppCompatActivity() {
@@ -34,7 +36,7 @@ class SettingsActivity : AppCompatActivity() {
 
         fragmentManager
                 .beginTransaction()
-                .replace(R.id.setting_content, SettingsFragment().setContext(this))
+                .replace(R.id.setting_content, SettingsFragment())
                 .commit()
     }
 
@@ -45,13 +47,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     internal class SettingsFragment: PreferenceFragment() {
-        var mContext: Context? = null
-
-        fun setContext(c: Context): SettingsFragment {
-            mContext = c
-            return this
-        }
-
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
@@ -74,8 +69,34 @@ class SettingsActivity : AppCompatActivity() {
                     ?: return super.onPreferenceTreeClick(preferenceScreen, preference)
 
             if (key == resources.getString(R.string.pref_key_order_page)) {
-                val intent = Intent(mContext, PageOrderActivity::class.java)
+                val intent = Intent(DaPenTiApplication.getAppContext(),
+                        PageOrderActivity::class.java)
                 startActivity(intent)
+            }
+
+            if (key == resources.getString(R.string.pref_key_clear_cache)) {
+                preference.onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+                    override fun onPreferenceChange(preference: Preference?, value: Any?): Boolean {
+                        if (preference == null)
+                            return false
+
+                        when (value) {
+                            "weekAgo" -> {
+                                Log.d(TAG, "clear cache [weekAgo]")
+                            }
+
+                            "monthAgo" -> {
+                                Log.d(TAG, "clear cache [monthAgo]")
+                            }
+
+                            "all" -> {
+                                Log.d(TAG, "clear cache [all]")
+                            }
+                        }
+
+                        return value.toString() != "none"
+                    }
+                }
             }
 
             return true

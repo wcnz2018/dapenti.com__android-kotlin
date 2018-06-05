@@ -24,7 +24,7 @@ import android.widget.TextView
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.EnhancedWebView
+import com.willchou.dapenti.view.VideoWebView
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -64,6 +64,13 @@ class MainActivity : AppCompatActivity() {
                                 context.startActivity(i)
                             }).show()
                 }
+
+                VideoWebView.ACTION_ENTER_FULLSCREEN -> {
+                    val pageTitle = intent.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
+                    val it = Intent(context, FullScreenVideoActivity::class.java)
+                    it.putExtra(DaPenTi.EXTRA_PAGE_TITLE, pageTitle)
+                    context?.startActivity(it)
+                }
             }
         }
     }
@@ -79,21 +86,18 @@ class MainActivity : AppCompatActivity() {
         intentFilter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
         intentFilter.addAction(DaPenTi.ACTION_CATEGORY_ERROR)
         intentFilter.addAction(Settings.ACTION_PLAY_ON_MOBILE_DATA)
+        intentFilter.addAction(VideoWebView.ACTION_ENTER_FULLSCREEN)
         registerReceiver(broadcastReceiver, intentFilter)
     }
 
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
-
-        setupListener()
     }
 
     override fun onPause() {
         super.onPause()
         Log.d(TAG, "onPause")
-
-        EnhancedWebView.enhancedWebViewCallback = null
     }
 
     override fun onDestroy() {
@@ -146,31 +150,6 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun setupListener() {
-        Log.d(TAG, "setupListener")
-
-        EnhancedWebView.enhancedWebViewCallback = object : EnhancedWebView.EnhancedWebViewCallback {
-            override fun fullscreenTriggered(fullscreen: Boolean) {
-                if (fullscreen) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                    //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                }
-            }
-
-            @SuppressLint("WrongViewCast")
-            override fun getFullScreenVideoLayout(): ViewGroup {
-                return findViewById(R.id.fullscreenVideo)
-            }
-        }
-    }
-
     private fun showWait(failed: Boolean) {
         waitLayout?.visibility = View.VISIBLE
 
@@ -199,8 +178,6 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         DaPenTi.storageDir = filesDir.absolutePath
-
-        setupListener()
 
         Handler().postDelayed({
             if (!DaPenTi.daPenTi!!.initiated() && !loadAlreadyFailed)

@@ -15,7 +15,6 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.EnhancedWebView
 import com.willchou.dapenti.view.RecyclerViewAdapter
 
 class FavoriteActivity : AppCompatActivity() {
@@ -40,24 +39,13 @@ class FavoriteActivity : AppCompatActivity() {
             finish()
 
         setupRecyclerView()
-        setupEnhancedWebView()
     }
 
     override fun onResume() {
+        Log.d(TAG, "onResume")
         super.onResume()
-        setupEnhancedWebView()
-    }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause")
-
-        // release those listeners to prevent memory leak
-        recyclerView?.adapter = null
-        //for (page in favoriteList!!)
-        //    page.resetEventListener()
-
-        EnhancedWebView.enhancedWebViewCallback = null
+        restoreVideoState()
     }
 
     private fun setupRecyclerView() {
@@ -72,26 +60,12 @@ class FavoriteActivity : AppCompatActivity() {
         recyclerView?.adapter = RecyclerViewAdapter(favoriteList!!)
     }
 
-    private fun setupEnhancedWebView() {
-        EnhancedWebView.enhancedWebViewCallback = object : EnhancedWebView.EnhancedWebViewCallback {
-            override fun fullscreenTriggered(fullscreen: Boolean) {
-                if (fullscreen) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-                    //activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                }
-            }
+    private fun restoreVideoState() {
+        val lm = recyclerView?.layoutManager as LinearLayoutManager? ?: return
 
-            @SuppressLint("WrongViewCast")
-            override fun getFullScreenVideoLayout(): ViewGroup {
-                return findViewById(R.id.fullscreenVideo)
-            }
-        }
+        val first = lm.findFirstVisibleItemPosition()
+        val last = lm.findLastVisibleItemPosition()
+
+        recyclerView?.adapter?.notifyItemRangeChanged(first, last - first)
     }
 }

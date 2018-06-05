@@ -25,8 +25,8 @@
         </activity>
         <activity
             android:name=".presenter.DetailActivity"
-            android:label="@string/title_activity_detail"
             android:hardwareAccelerated="true"
+            android:label="@string/title_activity_detail"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
@@ -35,20 +35,26 @@
             android:label="@string/title_activity_settings"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/ColorTheme"/>
+            android:theme="@style/ColorTheme" />
         <activity
             android:name=".presenter.PageOrderActivity"
             android:label="@string/title_activity_page"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/ColorTheme"/>
+            android:theme="@style/ColorTheme" />
         <activity
             android:name=".presenter.FavoriteActivity"
-            android:label="@string/title_activity_favorite"
             android:hardwareAccelerated="true"
+            android:label="@string/title_activity_favorite"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:theme="@style/ColorTheme"/>
+            android:theme="@style/ColorTheme" />
+        <activity
+            android:name=".presenter.FullScreenVideoActivity"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:hardwareAccelerated="true" />
     </application>
 
 </manifest>

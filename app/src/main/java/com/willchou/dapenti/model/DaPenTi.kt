@@ -9,7 +9,7 @@ import java.net.URL
 
 class DaPenTi {
     companion object {
-        private const val urlString = "http://www.dapenti.com/blog/index.asp"
+        const val urlString = "http://www.dapenti.com/blog/index.asp"
         private const val TAG = "DaPenTi"
 
         const val ACTION_CATEGORY_PREPARED = "com.willchou.dapenti.categoryPrepared"

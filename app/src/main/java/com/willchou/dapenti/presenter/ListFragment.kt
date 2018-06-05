@@ -105,7 +105,6 @@ class ListFragment : Fragment() {
         recyclerViewAdapter?.notifyItemRangeChanged(first, last - first)
     }
 
-
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {

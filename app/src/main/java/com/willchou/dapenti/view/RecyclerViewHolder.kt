@@ -8,7 +8,6 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -17,18 +16,16 @@ import com.bumptech.glide.Glide
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
+import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_Expanded
+import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_WebView
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
-import com.willchou.dapenti.presenter.SettingsActivity
 
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
     companion object {
         private const val TAG = "RecyclerViewHolder"
-
-        private const val PageProperty_Expanded = "pp_expand"
-        private const val PageProperty_WebView = "pp_webView"
 
         const val Bind_PlayVideo = "playVideo"
         const val Bind_Favorite = "favorite"
@@ -46,8 +43,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private var foregroundColor: Int = Color.BLACK
     private var backgroundColor: Int = Color.WHITE
 
-    //private var mobilePlayVideoWarned = false
-
     private var page: DaPenTiPage? = null
 
     init {
@@ -55,6 +50,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             if (page!!.initiated()) {
                 Log.d(TAG, "on clicked: ${page?.pageTitle}" +
                         " page initiated: ${page?.initiated()}")
+                // TODO: finish me
+                //page!!.checkSmartContent()
                 triggerContent(v)
             } else {
                 setExpand(true, true)
@@ -108,7 +105,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     fun setupContent(playVideoIfPossible: Boolean) {
         titleTextView.text = page!!.pageTitle
 
-        //checkFavorite()
         if (pageExpanded())
             showContent(mView, playVideoIfPossible)
     }
@@ -134,6 +130,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     private fun setExpand(expand: Boolean, saveState: Boolean) {
         Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
+
+        if (page?.pageTitle!!.contains("现实中见义勇为") && !saveState)
+            Exception().printStackTrace()
 
         if (expand) {
             titleTextView.setTextColor(backgroundColor)
@@ -198,12 +197,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         progressBar.visibility = View.VISIBLE
     }
 
-    private fun initEnhancedWebView(enhancedWebView: EnhancedWebView?) {
-        Log.d(TAG, "initEnhancedWebView for ${page?.pageTitle}")
-        enhancedWebView?.smallScreenVideoLayout = videoLayout
-        enhancedWebView?.prepareFullScreen()
-        enhancedWebView?.enhancedWebViewContentEventListener =
-                object : EnhancedWebView.EnhancedWebViewContentEventListener {
+    private fun initVideoWebView(videoWebView: VideoWebView?) {
+        videoWebView?.belongPageTitle = page?.pageTitle
+        videoWebView?.videoWebViewContentEventListener =
+                object : VideoWebView.VideoWebViewContentEventListener {
                     override fun onLoadFinished() {
                         Log.d(TAG, "onLoadFailed")
                         hideProgressBar()
@@ -216,14 +213,14 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                 }
     }
 
-    private fun unInitEnhancedWebView(enhancedWebView: EnhancedWebView?) {
-        enhancedWebView?.pauseVideo()
-        enhancedWebView?.releaseReference()
+    private fun unInitVideoWebView(videoWebView: VideoWebView?) {
+        videoWebView?.videoWebViewContentEventListener = null
     }
 
     private fun hideVideo() {
-        val enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
-        unInitEnhancedWebView(enhancedWebView)
+        val videoWebView = page?.getObjectProperty(DaPenTiPage.PageProperty_WebView) as VideoWebView?
+        videoWebView?.pauseVideo()
+        unInitVideoWebView(videoWebView)
 
         videoLayout.visibility = View.GONE
         videoLayout.removeAllViews()
@@ -232,35 +229,30 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
         Log.d(TAG, "showVideo for ${page?.pageTitle}, autoPlay: $autoPlay")
 
-        var enhancedWebView = page?.getObjectProperty(PageProperty_WebView) as EnhancedWebView?
-        if (enhancedWebView == null) {
-            enhancedWebView = EnhancedWebView(DaPenTiApplication.getAppContext())
-            initEnhancedWebView(enhancedWebView)
+        var videoWebView = page?.getObjectProperty(PageProperty_WebView) as VideoWebView?
+        if (videoWebView == null) {
+            videoWebView = VideoWebView(DaPenTiApplication.getAppContext())
+            initVideoWebView(videoWebView)
 
-            enhancedWebView.playOnLoadFinished = autoPlay
-            enhancedWebView.loadDataWithBaseURL("", contentHtml,
+            videoWebView.playOnLoadFinished = autoPlay
+            videoWebView.loadDataWithBaseURL("", contentHtml,
                     "text/html", "UTF-8", null)
 
             showProgressBar()
             videoLayout.visibility = View.GONE
 
-            page!!.setObjectProperty(PageProperty_WebView, enhancedWebView)
+            page!!.setObjectProperty(PageProperty_WebView, videoWebView)
         } else {
-            // the enhancedWebView may be possessed by another videoLayout
-            // when we jump to favorite activity, detach it from parent anyway
-            val p = enhancedWebView.parent as ViewGroup?
-            p?.removeView(enhancedWebView)
-
-            initEnhancedWebView(enhancedWebView)
+            initVideoWebView(videoWebView)
 
             hideProgressBar()
             videoLayout.visibility = View.VISIBLE
         }
 
-        videoLayout.addView(enhancedWebView)
+        videoWebView.moveTo(videoLayout, false)
 
         if (autoPlay)
-            enhancedWebView.startVideo()
+            videoWebView.startVideo()
     }
 
     private fun hideContent(saveExpandState: Boolean) {
