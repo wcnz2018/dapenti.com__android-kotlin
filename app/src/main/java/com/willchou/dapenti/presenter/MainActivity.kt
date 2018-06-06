@@ -29,7 +29,9 @@ import java.util.*
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
-        const val ACTION_READING_MODE_CHANGED = "com.willchou.NIGHT_MODE_CHANGED"
+
+        const val ACTION_READING_MODE_CHANGED = "com.willchou.dapenti.NIGHT_MODE_CHANGED"
+        const val ACTION_COLLAPSE_ALL = "com.willchou.dapenti.COLLAPSE_ALL"
     }
 
     private var toolbar: Toolbar? = null
@@ -131,19 +133,20 @@ class MainActivity : AppCompatActivity() {
                 Settings.settings?.nightMode = nightMode
 
                 sendBroadcast(Intent(ACTION_READING_MODE_CHANGED))
-                return true
+            }
+
+            R.id.action_collapse_all -> {
+                sendBroadcast(Intent(ACTION_COLLAPSE_ALL))
             }
 
             R.id.action_favorite -> {
                 val intent = Intent(this, FavoriteActivity::class.java)
                 startActivity(intent)
-                return true
             }
 
             R.id.action_settings -> {
                 val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
-                return true
             }
         }
         return super.onOptionsItemSelected(item)

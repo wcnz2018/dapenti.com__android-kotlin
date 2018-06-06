@@ -1,21 +1,23 @@
 package com.willchou.dapenti.view
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Handler
 import android.support.design.widget.Snackbar
+import android.support.v7.view.ContextThemeWrapper
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.view.Gravity
+import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.TranslateAnimation
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import com.bumptech.glide.Glide
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
@@ -25,6 +27,9 @@ import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_WebView
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
+import android.content.Context.CLIPBOARD_SERVICE
+import android.net.Uri
+
 
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
@@ -33,6 +38,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
         const val Bind_PlayVideo = "playVideo"
         const val Bind_Favorite = "favorite"
+        const val Bind_Callapse = "collapse"
         const val Bind_SelectModeAnimation = "selectModeAnimation"
         const val Bind_SelectModeQuit = "selectModeQuit"
         const val Bind_SelectChanged = "selectChanged"
@@ -54,22 +60,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private var page: DaPenTiPage? = null
 
     init {
-        mView.setOnClickListener { v: View ->
-            if (DRecyclerView.isSelectMode())
-                toggleSelect()
-            else itemClicked(v)
-        }
-
+        mView.setOnClickListener { v: View -> itemClicked(v) }
         mView.setOnLongClickListener { v: View ->
-            Log.d(TAG, "long press: $v")
-            val newFavorite = !page!!.getFavorite();
-            page!!.setFavorite(newFavorite)
-
-            var s = "已从收藏中移除"
-            if (newFavorite)
-                s = "已加入收藏"
-            Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
-
+            itemLongClicked(v)
             true
         }
     }
@@ -85,6 +78,11 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun itemClicked(v: View) {
+        if (DRecyclerView.isSelectMode()) {
+            toggleSelect()
+            return
+        }
+
         if (page!!.initiated()) {
             Log.d(TAG, "on clicked: ${page?.pageTitle}" +
                     " page initiated: ${page?.initiated()}")
@@ -99,6 +97,52 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             }, 500)
             Thread(Runnable { page!!.prepareContent() }).start()
         }
+    }
+
+    private fun copyToClipboard(v: View, message: String) {
+        val clipboard = DaPenTiApplication.getAppContext()
+                .getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("DaPenTi", message)
+        clipboard.primaryClip = clip
+
+        Snackbar.make(v, "已复制: $message", Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun itemLongClicked(v: View) {
+        Log.d(TAG, "long press: $v")
+
+        val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), titleTextView, Gravity.RIGHT)
+        popMenu.inflate(R.menu.item)
+        if (page!!.getFavorite())
+            popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_remove_favorite)
+        else
+            popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_add_favorite)
+
+        popMenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.action_favorite -> {
+                    val newFavorite = !page!!.getFavorite();
+                    page!!.setFavorite(newFavorite)
+
+                    var s = "已从收藏中移除"
+                    if (newFavorite)
+                        s = "已加入收藏"
+                    Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
+                }
+                R.id.action_hide -> {  }
+                R.id.action_copy_title -> copyToClipboard(v, page!!.pageTitle)
+                R.id.action_copy_link -> copyToClipboard(v, page!!.pageUrl.toString())
+                R.id.action_open_link -> {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse(page!!.pageUrl.toString())
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    DaPenTiApplication.getAppContext().startActivity(intent)
+                }
+            }
+            true
+        }
+
+        popMenu.show()
     }
 
     fun checkSelect() {
@@ -304,7 +348,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             videoWebView.startVideo()
     }
 
-    private fun hideContent(saveExpandState: Boolean) {
+    fun hideContent(saveExpandState: Boolean) {
         setExpand(false, saveExpandState)
         hideDescription()
         hideImage()

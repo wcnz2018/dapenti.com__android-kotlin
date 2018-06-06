@@ -37,7 +37,6 @@ class ListFragment : Fragment() {
 
     var recycledViewPool: RecyclerView.RecycledViewPool? = null
 
-    // TODO: bug exist: swipe to update then go to favorite
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -45,6 +44,8 @@ class ListFragment : Fragment() {
                     checkNightMode()
                     recyclerViewAdapter?.notifyDataSetChanged()
                 }
+
+                MainActivity.ACTION_COLLAPSE_ALL -> recyclerView?.collapseAll()
 
                 DaPenTi.ACTION_CATEGORY_PREPARED -> {
                     val categoryTitle = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
@@ -65,6 +66,7 @@ class ListFragment : Fragment() {
     private fun registerReceiver() {
         val filter = IntentFilter()
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
+        filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
         filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
         DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
     }

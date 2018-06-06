@@ -67,4 +67,15 @@ class DRecyclerView : RecyclerView {
 
         return list
     }
+
+    fun collapseAll() {
+        val adapter = adapter as RecyclerViewAdapter? ?: return
+        if (adapter.daPenTiPages == null)
+            return
+
+        for (page in adapter.daPenTiPages!!)
+            page.remove(DaPenTiPage.PageProperty_Expanded)
+
+        updateVisibleState(RecyclerViewHolder.Bind_Callapse)
+    }
 }

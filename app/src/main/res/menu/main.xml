@@ -1,12 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.willchou.dapenti.presenter.DetailActivity">
+    tools:context="com.willchou.dapenti.presenter.MainActivity">
     <item
         android:id="@+id/action_mode"
         android:title="@string/action_mode_night" />
     <item
+        android:id="@+id/action_collapse_all"
+        android:title="@string/action_collapse_all" />
+    <item
         android:id="@+id/action_favorite"
-        android:title="@string/action_my_collection"/>
+        android:title="@string/action_favorite"/>
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"/>

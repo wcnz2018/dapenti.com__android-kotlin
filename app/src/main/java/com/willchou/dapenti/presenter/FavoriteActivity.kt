@@ -1,5 +1,6 @@
 package com.willchou.dapenti.presenter
 
+import android.animation.AnimatorInflater
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar

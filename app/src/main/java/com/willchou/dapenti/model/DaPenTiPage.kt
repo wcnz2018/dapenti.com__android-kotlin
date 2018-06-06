@@ -8,7 +8,7 @@ import java.net.URL
 import java.util.*
 
 class DaPenTiPage internal constructor(val pageTitle: String,
-                                       private val pageUrl: URL,
+                                       val pageUrl: URL,
                                        private var favorite: Boolean)
     : Properties() {
     companion object {

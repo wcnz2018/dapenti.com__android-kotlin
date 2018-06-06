@@ -75,8 +75,9 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
             Log.d(TAG, "payLoad: $s")
 
             when (s) {
-                RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
                 RecyclerViewHolder.Bind_PlayVideo -> holder.setupContent(Settings.settings!!.canPlayVideo())
+                RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
+                RecyclerViewHolder.Bind_Callapse -> holder.hideContent(true)
                 RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()
                 RecyclerViewHolder.Bind_SelectChanged -> holder.checkSelect()
                 RecyclerViewHolder.Bind_SelectModeQuit -> holder.quitSelectMode()
