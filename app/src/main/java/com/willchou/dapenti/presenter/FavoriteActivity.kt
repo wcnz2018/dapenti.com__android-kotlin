@@ -1,6 +1,5 @@
 package com.willchou.dapenti.presenter
 
-import android.animation.AnimatorInflater
 import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -144,13 +143,9 @@ class FavoriteActivity : AppCompatActivity() {
     private fun setupContent() {
         recyclerView?.layoutManager = LinearLayoutManager(this)
 
-        val nightMode = Settings.settings?.nightMode
-        if (nightMode != null && nightMode) {
-            val color = Color.rgb(48, 48, 48)
-            recyclerView?.setBackgroundColor(color)
-            linearLayout?.setBackgroundColor(color)
-        } else
-            recyclerView?.setBackgroundColor(Color.WHITE)
+        val backgroundColor = Settings.settings!!.getBackgroundColor()
+        recyclerView?.setBackgroundColor(backgroundColor)
+        linearLayout?.setBackgroundColor(backgroundColor)
 
         recyclerView?.adapter = RecyclerViewAdapter(null)
 

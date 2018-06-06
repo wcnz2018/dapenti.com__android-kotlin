@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.util.Log
 import com.willchou.dapenti.DaPenTiApplication
@@ -83,6 +84,18 @@ class Settings {
 
     val viewModeCSSStyle: String
         get() = if (nightMode) nightModeStyle else dayModeStyle
+
+    fun getBackgroundColor(): Int {
+        return if (nightMode) Color.rgb(48, 48, 48) else Color.WHITE
+    }
+
+    fun getLighterBackgroundColor(): Int {
+        return if (nightMode) Color.rgb(66, 66, 66) else Color.WHITE
+    }
+
+    fun getForegroundColor(): Int {
+        return if(nightMode) Color.rgb(213, 213, 213) else Color.BLACK
+    }
 
     private fun getDataType(): Int {
         val context = DaPenTiApplication.getAppContext()

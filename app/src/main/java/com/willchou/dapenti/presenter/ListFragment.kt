@@ -127,11 +127,8 @@ class ListFragment : Fragment() {
     }
 
     private fun checkNightMode() {
-        val nightMode = Settings.settings?.nightMode
-        if (nightMode != null && nightMode)
-            recyclerView?.setBackgroundColor(Color.rgb(48, 48, 48))
-        else
-            recyclerView?.setBackgroundColor(Color.WHITE)
+        val bgColor = Settings.settings!!.getBackgroundColor()
+        recyclerView?.setBackgroundColor(bgColor)
     }
 
     private fun setupRecyclerView() {

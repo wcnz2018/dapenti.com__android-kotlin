@@ -1,22 +1,16 @@
 package com.willchou.dapenti.view
 
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Handler
 import android.support.design.widget.Snackbar
-import android.support.v7.view.ContextThemeWrapper
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
-import android.view.MenuItem
 import android.view.View
 import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.AnimationSet
-import android.view.animation.TranslateAnimation
 import android.widget.*
 import com.bumptech.glide.Glide
 import com.willchou.dapenti.DaPenTiApplication
@@ -27,7 +21,6 @@ import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_WebView
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
-import android.content.Context.CLIPBOARD_SERVICE
 import android.net.Uri
 
 
@@ -129,7 +122,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                         s = "已加入收藏"
                     Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
                 }
-                R.id.action_hide -> {  }
                 R.id.action_copy_title -> copyToClipboard(v, page!!.pageTitle)
                 R.id.action_copy_link -> copyToClipboard(v, page!!.pageUrl.toString())
                 R.id.action_open_link -> {
@@ -177,19 +169,13 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun checkNightMode() {
-        val nightMode = Settings.settings?.nightMode
-        backgroundColor = Color.WHITE
-        foregroundColor = Color.BLACK
-        if (nightMode != null && nightMode) {
-            backgroundColor = Color.rgb(66, 66, 66)
-            foregroundColor = Color.rgb(213, 213, 213)
-        }
+        backgroundColor = Settings.settings!!.getLighterBackgroundColor()
+        foregroundColor = Settings.settings!!.getForegroundColor()
 
         titleTextView.setTextColor(foregroundColor)
         descriptionTextView.setTextColor(foregroundColor)
 
         cardView.setCardBackgroundColor(backgroundColor)
-        Log.d(TAG, "change cardView background to ${String.format("#%06X", backgroundColor)}")
     }
 
     internal fun update(page: DaPenTiPage) {

@@ -16,4 +16,15 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="NightModeTheme" parent="AppTheme">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColorSecondary">#AAAAAA</item>
+
+        <!-- same as getBackgroundColor() in model.Settings -->
+        <item name="android:background">#424242</item>
+
+        <item name="android:textColorAlertDialogListItem">#AAAAAA</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
 </resources>

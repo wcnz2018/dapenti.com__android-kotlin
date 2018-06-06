@@ -1,21 +1,28 @@
 package com.willchou.dapenti.presenter
 
-import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.preference.Preference
 import android.preference.PreferenceFragment
-import android.preference.PreferenceManager
 import android.preference.PreferenceScreen
+import android.support.annotation.RequiresApi
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import com.hannesdorfmann.swipeback.Position
 import com.hannesdorfmann.swipeback.SwipeBack
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
+import com.willchou.dapenti.model.Settings
+import org.w3c.dom.Text
 
 class SettingsActivity : AppCompatActivity() {
     companion object {
@@ -38,6 +45,12 @@ class SettingsActivity : AppCompatActivity() {
                 .beginTransaction()
                 .replace(R.id.setting_content, SettingsFragment())
                 .commit()
+
+        if (Settings.settings!!.nightMode) {
+            setTheme(R.style.NightModeTheme)
+            findViewById<View>(R.id.setting_content)
+                    ?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
+        }
     }
 
     override fun onBackPressed() {

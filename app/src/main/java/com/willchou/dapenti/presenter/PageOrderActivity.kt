@@ -1,9 +1,11 @@
 package com.willchou.dapenti.presenter
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.Toolbar
 import android.util.Pair
@@ -17,9 +19,11 @@ import android.widget.TextView
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Database
+import com.willchou.dapenti.model.Settings
 import com.woxthebox.draglistview.DragItem
 import com.woxthebox.draglistview.DragItemAdapter
 import com.woxthebox.draglistview.DragListView
+import kotlinx.android.synthetic.main.page_list_item.*
 
 import java.net.URL
 import java.util.ArrayList
@@ -46,6 +50,14 @@ class PageOrderActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
+
+        if (Settings.settings!!.nightMode) {
+            setTheme(R.style.NightModeTheme)
+
+            val color = Settings.settings!!.getBackgroundColor()
+            findViewById<View>(R.id.drag_list_view)?.setBackgroundColor(color)
+            findViewById<View>(R.id.linearLayout)?.setBackgroundColor(color)
+        }
 
         setupData()
         setupLayout()
@@ -135,7 +147,14 @@ class PageOrderActivity : AppCompatActivity() {
             val view = LayoutInflater
                     .from(baseContext)
                     .inflate(R.layout.page_list_item, parent, false)
-            return ViewHolder(view, R.id.drag_image, false, applyButton)
+
+            if (Settings.settings!!.nightMode) {
+                view.findViewById<CardView>(R.id.cardView)
+                        ?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
+                view.setBackgroundColor(Settings.settings!!.getBackgroundColor())
+            }
+
+            return ViewHolder(view, R.id.dragImage, false, applyButton)
         }
 
         override fun getUniqueItemId(position: Int): Long {
@@ -146,14 +165,13 @@ class PageOrderActivity : AppCompatActivity() {
     internal inner class ViewHolder(itemView: View, handleResId: Int, dragOnLongPress: Boolean,
                                     private val triggerButton: View?) :
             DragItemAdapter.ViewHolder(itemView, handleResId, dragOnLongPress) {
-        var textView: TextView = itemView.findViewById(R.id.drag_page_name)
-        var checkBox: CheckBox = itemView.findViewById(R.id.visible_checkbox)
+        var textView: TextView = itemView.findViewById(R.id.pageName)
+        var checkBox: CheckBox = itemView.findViewById(R.id.visibleCheckbox)
         var itemDetail: ItemDetail? = null
 
         override fun onItemClicked(view: View?) {
             super.onItemClicked(view)
             checkBox.toggle()
-
             itemDetail?.visible = checkBox.isChecked
 
             if (triggerButton?.visibility != View.VISIBLE)
@@ -163,11 +181,14 @@ class PageOrderActivity : AppCompatActivity() {
 
     internal inner class MyDragItem(context: Context, layoutId: Int) : DragItem(context, layoutId) {
         override fun onBindDragView(clickedView: View, dragView: View) {
-            val text = (clickedView.findViewById<View>(R.id.drag_page_name) as TextView).text
-            (dragView.findViewById<View>(R.id.drag_page_name) as TextView).text = text
+            val text = clickedView.findViewById<TextView>(R.id.pageName).text
+            val checked = clickedView.findViewById<CheckBox>(R.id.visibleCheckbox).isChecked
 
-            val checked = (clickedView.findViewById<View>(R.id.visible_checkbox) as CheckBox).isChecked
-            (dragView.findViewById<View>(R.id.visible_checkbox) as CheckBox).isChecked = checked
+            (dragView.findViewById<View>(R.id.pageName) as TextView).text = text
+            (dragView.findViewById<View>(R.id.visibleCheckbox) as CheckBox).isChecked = checked
+
+            if (Settings.settings!!.nightMode)
+                dragView.setBackgroundColor(Settings.settings!!.getBackgroundColor())
         }
     }
 }
