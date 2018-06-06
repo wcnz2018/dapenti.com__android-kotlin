@@ -14,7 +14,7 @@ import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 
-class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
+class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
     : RecyclerView.Adapter<RecyclerViewHolder>() {
     companion object {
         private const val TAG = "RecyclerViewAdapter"
@@ -24,9 +24,12 @@ class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
         override fun onReceive(context: Context?, intent: Intent?) {
             val pageTitle = intent?.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
 
+            if (daPenTiPages == null)
+                return
+
             var index = -1
-            for (i in daPenTiPages.indices) {
-                val title = daPenTiPages[i].pageTitle
+            for (i in daPenTiPages!!.indices) {
+                val title = daPenTiPages!![i].pageTitle
                 if (title == pageTitle) {
                     index = i
                     break
@@ -53,7 +56,8 @@ class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
     }
 
     override fun onBindViewHolder(holder: RecyclerViewHolder, position: Int) {
-        holder.update(daPenTiPages[position])
+        if (daPenTiPages != null)
+            holder.update(daPenTiPages!![position])
     }
 
     override fun onBindViewHolder(holder: RecyclerViewHolder, position: Int,
@@ -68,16 +72,20 @@ class RecyclerViewAdapter(private val daPenTiPages: List<DaPenTiPage>)
                 continue
 
             val s = payLoad.toString()
+            Log.d(TAG, "payLoad: $s")
 
-            if (s == RecyclerViewHolder.Bind_Favorite)
-                holder.checkFavorite()
-            if (s == RecyclerViewHolder.Bind_PlayVideo)
-                holder.setupContent(Settings.settings!!.canPlayVideo())
+            when (s) {
+                RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
+                RecyclerViewHolder.Bind_PlayVideo -> holder.setupContent(Settings.settings!!.canPlayVideo())
+                RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()
+                RecyclerViewHolder.Bind_SelectChanged -> holder.checkSelect()
+                RecyclerViewHolder.Bind_SelectModeQuit -> holder.quitSelectMode()
+            }
         }
     }
 
     override fun getItemCount(): Int {
-        return daPenTiPages.size
+        return if (daPenTiPages == null) 0 else daPenTiPages!!.size
     }
 
     override fun onViewAttachedToWindow(holder: RecyclerViewHolder) {

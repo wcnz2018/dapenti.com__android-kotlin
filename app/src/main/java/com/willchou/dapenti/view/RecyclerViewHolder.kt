@@ -8,6 +8,10 @@ import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.TranslateAnimation
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -29,6 +33,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
         const val Bind_PlayVideo = "playVideo"
         const val Bind_Favorite = "favorite"
+        const val Bind_SelectModeAnimation = "selectModeAnimation"
+        const val Bind_SelectModeQuit = "selectModeQuit"
+        const val Bind_SelectChanged = "selectChanged"
     }
 
     private val cardView: CardView = mView.findViewById(R.id.cardView)
@@ -38,6 +45,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private val descriptionTextView: TextView = mView.findViewById(R.id.description)
     private val imageView: ImageView = mView.findViewById(R.id.image)
     private val favoriteImage: ImageView = mView.findViewById(R.id.page_favorite_iv)
+    private val checkImage: ImageView = mView.findViewById(R.id.page_check_iv)
     private val videoLayout: LinearLayout = mView.findViewById(R.id.webViewLayout)
 
     private var foregroundColor: Int = Color.BLACK
@@ -47,20 +55,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     init {
         mView.setOnClickListener { v: View ->
-            if (page!!.initiated()) {
-                Log.d(TAG, "on clicked: ${page?.pageTitle}" +
-                        " page initiated: ${page?.initiated()}")
-                // TODO: finish me
-                //page!!.checkSmartContent()
-                triggerContent(v)
-            } else {
-                setExpand(true, true)
-                Handler().postDelayed({
-                    if (!page!!.initiated())
-                        showProgressBar()
-                }, 500)
-                Thread(Runnable { page!!.prepareContent() }).start()
-            }
+            if (DRecyclerView.isSelectMode())
+                toggleSelect()
+            else itemClicked(v)
         }
 
         mView.setOnLongClickListener { v: View ->
@@ -77,8 +74,62 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         }
     }
 
+    private fun toggleSelect() {
+        if (page!!.isSelected) {
+            checkImage.visibility = View.GONE
+            page!!.isSelected = false
+        } else {
+            checkImage.visibility = View.VISIBLE
+            page!!.isSelected = true
+        }
+    }
+
+    private fun itemClicked(v: View) {
+        if (page!!.initiated()) {
+            Log.d(TAG, "on clicked: ${page?.pageTitle}" +
+                    " page initiated: ${page?.initiated()}")
+            // TODO: finish me
+            //page!!.checkSmartContent()
+            triggerContent(v)
+        } else {
+            setExpand(true, true)
+            Handler().postDelayed({
+                if (!page!!.initiated())
+                    showProgressBar()
+            }, 500)
+            Thread(Runnable { page!!.prepareContent() }).start()
+        }
+    }
+
+    fun checkSelect() {
+        Log.d(TAG, "checkSelect: isSelectMode: ${DRecyclerView.isSelectMode()}")
+        if (!DRecyclerView.isSelectMode()) {
+            checkImage.visibility = View.GONE
+            return
+        }
+
+        checkImage.visibility = if (page!!.isSelected) View.VISIBLE else View.GONE
+    }
+
     fun checkFavorite() {
         favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
+    }
+
+    fun enterSelectModeAnimation() {
+        checkImage.visibility = View.VISIBLE
+
+        val animation = AlphaAnimation(1.0f, 0f)
+        animation.duration = 350
+        animation.repeatCount = 1
+        checkImage.animation = animation
+
+        Handler().postDelayed({
+            checkImage.visibility = View.GONE
+        }, animation.duration + 100)
+    }
+
+    fun quitSelectMode() {
+        checkImage.visibility = View.GONE
     }
 
     private fun checkNightMode() {
@@ -113,6 +164,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
                 "expanded: ${pageExpanded()}")
 
+        checkSelect()
         checkNightMode()
         checkFavorite()
         setupContent(false)

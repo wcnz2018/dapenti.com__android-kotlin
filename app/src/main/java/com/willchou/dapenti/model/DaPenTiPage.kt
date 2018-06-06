@@ -28,6 +28,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     var pageType = PageTypeUnknown
     //private var originalHtml: String? = null
 
+    var isSelected = false
+
     var doc: Document? = null
 
     var pageLongReading = PageLongReading()

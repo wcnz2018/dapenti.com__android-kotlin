@@ -122,6 +122,12 @@ class DaPenTi {
         return !daPenTiCategories.isEmpty()
     }
 
+    fun resetPageSelect() {
+        for (map in daPenTiPageMap) {
+            map.value.isSelected = false
+        }
+    }
+
     fun findPageByTitle(pageTitle: String): DaPenTiPage? {
         for (page in daPenTiPageMap) {
             if (page.key == pageTitle)

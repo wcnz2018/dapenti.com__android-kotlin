@@ -72,12 +72,24 @@
             android:layout_height="12dp"
             android:layout_margin="4dp"
             android:layout_gravity="end">
-
             <ImageView
                 android:id="@+id/page_favorite_iv"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:src="@drawable/favorite"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_margin="4dp"
+            android:layout_gravity="start">
+            <ImageView
+                android:id="@+id/page_check_iv"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/check"/>
 
         </RelativeLayout>
 

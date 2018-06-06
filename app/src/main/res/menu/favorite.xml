@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.willchou.dapenti.presenter.FavoriteActivity">
+    <item
+        android:id="@+id/action_select_mode"
+        android:title="@string/action_select_mode" />
+</menu>

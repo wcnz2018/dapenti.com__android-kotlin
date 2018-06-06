@@ -20,6 +20,7 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.view.DRecyclerView
 import com.willchou.dapenti.view.RecyclerViewAdapter
 
 class ListFragment : Fragment() {
@@ -30,11 +31,13 @@ class ListFragment : Fragment() {
     private var daPenTiCategory: DaPenTiCategory? = null
 
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
-    private var recyclerView: RecyclerView? = null
+    private var recyclerView: DRecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
+
 
     var recycledViewPool: RecyclerView.RecycledViewPool? = null
 
+    // TODO: bug exist: swipe to update then go to favorite
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -59,6 +62,17 @@ class ListFragment : Fragment() {
         return this
     }
 
+    private fun registerReceiver() {
+        val filter = IntentFilter()
+        filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
+        filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
+        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+    }
+
+    private fun unregisterReceiver() {
+        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
+    }
+
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}")
@@ -68,17 +82,14 @@ class ListFragment : Fragment() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate: ${daPenTiCategory?.categoryName}")
 
-        val filter = IntentFilter()
-        filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
-        filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
-        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+        registerReceiver()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: ${daPenTiCategory?.categoryName}")
 
-        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
+        unregisterReceiver()
     }
 
     override fun onPause() {
@@ -93,16 +104,7 @@ class ListFragment : Fragment() {
         swipeRefreshLayout!!.isRefreshing = false
 
         checkNightMode()
-        restoreVideoState()
-    }
-
-    private fun restoreVideoState() {
-        val lm = recyclerView?.layoutManager as LinearLayoutManager? ?: return
-
-        val first = lm.findFirstVisibleItemPosition()
-        val last = lm.findLastVisibleItemPosition()
-
-        recyclerViewAdapter?.notifyItemRangeChanged(first, last - first)
+        recyclerView?.updateVisibleState(null)
     }
 
     override fun onCreateView(inflater: LayoutInflater,
