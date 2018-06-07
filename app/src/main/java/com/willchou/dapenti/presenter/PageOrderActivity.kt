@@ -1,10 +1,8 @@
 package com.willchou.dapenti.presenter
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.Toolbar
@@ -15,7 +13,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
-
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Database
@@ -23,12 +20,11 @@ import com.willchou.dapenti.model.Settings
 import com.woxthebox.draglistview.DragItem
 import com.woxthebox.draglistview.DragItemAdapter
 import com.woxthebox.draglistview.DragListView
-import kotlinx.android.synthetic.main.page_list_item.*
-
+import me.majiajie.swipeback.SwipeBackActivity
 import java.net.URL
-import java.util.ArrayList
+import java.util.*
 
-class PageOrderActivity : AppCompatActivity() {
+class PageOrderActivity : SwipeBackActivity() {
     companion object {
         private const val TAG = "PageOrderActivity"
     }
@@ -47,7 +43,7 @@ class PageOrderActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_page_order)
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
@@ -55,8 +51,8 @@ class PageOrderActivity : AppCompatActivity() {
             setTheme(R.style.NightModeTheme)
 
             val color = Settings.settings!!.getBackgroundColor()
-            findViewById<View>(R.id.drag_list_view)?.setBackgroundColor(color)
-            findViewById<View>(R.id.linearLayout)?.setBackgroundColor(color)
+            findViewById(R.id.drag_list_view)?.setBackgroundColor(color)
+            findViewById(R.id.linearLayout)?.setBackgroundColor(color)
         }
 
         setupData()
@@ -88,11 +84,11 @@ class PageOrderActivity : AppCompatActivity() {
     }
 
     private fun setupLayout() {
-        applyButton = findViewById(R.id.apply_button)
+        applyButton = findViewById(R.id.apply_button) as Button
         applyButton?.visibility = View.GONE
         applyButton?.setOnClickListener { saveChanged() }
 
-        dragListView = findViewById(R.id.drag_list_view)
+        dragListView = findViewById(R.id.drag_list_view) as DragListView
         if (dragListView == null)
             return
 

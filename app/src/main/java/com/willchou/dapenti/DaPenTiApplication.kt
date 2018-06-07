@@ -7,6 +7,7 @@ import com.squareup.leakcanary.LeakCanary
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Database
 import com.willchou.dapenti.model.Settings
+import me.majiajie.swipeback.utils.ActivityStack
 
 
 class DaPenTiApplication : Application() {
@@ -25,6 +26,8 @@ class DaPenTiApplication : Application() {
 
         prepareStaticEnv()
         prepareLeakCanary()
+
+        registerActivityLifecycleCallbacks(ActivityStack.getInstance())
     }
 
     private fun prepareStaticEnv() {

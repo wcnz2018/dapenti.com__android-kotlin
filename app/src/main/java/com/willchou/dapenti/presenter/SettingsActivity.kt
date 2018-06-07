@@ -9,20 +9,18 @@ import android.preference.Preference
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.View
-import com.hannesdorfmann.swipeback.Position
-import com.hannesdorfmann.swipeback.SwipeBack
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.Database
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.ConfirmDialog
+import me.majiajie.swipeback.SwipeBackActivity
 import java.util.*
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : SwipeBackActivity() {
     companion object {
         private const val TAG = "SettingsActivity"
     }
@@ -33,11 +31,7 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        SwipeBack.attach(this, Position.LEFT)
-                .setContentView(R.layout.activity_settings)
-                .setSwipeBackView(R.layout.swipeback_default)
-
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
@@ -52,12 +46,6 @@ class SettingsActivity : AppCompatActivity() {
             setTheme(R.style.NightModeTheme)
             settingContent?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
         }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        overridePendingTransition(R.anim.swipeback_stack_to_front,
-                R.anim.swipeback_stack_right_out)
     }
 
     internal class SettingsFragment : PreferenceFragment() {

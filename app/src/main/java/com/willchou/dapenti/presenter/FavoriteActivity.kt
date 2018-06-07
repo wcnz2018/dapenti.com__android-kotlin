@@ -1,9 +1,7 @@
 package com.willchou.dapenti.presenter
 
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.Toolbar
 import android.util.Log
@@ -19,8 +17,9 @@ import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.ConfirmDialog
 import com.willchou.dapenti.view.DRecyclerView
 import com.willchou.dapenti.view.RecyclerViewAdapter
+import me.majiajie.swipeback.SwipeBackActivity
 
-class FavoriteActivity : AppCompatActivity() {
+class FavoriteActivity : SwipeBackActivity() {
     companion object {
         private const val TAG = "FavoriteActivity"
     }
@@ -67,15 +66,15 @@ class FavoriteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_favorite)
 
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
-        recyclerView = findViewById(R.id.recycler_view)
-        linearLayout = findViewById(R.id.linearLayout)
+        recyclerView = findViewById(R.id.recycler_view) as DRecyclerView
+        linearLayout = findViewById(R.id.linearLayout) as LinearLayout
 
-        val reverseButton = findViewById<Button>(R.id.reverse_button)
-        val removeButton = findViewById<Button>(R.id.remove_button)
+        val reverseButton = findViewById(R.id.reverse_button) as Button
+        val removeButton = findViewById(R.id.remove_button) as Button
 
         reverseButton.setOnClickListener(clickListener)
         removeButton.setOnClickListener(clickListener)
@@ -88,6 +87,13 @@ class FavoriteActivity : AppCompatActivity() {
         super.onResume()
 
         recyclerView?.updateVisibleState(null)
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // prevent leak
+        recyclerView?.getRecyclerViewAdapter()?.unregisterReceiver()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

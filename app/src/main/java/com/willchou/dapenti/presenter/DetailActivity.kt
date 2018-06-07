@@ -5,7 +5,6 @@ import android.support.design.widget.CollapsingToolbarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.webkit.WebView
 import android.widget.ImageView
@@ -14,23 +13,20 @@ import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
-import com.hannesdorfmann.swipeback.Position
-import com.hannesdorfmann.swipeback.SwipeBack
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
+import me.majiajie.swipeback.SwipeBackActivity
 
-class DetailActivity : AppCompatActivity() {
+class DetailActivity : SwipeBackActivity() {
     companion object {
         private const val TAG = "DetailActivity"
         const val EXTRA_HTML = "extra_string_html"
         const val EXTRA_COVER_URL = "extra_string_cover"
         const val EXTRA_TITLE = "extra_string_title"
-        //const val EXTRA_PAGE_INDEX = "extra_string_page_index"
     }
 
-    //private DaPenTi.DaPenTiContent daPenTiContent;
     private var webView: WebView? = null
     private var coverImageView: ImageView? = null
     private var floatingActionButton: FloatingActionButton? = null
@@ -41,18 +37,14 @@ class DetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
-        SwipeBack.attach(this, Position.LEFT)
-                .setContentView(R.layout.activity_detail)
-                .setSwipeBackView(R.layout.swipeback_default)
-
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
-        coverImageView = findViewById(R.id.coverImage)
-        webView = findViewById(R.id.webview)
+        coverImageView = findViewById(R.id.coverImage) as ImageView
+        webView = findViewById(R.id.webview) as WebView
 
-        floatingActionButton = findViewById(R.id.fab)
+        floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
         floatingActionButton?.setOnClickListener { view ->
             val newFavorite = !daPenTiPage!!.getFavorite();
             daPenTiPage!!.setFavorite(newFavorite)
@@ -74,8 +66,6 @@ class DetailActivity : AppCompatActivity() {
         }
 
         super.onBackPressed()
-        overridePendingTransition(R.anim.swipeback_stack_to_front,
-                R.anim.swipeback_stack_right_out)
     }
 
     private fun updateFavorite(favorite: Boolean) {
@@ -83,9 +73,6 @@ class DetailActivity : AppCompatActivity() {
                 if (favorite) R.drawable.favorite else R.drawable.not_favorite
         )
         floatingActionButton?.setImageDrawable(drawable)
-
-        //val color = if (favorite) Color.WHITE else Color.MAGENTA
-        //floatingActionButton?.backgroundTintList = ColorStateList.valueOf(color)
     }
 
     private fun applyUserSettings() {
@@ -109,7 +96,7 @@ class DetailActivity : AppCompatActivity() {
         daPenTiPage = DaPenTi.daPenTi?.findPageByTitle(titleString)
         updateFavorite(daPenTiPage!!.getFavorite())
 
-        val collapsingToolbarLayout = findViewById<CollapsingToolbarLayout>(R.id.toolbar_layout)
+        val collapsingToolbarLayout = findViewById(R.id.toolbar_layout) as CollapsingToolbarLayout
         collapsingToolbarLayout.title = titleString
 
         applyUserSettings()

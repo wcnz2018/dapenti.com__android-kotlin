@@ -85,6 +85,17 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
         }
     }
 
+    private fun registerReceiver() {
+        val filter = IntentFilter()
+        filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
+        filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
+        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+    }
+
+    fun unregisterReceiver() {
+        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
+    }
+
     override fun getItemCount(): Int {
         return if (daPenTiPages == null) 0 else daPenTiPages!!.size
     }
@@ -103,17 +114,14 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
         super.onAttachedToRecyclerView(recyclerView)
         Log.d(TAG, "onAttachedToRecyclerView")
 
-        val filter = IntentFilter()
-        filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
-        filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
-        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+        registerReceiver()
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
         super.onDetachedFromRecyclerView(recyclerView)
         Log.d(TAG, "onDetachedFromRecyclerView")
 
-        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
+        unregisterReceiver()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
