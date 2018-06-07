@@ -1,33 +1,33 @@
 package com.willchou.dapenti.presenter
 
+import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.preference.ListPreference
 import android.preference.Preference
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
-import android.support.annotation.RequiresApi
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
 import com.hannesdorfmann.swipeback.Position
 import com.hannesdorfmann.swipeback.SwipeBack
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
+import com.willchou.dapenti.model.Database
 import com.willchou.dapenti.model.Settings
-import org.w3c.dom.Text
+import com.willchou.dapenti.view.ConfirmDialog
+import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "SettingsActivity"
     }
+
+    private var settingContent: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,13 +43,14 @@ class SettingsActivity : AppCompatActivity() {
 
         fragmentManager
                 .beginTransaction()
-                .replace(R.id.setting_content, SettingsFragment())
+                .replace(R.id.setting_content, SettingsFragment().setContext(this))
                 .commit()
+
+        settingContent = findViewById(R.id.setting_content)
 
         if (Settings.settings!!.nightMode) {
             setTheme(R.style.NightModeTheme)
-            findViewById<View>(R.id.setting_content)
-                    ?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
+            settingContent?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
         }
     }
 
@@ -59,10 +60,27 @@ class SettingsActivity : AppCompatActivity() {
                 R.anim.swipeback_stack_right_out)
     }
 
-    internal class SettingsFragment: PreferenceFragment() {
+    internal class SettingsFragment : PreferenceFragment() {
+        private var mContext: Context? = null
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             addPreferencesFromResource(R.xml.preferences)
+
+            setup()
+        }
+
+        fun setContext(context: Context): SettingsFragment {
+            mContext = context
+            return this
+        }
+
+        private fun setup() {
+            val s = Settings.settings!!
+            val cacheSize = s.getSizeString(s.getCacheSize())
+            val databaseSize = s.getSizeString(s.getDatabaseSize())
+
+            val pref = findPreference(resources.getString(R.string.pref_key_clear_cache))
+            pref.summary = "页面呈现缓存: $cacheSize, 条目数据库: $databaseSize"
         }
 
         override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen,
@@ -88,27 +106,46 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             if (key == resources.getString(R.string.pref_key_clear_cache)) {
-                preference.onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
-                    override fun onPreferenceChange(preference: Preference?, value: Any?): Boolean {
-                        if (preference == null)
-                            return false
+                preference.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { pref, value ->
+                    if (pref == null)
+                        return@OnPreferenceChangeListener false
+                    if (value.toString() == "none")
+                        return@OnPreferenceChangeListener true
 
-                        when (value) {
-                            "weekAgo" -> {
-                                Log.d(TAG, "clear cache [weekAgo]")
+                    val listPref = pref as ListPreference
+                    val index = listPref.findIndexOfValue(value.toString())
+
+                    val confirmDialog = ConfirmDialog(mContext!!, pref.title.toString(),
+                            "确定清除${listPref.entries[index]}?")
+                    confirmDialog.clickEventListener = object : ConfirmDialog.ClickEventListener {
+                        override fun confirmed() {
+                            val settings = Settings.settings!!
+                            val database = Database.database!!
+
+                            val calendar = Calendar.getInstance()
+
+                            when (index) {
+                                1 -> settings.clearCache() // cacheOnly
+                                2 -> { // weekAgo
+                                    calendar.add(Calendar.DAY_OF_YEAR, -7)
+                                    database.removePageBefore(calendar.time)
+                                }
+                                3 -> { // monthAgo
+                                    calendar.add(Calendar.MONTH, -1)
+                                    database.removePageBefore(calendar.time)
+                                }
+                                4 -> { // all
+                                    database.removePageBefore(calendar.time)
+                                }
                             }
 
-                            "monthAgo" -> {
-                                Log.d(TAG, "clear cache [monthAgo]")
-                            }
-
-                            "all" -> {
-                                Log.d(TAG, "clear cache [all]")
-                            }
+                            setup()
+                            Snackbar.make(view, "清理成功", Snackbar.LENGTH_LONG).show()
                         }
-
-                        return value.toString() != "none"
                     }
+                    confirmDialog.show()
+
+                    false
                 }
             }
 

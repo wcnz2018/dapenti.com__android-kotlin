@@ -18,6 +18,7 @@
 
     <style name="NightModeTheme" parent="AppTheme">
         <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColorPrimary">#CCCCCC</item>
         <item name="android:textColorSecondary">#AAAAAA</item>
 
         <!-- same as getBackgroundColor() in model.Settings -->

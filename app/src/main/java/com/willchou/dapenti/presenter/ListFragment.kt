@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.Fragment
@@ -53,6 +52,8 @@ class ListFragment : Fragment() {
                     if (categoryTitle == daPenTiCategory?.categoryName)
                         activity!!.runOnUiThread { setupRecyclerView() }
                 }
+
+                DaPenTi.ACTION_DATABASE_CHANGED -> setupRecyclerView()
             }
         }
     }
@@ -68,6 +69,7 @@ class ListFragment : Fragment() {
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
         filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
         filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
+        filter.addAction(DaPenTi.ACTION_DATABASE_CHANGED)
         DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
     }
 
@@ -112,7 +114,7 @@ class ListFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        swipeRefreshLayout = inflater.inflate(R.layout.penti_list,
+        swipeRefreshLayout = inflater.inflate(R.layout.penti_fragment,
                 container, false) as SwipeRefreshLayout
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary)
 
@@ -133,8 +135,7 @@ class ListFragment : Fragment() {
 
     private fun setupRecyclerView() {
         swipeRefreshLayout!!.isRefreshing = false
-        if (recyclerViewAdapter == null)
-            recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
+        recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
 
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
         recyclerView!!.recycledViewPool = recycledViewPool

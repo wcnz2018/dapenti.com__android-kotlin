@@ -51,10 +51,10 @@
             android:theme="@style/ColorTheme" />
         <activity
             android:name=".presenter.FullScreenVideoActivity"
-            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
+            android:hardwareAccelerated="true"
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
-            android:hardwareAccelerated="true" />
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
     </application>
 
 </manifest>

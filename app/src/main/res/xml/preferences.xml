@@ -51,6 +51,7 @@
         <ListPreference
             android:key="@string/pref_key_clear_cache"
             android:title="@string/setting_general_clear_cache"
+            android:defaultValue="none"
             android:entries="@array/clearCache_entries_list"
             android:entryValues="@array/clearCache_entries_value"
             android:dialogTitle="@string/setting_general_clear_cache" />

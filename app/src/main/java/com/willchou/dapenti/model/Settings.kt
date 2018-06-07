@@ -10,6 +10,7 @@ import android.util.Log
 import com.willchou.dapenti.DaPenTiApplication
 
 import com.willchou.dapenti.R
+import java.io.File
 
 class Settings {
     companion object {
@@ -38,6 +39,8 @@ class Settings {
 
     private var resources: Resources? = null
     private var prefs: SharedPreferences? = null
+
+    private val packageDataDir = DaPenTiApplication.getAppContext().applicationInfo.dataDir
 
     init {
         settings = this
@@ -135,5 +138,66 @@ class Settings {
         }
 
         return false
+    }
+
+    private fun deleteRecursive(fileOrDirectory: File) {
+        if (fileOrDirectory.isDirectory)
+            for (child in fileOrDirectory.listFiles()!!)
+                deleteRecursive(child)
+
+        fileOrDirectory.delete()
+    }
+
+    private fun getFolderSize(directory: File): Long {
+        var length: Long = 0
+        for (file in directory.listFiles()) {
+            length += if (file.isFile)
+                file.length()
+            else
+                getFolderSize(file)
+        }
+        return length
+    }
+
+    private fun getDirSizeInsidePackageData(dirEndWith: String): Long {
+        var size: Long = 0
+
+        for (file in File(packageDataDir).listFiles()) {
+            if (!file.isDirectory)
+                continue
+            if (file.absoluteFile.endsWith(dirEndWith))
+                size += getFolderSize(file)
+        }
+
+        return size
+    }
+
+    fun getCacheSize(): Long {
+        return getDirSizeInsidePackageData("cache")
+    }
+
+    fun clearCache() {
+        for (file in File(packageDataDir).listFiles()) {
+            if (file.absoluteFile.endsWith("cache"))
+                deleteRecursive(file)
+        }
+    }
+
+    fun getDatabaseSize(): Long {
+        return getDirSizeInsidePackageData("databases")
+    }
+
+    fun getSizeString(size: Long): String {
+        val K = 1024
+        val M = K * 1024
+        val G = M * 1024
+
+        if (size < K)
+            return "${size}B"
+        if (size < M)
+            return "${size / K}K"
+        if (size < G)
+            return "${size / M}M"
+        return "${size / G}G"
     }
 }

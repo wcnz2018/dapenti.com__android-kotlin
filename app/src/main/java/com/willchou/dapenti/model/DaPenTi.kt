@@ -16,6 +16,7 @@ class DaPenTi {
         const val ACTION_CATEGORY_ERROR = "com.willchou.dapenti.categoryError"
         const val ACTION_PAGE_PREPARED = "com.willchou.dapenti.pagePrepared"
         const val ACTION_PAGE_FAVORITE = "com.willchou.dapenti.pageFavorite"
+        const val ACTION_DATABASE_CHANGED = "com.willchou.dapenti.databaseChanged"
 
         const val EXTRA_PAGE_TITLE = "extra_page_title"
         const val EXTRA_CATEGORY_TITLE = "extra_category_title"
@@ -194,5 +195,15 @@ class DaPenTi {
         }
 
         return fetchFromWeb()
+    }
+
+    fun databaseChanged() {
+        for (category in daPenTiCategories)
+            category.pages.clear()
+        daPenTiPageMap.clear()
+
+        prepareCategory(false)
+
+        DaPenTiApplication.getAppContext().sendBroadcast(Intent(ACTION_DATABASE_CHANGED))
     }
 }

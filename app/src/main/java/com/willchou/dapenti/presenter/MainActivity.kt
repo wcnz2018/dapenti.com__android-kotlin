@@ -60,7 +60,6 @@ class MainActivity : AppCompatActivity() {
                     Snackbar.make(findViewById(android.R.id.content),
                             "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
                             .setAction(R.string.title_activity_settings, {
-
                                 val i = Intent(context!!, SettingsActivity::class.java)
                                 context.startActivity(i)
                             }).show()

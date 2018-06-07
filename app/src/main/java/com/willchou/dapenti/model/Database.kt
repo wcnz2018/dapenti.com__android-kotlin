@@ -8,13 +8,15 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import android.util.Pair
 import com.willchou.dapenti.DaPenTiApplication
+import java.net.MulticastSocket
 import java.net.URL
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val TAG = "DaPenTiDatabase"
-        const val ACTION_DATA_CLEARED = "com.willchou.dapenti.dataCleared"
 
         private const val DATABASE_NAME = "daPenTi.db"
         private const val DATABASE_VERSION = 1
@@ -44,6 +46,12 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
     init {
         database = this
+
+        val calendar = Calendar.getInstance()
+        val to = calendar.time
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        val from = calendar.time
+        //removePage(from, to)
     }
 
     class PageInfo(val pageTitle: String, val pageUrl: URL, val isFavorite: Boolean)
@@ -137,11 +145,41 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         }
     }
 
-    fun clearDataBefore(date: Date) {
-        // TODO: finish me
+    fun removePageBefore(before: Date) {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US)
+        val beforeString = dateFormat.format(before)
 
-        val intent = Intent(ACTION_DATA_CLEARED)
-        DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        Log.d(TAG, "remove before $beforeString")
+
+        synchronized(this) {
+            val db = writableDatabase
+            val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
+                    "$COLUMN_PAGE_INDEX__CREATE_AT<=?", arrayOf(beforeString),
+                    null, null, null)
+
+            val pageIdList: MutableList<Int> = ArrayList()
+            while (cursor.moveToNext()) {
+                pageIdList.add(cursor.getInt(0))
+            }
+            cursor.close()
+
+            if (pageIdList.isEmpty()) {
+                Log.d(TAG, "no index found before $beforeString")
+                db.close()
+                return
+            }
+
+            val joinString = pageIdList.joinToString()
+            db.delete(TABLE_PAGE_INDEX,
+                    "$COLUMN_PAGE_INDEX__PAGE_ID IN ($joinString)", null)
+
+            db.delete(TABLE_PAGES,
+                    "$COLUMN_PAGE__ID IN ($joinString)", null)
+
+            db.close()
+        }
+
+        DaPenTi.daPenTi!!.databaseChanged()
     }
 
     fun updateCategoriesOrderAndVisible(pairs: List<Pair<String, Boolean>>) {

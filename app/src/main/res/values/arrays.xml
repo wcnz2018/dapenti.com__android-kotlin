@@ -26,14 +26,25 @@
 
     <string-array name="clearCache_entries_list">
         <item>不清除</item>
-        <item>一周以前</item>
-        <item>一个月以前</item>
-        <item>所有</item>
+        <item>页面缓存</item>
+        <item>一周以前的条目</item>
+        <item>一个月以前的条目</item>
+        <item>所有条目</item>
     </string-array>
     <string-array name="clearCache_entries_value">
         <item>none</item>
-        <item>weekAgo</item>
-        <item>monthAgo</item>
-        <item>all</item>
+        <item>cacheOnly</item>
+        <item>pageWeekAgo</item>
+        <item>pageMonthAgo</item>
+        <item>pageAll</item>
+    </string-array>
+
+    <string-array name="clearData_entries_list">
+        <item>所有</item>
+        <item>一周前</item>
+        <item>两周前</item>
+        <item>一个月前</item>
+        <item>三个月前</item>
+        <item>一年前</item>
     </string-array>
 </resources>

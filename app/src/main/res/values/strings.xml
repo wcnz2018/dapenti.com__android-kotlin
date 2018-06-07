@@ -25,6 +25,7 @@
     <string name="action_add_favorite">添加收藏</string>
     <string name="action_remove_favorite">移除收藏</string>
     <string name="action_hide_item">不再显示</string>
+    <string name="action_delete_item">选择和删除</string>
     <string name="action_copy_title">复制标题</string>
     <string name="action_copy_link">复制连接</string>
     <string name="action_open_link">浏览器打开连接</string>
