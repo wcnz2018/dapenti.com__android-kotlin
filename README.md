@@ -8,12 +8,12 @@ I've been a fan for the website for years, it's not my intention to hurt the own
 
 Here are some screenshots
 
-![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_1.git)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_1.gif)
 
-![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_2.git)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_2.gif)
 
-![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_3.git)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_3.gif)
 
-![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_4.git)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_4.gif)
 
-![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_5.git)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_5.gif)
