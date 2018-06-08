@@ -2,15 +2,11 @@ package com.willchou.dapenti.model
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import android.util.Pair
-import com.willchou.dapenti.DaPenTiApplication
-import java.net.MulticastSocket
 import java.net.URL
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 

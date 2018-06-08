@@ -135,6 +135,7 @@ class ListFragment : Fragment() {
 
     private fun setupRecyclerView() {
         swipeRefreshLayout!!.isRefreshing = false
+        if (daPenTiCategory == null) return
         recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
 
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
@@ -157,7 +158,7 @@ class ListFragment : Fragment() {
         } else {
             Handler().postDelayed({
                 if (!daPenTiCategory!!.initiated())
-                    swipeRefreshLayout?.isRefreshing = true
+                    swipeRefreshLayout!!.isRefreshing = true
             }, 500)
             Thread { daPenTiCategory!!.preparePages(false) }.start()
         }

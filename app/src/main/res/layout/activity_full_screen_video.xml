@@ -9,9 +9,6 @@
     <RelativeLayout
         android:id="@+id/videoLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/colorAccent">
-
-    </RelativeLayout>
+        android:layout_height="match_parent" />
 
 </android.support.constraint.ConstraintLayout>

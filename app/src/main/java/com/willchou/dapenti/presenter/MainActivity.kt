@@ -6,17 +6,20 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.os.Handler
+import android.os.Parcelable
 import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentPagerAdapter
+import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -24,7 +27,6 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.VideoWebView
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -222,31 +224,34 @@ class MainActivity : AppCompatActivity() {
         viewPager.adapter = adapter
     }
 
-    internal class Adapter(fm: FragmentManager) : FragmentPagerAdapter(fm) {
-        private val mFragments = ArrayList<ListFragment>()
-        private val mFragmentTitles = ArrayList<String>()
+    internal class Adapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+        private val fragmentPairList: MutableList<Pair<String, ListFragment>> = ArrayList()
         private val recycledViewPool = RecyclerView.RecycledViewPool()
 
         fun addFragment(title: String, fragment: ListFragment) {
-            mFragmentTitles.add(title)
-
             fragment.recycledViewPool = recycledViewPool
-            mFragments.add(fragment)
-
+            fragmentPairList.add(Pair(title, fragment))
             Log.d(TAG, "title: $title, fragment: $fragment")
         }
 
+        override fun saveState(): Parcelable? {
+            return null
+        }
+
+        override fun restoreState(state: Parcelable?, loader: ClassLoader?) {
+
+        }
+
         override fun getItem(position: Int): Fragment {
-            Log.d(TAG, "Adapter getItem: $position")
-            return mFragments[position]
+            return fragmentPairList[position].second
         }
 
         override fun getPageTitle(position: Int): CharSequence? {
-            return mFragmentTitles[position]
+            return fragmentPairList[position].first
         }
 
         override fun getCount(): Int {
-            return mFragmentTitles.size
+            return fragmentPairList.size
         }
     }
 }

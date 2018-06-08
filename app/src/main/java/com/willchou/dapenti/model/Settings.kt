@@ -122,8 +122,12 @@ class Settings {
         val dataType = getDataType()
         val s = prefs!!.getString(resources!!.getString(R.string.pref_key_auto_play), "")
         Log.d(TAG, "auto_play: $s")
-        if (s.isEmpty() || s == "none" || dataType == DataTypeNone)
+
+        if (s == "none")
             return false
+
+        if (s.isEmpty() && dataType == DataTypeWifi)
+            return true
 
         when (s) {
             "mobileAndWiFi" -> {

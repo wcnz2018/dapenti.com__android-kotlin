@@ -19,6 +19,14 @@ class DaPenTiCategory internal constructor(p: Pair<String, URL>) {
         return !pages.isEmpty()
     }
 
+    override fun toString(): String {
+        var s = "DaPenTiCategory $categoryName: ["
+        for (page in pages)
+            s + " ${page.pageTitle}"
+        s += "]"
+        return s
+    }
+
     private fun setPages(pageInfoList: List<Database.PageInfo>, fromDatabase: Boolean) {
         pages.clear()
         val database = Database.database
