@@ -14,8 +14,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     companion object {
         private const val TAG = "DaPenTiPage"
 
-        const val PageProperty_Expanded = "pp_expand"
-
         const val PageTypeUnknown = 0
         const val PageTypeLongReading = 1
         const val PageTypeNote = 2
@@ -28,8 +26,9 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     //private var originalHtml: String? = null
 
     var isSelected = false
+    private var isExpanded = false
 
-    var doc: Document? = null
+    private var doc: Document? = null
 
     var pageLongReading = PageLongReading()
     var pageNotes = PageNotes()
@@ -38,11 +37,14 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     //internal var contentElement: Element? = null
     //internal var coverImageUrl: String? = null
-    // Properties
-    private val mapObject = HashMap<String, Any>()
-    fun setObjectProperty(k: String, o: Any) { mapObject[k] = o }
-    fun getObjectProperty(k: String): Any? { return mapObject[k] }
-    fun removeAllObjectProperties() { mapObject.clear() }
+
+    fun pageExpanded(): Boolean {
+        return isExpanded
+    }
+
+    fun markExpanded(e: Boolean) {
+        isExpanded = e
+    }
 
     class PageLongReading {
         var contentHtml: String? = null

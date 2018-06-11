@@ -74,7 +74,7 @@ class DRecyclerView : RecyclerView {
             return
 
         for (page in adapter.daPenTiPages!!)
-            page.remove(DaPenTiPage.PageProperty_Expanded)
+            page.markExpanded(false)
 
         updateVisibleState(RecyclerViewHolder.Bind_Callapse)
     }

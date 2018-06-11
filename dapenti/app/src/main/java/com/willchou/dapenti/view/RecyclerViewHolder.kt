@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
-import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_Expanded
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
@@ -189,13 +188,13 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     fun setupContent(playVideoIfPossible: Boolean) {
         titleTextView.text = page!!.pageTitle
 
-        if (pageExpanded())
+        if (page!!.pageExpanded())
             showContent(mView, playVideoIfPossible)
     }
 
     internal fun attachedToWindow() {
         Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
-                "expanded: ${pageExpanded()}")
+                "expanded: ${page?.pageExpanded()}")
 
         checkSelect()
         checkNightMode()
@@ -209,10 +208,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         hideContent(false)
     }
 
-    private fun pageExpanded(): Boolean {
-        return page?.getProperty(PageProperty_Expanded) != null
-    }
-
     private fun setExpand(expand: Boolean, saveState: Boolean) {
         Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
 
@@ -221,13 +216,13 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             titleTextView.setBackgroundColor(Color.GRAY)
 
             if (saveState)
-                page!!.setProperty(PageProperty_Expanded, "yes")
+                page!!.markExpanded(true)
         } else {
             titleTextView.setTextColor(foregroundColor)
             titleTextView.setBackgroundColor(0)
 
             if (saveState)
-                page!!.remove(PageProperty_Expanded)
+                page!!.markExpanded(false)
         }
     }
 
@@ -392,7 +387,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun triggerContent(v: View) {
         Log.d(TAG, "update ${page?.pageTitle} with pageType: " + page!!.pageType)
 
-        if (pageExpanded())
+        if (page!!.pageExpanded())
             hideContent(true)
         else
             showContent(v, true)
