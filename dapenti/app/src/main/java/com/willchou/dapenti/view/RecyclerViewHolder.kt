@@ -17,11 +17,13 @@ import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_Expanded
-import com.willchou.dapenti.model.DaPenTiPage.Companion.PageProperty_WebView
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
 import android.net.Uri
+import android.os.Build
+import android.support.annotation.RequiresApi
+import com.willchou.dapenti.model.DaPenTi
 
 
 class RecyclerViewHolder internal constructor(private val mView: View)
@@ -101,6 +103,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         Snackbar.make(v, "已复制: $message", Snackbar.LENGTH_LONG).show()
     }
 
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     private fun itemLongClicked(v: View) {
         Log.d(TAG, "long press: $v")
 
@@ -297,7 +300,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun hideVideo() {
-        val videoWebView = page?.getObjectProperty(DaPenTiPage.PageProperty_WebView) as VideoWebView?
+        val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
         videoWebView?.pauseVideo()
         unInitVideoWebView(videoWebView)
 
@@ -308,7 +311,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
         Log.d(TAG, "showVideo for ${page?.pageTitle}, autoPlay: $autoPlay")
 
-        var videoWebView = page?.getObjectProperty(PageProperty_WebView) as VideoWebView?
+        var videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
+
         if (videoWebView == null) {
             videoWebView = VideoWebView(DaPenTiApplication.getAppContext())
             initVideoWebView(videoWebView)
@@ -320,7 +324,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             showProgressBar()
             videoLayout.visibility = View.GONE
 
-            page!!.setObjectProperty(PageProperty_WebView, videoWebView)
+            DaPenTi.daPenTi!!.cacheVideoWebView(page!!.pageTitle, videoWebView)
         } else {
             initVideoWebView(videoWebView)
 

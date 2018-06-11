@@ -42,12 +42,6 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
     init {
         database = this
-
-        val calendar = Calendar.getInstance()
-        val to = calendar.time
-        calendar.add(Calendar.DAY_OF_YEAR, -7)
-        val from = calendar.time
-        //removePage(from, to)
     }
 
     class PageInfo(val pageTitle: String, val pageUrl: URL, val isFavorite: Boolean)

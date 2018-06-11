@@ -15,7 +15,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         private const val TAG = "DaPenTiPage"
 
         const val PageProperty_Expanded = "pp_expand"
-        const val PageProperty_WebView = "pp_webView"
 
         const val PageTypeUnknown = 0
         const val PageTypeLongReading = 1

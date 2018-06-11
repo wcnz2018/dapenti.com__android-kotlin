@@ -12,7 +12,6 @@ import android.view.WindowManager
 import android.widget.RelativeLayout
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
-import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.view.VideoWebView
 
 class FullScreenVideoActivity : AppCompatActivity() {
@@ -59,7 +58,6 @@ class FullScreenVideoActivity : AppCompatActivity() {
         Log.d(TAG, "onBackPressed")
         super.onBackPressed()
 
-        //videoLayout?.removeAllViews()
         videoWebView?.pauseVideo()
         videoWebView?.detachFromParent()
     }
@@ -71,13 +69,7 @@ class FullScreenVideoActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        val page = DaPenTi.daPenTi?.findPageByTitle(pageTitle)
-        if (page == null) {
-            Log.d(TAG, "unable to get page by title $pageTitle")
-            onBackPressed()
-        }
-
-        videoWebView = page!!.getObjectProperty(DaPenTiPage.PageProperty_WebView) as VideoWebView?
+        videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(pageTitle)
         if (videoWebView == null) {
             Log.d(TAG, "unable to get videoWebView from page $pageTitle")
             onBackPressed()

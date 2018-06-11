@@ -4,6 +4,8 @@ import android.content.Intent
 import android.util.Log
 import android.util.Pair
 import com.willchou.dapenti.DaPenTiApplication
+import com.willchou.dapenti.view.DRecyclerView
+import com.willchou.dapenti.view.VideoWebView
 import org.jsoup.Jsoup
 import java.net.URL
 
@@ -115,12 +117,30 @@ class DaPenTi {
     var daPenTiCategories: MutableList<DaPenTiCategory> = ArrayList()
     var daPenTiPageMap: MutableMap<String, DaPenTiPage> = HashMap()
 
+    private var videoWebViewMap: MutableMap<String, VideoWebView> = HashMap()
+
     init {
         daPenTi = this
     }
 
     fun initiated(): Boolean {
         return !daPenTiCategories.isEmpty()
+    }
+
+    fun getCachedVideoWebView(pageTitle: String): VideoWebView? {
+        for (map in videoWebViewMap) {
+            if (map.key == pageTitle)
+                return map.value
+        }
+
+        return null
+    }
+
+    fun cacheVideoWebView(pageTitle: String, videoWebView: VideoWebView) {
+        if (getCachedVideoWebView(pageTitle) != null)
+            return
+
+        videoWebViewMap.put(pageTitle, videoWebView)
     }
 
     fun resetPageSelect() {
