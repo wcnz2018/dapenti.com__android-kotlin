@@ -79,8 +79,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, i: Int, i1: Int) { }
 
     private fun getCategoryID(db: SQLiteDatabase, title: String): Int {
-        val sql = ("SELECT " + COLUMN_CATEGORY__ID + " FROM " + TABLE_CATEGORIES
-                + " WHERE " + COLUMN_CATEGORY__TITLE + " =? ")
+        val sql = "SELECT $COLUMN_CATEGORY__ID FROM $TABLE_CATEGORIES " +
+                "WHERE $COLUMN_CATEGORY__TITLE =? "
         val cursor = db.rawQuery(sql, arrayOf(title))
 
         var categoryID = -1
@@ -95,8 +95,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     }
 
     private fun getPageID(db: SQLiteDatabase, pageTitle: String): Int {
-        val sql = ("SELECT " + COLUMN_PAGE__ID + " FROM " + TABLE_PAGES
-                + " WHERE " + COLUMN_PAGE__TITLE + " =? ")
+        val sql = "SELECT $COLUMN_PAGE__ID FROM $TABLE_PAGES " +
+                "WHERE $COLUMN_PAGE__TITLE =? "
         val cursor = db.rawQuery(sql, arrayOf(pageTitle))
 
         var pageID = -1

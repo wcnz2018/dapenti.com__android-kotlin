@@ -1,11 +1,18 @@
 package com.willchou.dapenti.presenter
 
+import android.graphics.Point
+import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
+import android.support.annotation.RequiresApi
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.CollapsingToolbarLayout
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
+import android.support.v4.widget.NestedScrollView
 import android.support.v7.widget.Toolbar
+import android.view.KeyEvent
 import android.webkit.WebView
 import android.widget.ImageView
 import com.bumptech.glide.Glide
@@ -27,12 +34,18 @@ class DetailActivity : SwipeBackActivity() {
         const val EXTRA_TITLE = "extra_string_title"
     }
 
+    private var appBarLayout: AppBarLayout? = null
+    private var nestedScrollView: NestedScrollView? = null
     private var webView: WebView? = null
     private var coverImageView: ImageView? = null
     private var floatingActionButton: FloatingActionButton? = null
 
+    private var scrollHeight: Int = 0
+    private var appBarVisible: Boolean = true
+
     private var daPenTiPage: DaPenTiPage? = null
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
@@ -41,21 +54,8 @@ class DetailActivity : SwipeBackActivity() {
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
-        coverImageView = findViewById(R.id.coverImage) as ImageView
-        webView = findViewById(R.id.webview) as WebView
-
-        floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
-        floatingActionButton?.setOnClickListener { view ->
-            val newFavorite = !daPenTiPage!!.getFavorite();
-            daPenTiPage!!.setFavorite(newFavorite)
-            updateFavorite(newFavorite)
-
-            var s = "已从收藏中移除"
-            if (newFavorite)
-                s = "已加入收藏"
-            Snackbar.make(view, s, Snackbar.LENGTH_SHORT).show()
-        }
-
+        prepareViews()
+        prepareScroll()
         prepareContent()
     }
 
@@ -66,6 +66,33 @@ class DetailActivity : SwipeBackActivity() {
         }
 
         super.onBackPressed()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        val y = nestedScrollView!!.scrollY
+
+        when (keyCode) {
+            KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                if (appBarVisible) {
+                    appBarLayout?.setExpanded(false, true)
+                    return true
+                }
+
+                nestedScrollView?.scrollTo(0, y + scrollHeight)
+                return true
+            }
+
+            KeyEvent.KEYCODE_VOLUME_UP -> {
+                if (y == 0) {
+                    appBarLayout?.setExpanded(true, true)
+                    return true
+                }
+
+                nestedScrollView?.scrollTo(0, y - scrollHeight)
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun updateFavorite(favorite: Boolean) {
@@ -84,6 +111,43 @@ class DetailActivity : SwipeBackActivity() {
             Settings.FontSizeMedia -> webSettings.defaultFontSize = 17
             Settings.FontSizeBig -> webSettings.defaultFontSize = 19
             Settings.FontSizeSuperBig -> webSettings.defaultFontSize = 21
+        }
+    }
+
+    private fun prepareScroll() {
+        val rect = Rect()
+        window.decorView.getWindowVisibleDisplayFrame(rect)
+        scrollHeight = rect.height()
+
+        val point = Point()
+        windowManager.defaultDisplay.getSize(point)
+        // height of status bar
+        scrollHeight -= (24 * resources.displayMetrics.density).toInt()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun prepareViews() {
+        appBarLayout = findViewById(R.id.app_bar) as AppBarLayout
+        appBarLayout!!.addOnOffsetChangedListener { _, verticalOffset ->
+            appBarVisible = Math.abs(verticalOffset) != appBarLayout?.totalScrollRange
+        }
+
+        // to prevent error: can't call void android.view.View.setElevation(float) on null object
+        appBarLayout!!.stateListAnimator = null
+
+        nestedScrollView = findViewById(R.id.nestedScrollView) as NestedScrollView
+
+        webView = findViewById(R.id.webview) as WebView
+        coverImageView = findViewById(R.id.coverImage) as ImageView
+
+        floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
+        floatingActionButton?.setOnClickListener { view ->
+            val newFavorite = !daPenTiPage!!.getFavorite();
+            daPenTiPage!!.setFavorite(newFavorite)
+            updateFavorite(newFavorite)
+
+            val s = if (newFavorite) "已加入收藏" else "已从收藏中移除"
+            Snackbar.make(view, s, Snackbar.LENGTH_SHORT).show()
         }
     }
 

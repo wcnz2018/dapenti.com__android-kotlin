@@ -159,7 +159,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         return true
     }
 
-    private fun prepareoriginal(doc: Document): Boolean {
+    private fun prepareOriginal(doc: Document): Boolean {
         val e = getFirstElement(doc, "body") ?: return false
 
         pageLongReading = PageLongReading()
@@ -177,12 +177,12 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         }
     }
 
-    fun checkSmartContent(): Boolean {
+    fun smartContent(): Boolean {
         if (Settings.settings!!.smartContentEnabled)
             if (checkByTitle(doc!!) || checkByContent(doc!!))
                 return true
 
-        return prepareoriginal(doc!!)
+        return prepareOriginal(doc!!)
     }
 
     private fun checkByTitle(doc: Document): Boolean {
@@ -228,7 +228,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
                 database?.updatePageContent(pageTitle, doc!!.toString())
             }
 
-            return checkSmartContent()
+            return smartContent()
         } catch (e: Exception) {
             e.printStackTrace()
             return false
@@ -238,7 +238,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     private fun getCoverImageUrl(contentElement: Element): String {
         val es = contentElement.select("img:not(.W_img_face)")
-        // TODO: check image url valid
+        // TODO: validate image url
         return if (es.size >= 1) es.first().attr("src") else ""
 
     }
@@ -278,20 +278,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         html += "<style>" +
                 "img:not(.W_img_face) {display: block; margin: 0 auto;max-width: 100%;}" +
                 "video { width:100% !important; height:auto !important; }" +
-                "table { width: 100% !important; }" +
-                ".video-rotate {\n" +
-                "  position: absolute;\n" +
-                "  transform: rotate(90deg);\n" +
-                "\n" +
-                "  transform-origin: bottom left;\n" +
-                "  width: 100vh;\n" +
-                "  height: 100vw;\n" +
-                "  margin-top: -100vw;\n" +
-                "  object-fit: cover;\n" +
-                "\n" +
-                "  z-index: 4;\n" +
-                "  visibility: visible;\n" +
-                "}" + Settings.settings?.viewModeCSSStyle +
+                "table { width: 100% !important; }" + Settings.settings?.viewModeCSSStyle +
                 "</style>"
         html += "<script type=\"text/javascript\">\n" +
                 "  document.addEventListener(\"DOMContentLoaded\", function(event) {\n" +
@@ -301,10 +288,10 @@ class DaPenTiPage internal constructor(val pageTitle: String,
                 "  });\n" +
                 "</script>"
 
-        if (innerHTML.startsWith("<body>"))
-            html += "</head>$innerHTML</html>"
+        html += if (innerHTML.startsWith("<body>"))
+            "</head>$innerHTML</html>"
         else
-            html += "</head><body>$innerHTML</body></html>"
+            "</head><body>$innerHTML</body></html>"
 
         Log.d(TAG, "html content: \n$html")
         return html

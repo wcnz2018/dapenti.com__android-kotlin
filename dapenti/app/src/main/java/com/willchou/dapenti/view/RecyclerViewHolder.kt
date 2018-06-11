@@ -1,5 +1,6 @@
 package com.willchou.dapenti.view
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -24,7 +25,7 @@ import android.os.Build
 import android.support.annotation.RequiresApi
 import com.willchou.dapenti.model.DaPenTi
 
-
+@RequiresApi(Build.VERSION_CODES.KITKAT)
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
     companion object {
@@ -81,9 +82,14 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             Log.d(TAG, "on clicked: ${page?.pageTitle}" +
                     " page initiated: ${page?.initiated()}")
             // TODO: finish me
-            //page!!.checkSmartContent()
+            //page!!.smartContent()
             triggerContent(v)
         } else {
+            if (page!!.pageExpanded()) {
+                setExpand(false, true)
+                return
+            }
+
             setExpand(true, true)
             Handler().postDelayed({
                 if (!page!!.initiated())
@@ -220,6 +226,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         } else {
             titleTextView.setTextColor(foregroundColor)
             titleTextView.setBackgroundColor(0)
+
+            descriptionTextView.visibility = View.GONE
+            imageView.visibility = View.GONE
+            progressBar.visibility = View.GONE
 
             if (saveState)
                 page!!.markExpanded(false)
