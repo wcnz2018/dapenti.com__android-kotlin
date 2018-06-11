@@ -1,15 +1,19 @@
 package com.willchou.dapenti.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.util.AttributeSet
 import android.util.Log
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
 import android.widget.FrameLayout
+import android.widget.Toast
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
 
@@ -33,6 +37,10 @@ class VideoWebView : WebView {
         setup()
     }
 
+    var enableZoomGesture: Boolean = false
+    private var defaultFontSize: Int = 0
+    private var scaleGestureDetector: ScaleGestureDetector? = null
+
     interface VideoWebViewContentEventListener {
         fun onLoadFinished()
         fun onLoadFailed()
@@ -45,15 +53,6 @@ class VideoWebView : WebView {
     var playOnLoadFinished = false
 
     private var videoViewContainer: FrameLayout? = null
-
-    private fun notifyFullScreen(enter: Boolean) = if (enter) {
-        val intent = Intent(ACTION_ENTER_FULLSCREEN)
-        intent.putExtra(DaPenTi.EXTRA_PAGE_TITLE, belongPageTitle)
-        context.sendBroadcast(intent)
-    } else {
-        val intent = Intent(ACTION_QUIT_FULLSCREEN)
-        context.sendBroadcast(intent)
-    }
 
     private var webViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
@@ -96,6 +95,7 @@ class VideoWebView : WebView {
                 startVideo()
             }
 
+            defaultFontSize = settings.defaultFontSize
             videoWebViewContentEventListener?.onLoadFinished()
         }
 
@@ -124,6 +124,25 @@ class VideoWebView : WebView {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (enableZoomGesture) {
+            scaleGestureDetector?.onTouchEvent(event)
+            return true
+        }
+
+        return super.onTouchEvent(event)
+    }
+
+    private fun notifyFullScreen(enter: Boolean) = if (enter) {
+        val intent = Intent(ACTION_ENTER_FULLSCREEN)
+        intent.putExtra(DaPenTi.EXTRA_PAGE_TITLE, belongPageTitle)
+        context.sendBroadcast(intent)
+    } else {
+        val intent = Intent(ACTION_QUIT_FULLSCREEN)
+        context.sendBroadcast(intent)
+    }
+
     fun detachFromParent() {
         (videoViewContainer?.parent as ViewGroup?)?.removeView(videoViewContainer)
         (parent as ViewGroup?)?.removeView(this)
@@ -149,6 +168,8 @@ class VideoWebView : WebView {
 
         setWebViewClient(webViewClient)
         setWebChromeClient(webChromeClient)
+
+        scaleGestureDetector = ScaleGestureDetector(context, OnScaleGestureListener())
     }
 
     fun startVideo() {
@@ -160,5 +181,36 @@ class VideoWebView : WebView {
         playOnLoadFinished = false
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()")
+    }
+
+    private inner class OnScaleGestureListener
+        : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        private var toast: Toast? = null
+
+        override fun onScale(detector: ScaleGestureDetector?): Boolean {
+            Log.d(TAG, "onScale.detector: $detector, factor: ${detector?.scaleFactor}")
+            if (detector == null)
+                return super.onScale(detector)
+
+            if (detector.scaleFactor >= 1f)
+                settings.defaultFontSize += 1
+            else
+                settings.defaultFontSize -= 1
+
+            val s = "${settings.defaultFontSize * 100 / defaultFontSize}%"
+
+            if (toast != null) toast?.cancel()
+            toast = Toast.makeText(context, s, Toast.LENGTH_SHORT)
+            toast?.show()
+            return true
+        }
+
+        override fun onScaleBegin(detector: ScaleGestureDetector?): Boolean {
+            return true
+        }
+
+        override fun onScaleEnd(detector: ScaleGestureDetector?) {
+
+        }
     }
 }

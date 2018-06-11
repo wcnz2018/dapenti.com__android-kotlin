@@ -13,7 +13,6 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.widget.NestedScrollView
 import android.support.v7.widget.Toolbar
 import android.view.KeyEvent
-import android.webkit.WebView
 import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
@@ -24,6 +23,7 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.view.VideoWebView
 import me.majiajie.swipeback.SwipeBackActivity
 
 class DetailActivity : SwipeBackActivity() {
@@ -36,7 +36,7 @@ class DetailActivity : SwipeBackActivity() {
 
     private var appBarLayout: AppBarLayout? = null
     private var nestedScrollView: NestedScrollView? = null
-    private var webView: WebView? = null
+    private var webView: VideoWebView? = null
     private var coverImageView: ImageView? = null
     private var floatingActionButton: FloatingActionButton? = null
 
@@ -137,12 +137,14 @@ class DetailActivity : SwipeBackActivity() {
 
         nestedScrollView = findViewById(R.id.nestedScrollView) as NestedScrollView
 
-        webView = findViewById(R.id.webview) as WebView
+        webView = findViewById(R.id.webview) as VideoWebView
         coverImageView = findViewById(R.id.coverImage) as ImageView
+
+        webView?.enableZoomGesture = true
 
         floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
         floatingActionButton?.setOnClickListener { view ->
-            val newFavorite = !daPenTiPage!!.getFavorite();
+            val newFavorite = !daPenTiPage!!.getFavorite()
             daPenTiPage!!.setFavorite(newFavorite)
             updateFavorite(newFavorite)
 
