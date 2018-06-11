@@ -140,7 +140,7 @@ class DaPenTi {
         if (getCachedVideoWebView(pageTitle) != null)
             return
 
-        videoWebViewMap.put(pageTitle, videoWebView)
+        videoWebViewMap[pageTitle] = videoWebView
     }
 
     fun resetPageSelect() {

@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
@@ -77,7 +78,7 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
             when (s) {
                 RecyclerViewHolder.Bind_PlayVideo -> holder.setupContent(Settings.settings!!.canPlayVideo())
                 RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
-                RecyclerViewHolder.Bind_Callapse -> holder.hideContent(true)
+                RecyclerViewHolder.Bind_Collapse -> holder.hideContent(true)
                 RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()
                 RecyclerViewHolder.Bind_SelectChanged -> holder.checkSelect()
                 RecyclerViewHolder.Bind_SelectModeQuit -> holder.quitSelectMode()
@@ -121,7 +122,8 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
         super.onDetachedFromRecyclerView(recyclerView)
         Log.d(TAG, "onDetachedFromRecyclerView")
 
-        unregisterReceiver()
+        LocalBroadcastManager.getInstance(recyclerView.context).unregisterReceiver(broadcastReceiver)
+        //unregisterReceiver()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {

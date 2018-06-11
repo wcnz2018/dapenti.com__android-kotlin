@@ -76,6 +76,6 @@ class DRecyclerView : RecyclerView {
         for (page in adapter.daPenTiPages!!)
             page.markExpanded(false)
 
-        updateVisibleState(RecyclerViewHolder.Bind_Callapse)
+        updateVisibleState(RecyclerViewHolder.Bind_Collapse)
     }
 }

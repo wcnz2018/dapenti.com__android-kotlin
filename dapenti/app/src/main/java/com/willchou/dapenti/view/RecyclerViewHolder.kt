@@ -25,7 +25,6 @@ import android.os.Build
 import android.support.annotation.RequiresApi
 import com.willchou.dapenti.model.DaPenTi
 
-@RequiresApi(Build.VERSION_CODES.KITKAT)
 class RecyclerViewHolder internal constructor(private val mView: View)
     : RecyclerView.ViewHolder(mView) {
     companion object {
@@ -33,7 +32,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
         const val Bind_PlayVideo = "playVideo"
         const val Bind_Favorite = "favorite"
-        const val Bind_Callapse = "collapse"
+        const val Bind_Collapse = "collapse"
         const val Bind_SelectModeAnimation = "selectModeAnimation"
         const val Bind_SelectModeQuit = "selectModeQuit"
         const val Bind_SelectChanged = "selectChanged"
@@ -186,7 +185,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         cardView.setCardBackgroundColor(backgroundColor)
     }
 
-    internal fun update(page: DaPenTiPage) {
+    fun update(page: DaPenTiPage) {
         this.page = page
         Log.d(TAG, "update with page ${page.pageTitle}")
     }
