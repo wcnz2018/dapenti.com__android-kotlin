@@ -8,7 +8,6 @@ I've been a fan of the website for years, it's not my intention to hurt the owne
 
 Here are some screenshots
 
-| --- | --- |
-|![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_1.gif)|![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_2.gif)|
-|![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_3.gif)|![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_4.gif)|
-|![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_5.gif)||
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_1.gif)![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_2.gif)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_3.gif)![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_4.gif)
+![img](https://github.com/wcnz2018/dapenti.com__android-kotlin/blob/master/screenshots/screen_5.gif)
