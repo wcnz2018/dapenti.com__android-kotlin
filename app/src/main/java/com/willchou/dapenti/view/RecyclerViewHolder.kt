@@ -104,7 +104,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         Snackbar.make(v, "已复制: $message", Snackbar.LENGTH_LONG).show()
     }
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
     private fun itemLongClicked(v: View) {
         Log.d(TAG, "long press: $v")
 
@@ -211,6 +210,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     fun update(page: DaPenTiPage) {
         this.page = page
         Log.d(TAG, "update with page ${page.pageTitle}")
+
+        val animation = AlphaAnimation(0f, 1.0f)
+        animation.duration = 200
+        cardView.animation = animation
     }
 
     fun setupContent(playVideoIfPossible: Boolean) {
