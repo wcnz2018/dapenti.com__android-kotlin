@@ -126,11 +126,8 @@ class VideoWebView : WebView {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        if (enableZoomGesture) {
+        if (enableZoomGesture)
             scaleGestureDetector?.onTouchEvent(event)
-            return true
-        }
-
         return super.onTouchEvent(event)
     }
 

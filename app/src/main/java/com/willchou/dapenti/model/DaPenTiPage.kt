@@ -189,10 +189,10 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         }
     }
 
-    private fun smartContent(): Boolean {
-        if (Settings.settings!!.smartContentEnabled)
-            if (checkByTitle(doc!!) || checkByContent(doc!!))
-                return true
+    private fun smartContent(doc: Document): Boolean {
+        //if (Settings.settings!!.smartContentEnabled)
+        if (checkByTitle(doc.clone()) || checkByContent(doc))
+            return true
 
         return false
     }
@@ -241,8 +241,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
             }
 
             if (doc != null) {
-                prepareOriginal(doc!!)
-                smartContent()
+                prepareOriginal(doc!!.clone())
+                smartContent(doc!!.clone())
                 return true
             }
 
