@@ -30,7 +30,8 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     companion object {
         private const val TAG = "RecyclerViewHolder"
 
-        const val Bind_PlayVideo = "playVideo"
+        const val Bind_ShowContent = "showContent"
+        const val Bind_PageFailed = "pageFailed"
         const val Bind_Favorite = "favorite"
         const val Bind_Collapse = "collapse"
         const val Bind_SelectModeAnimation = "selectModeAnimation"
@@ -78,10 +79,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         }
 
         if (page!!.initiated()) {
-            Log.d(TAG, "on clicked: ${page?.pageTitle}" +
-                    " page initiated: ${page?.initiated()}")
-            // TODO: finish me
-            //page!!.smartContent()
             triggerContent(v)
         } else {
             if (page!!.pageExpanded()) {
@@ -111,7 +108,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun itemLongClicked(v: View) {
         Log.d(TAG, "long press: $v")
 
-        val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), titleTextView, Gravity.RIGHT)
+        val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), titleTextView, Gravity.END)
         popMenu.inflate(R.menu.item)
         if (page!!.getFavorite())
             popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_remove_favorite)
@@ -129,8 +126,34 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                         s = "已加入收藏"
                     Snackbar.make(v, s, Snackbar.LENGTH_SHORT).show()
                 }
+
+                R.id.action_show_original -> {
+                    setExpand(false, true)
+
+                    val context = v.context
+                    val intent = Intent(context, DetailActivity::class.java)
+                    intent.putExtra(DetailActivity.EXTRA_TITLE, page!!.pageTitle)
+
+                    var url = page!!.pageUrl.toString()
+                    if (url.contains("more.asp")) {  // fetch page for mobile
+                        url = url.replace("more.asp", "readforwx.asp")
+                        intent.putExtra(DetailActivity.EXTRA_URL, url)
+                    } else {
+                        val pageOriginal = page!!.pageOriginal
+                        if (pageOriginal.valid) { // html already exists
+                            intent.putExtra(DetailActivity.EXTRA_HTML, pageOriginal.contentHtml)
+                            intent.putExtra(DetailActivity.EXTRA_COVER_URL, pageOriginal.coverImageUrl)
+                        } else // pull it from the site
+                            intent.putExtra(DetailActivity.EXTRA_URL, url)
+                    }
+
+                    context.startActivity(intent)
+                }
+
                 R.id.action_copy_title -> copyToClipboard(v, page!!.pageTitle)
+
                 R.id.action_copy_link -> copyToClipboard(v, page!!.pageUrl.toString())
+
                 R.id.action_open_link -> {
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse(page!!.pageUrl.toString())
@@ -197,6 +220,16 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             showContent(mView, playVideoIfPossible)
     }
 
+    fun invalidContent() {
+        if (!page!!.pageExpanded())
+            return
+
+        hideImage()
+        hideVideo()
+        hideProgressBar()
+        showDescription("内容获取失败,请稍后重试...", true)
+    }
+
     internal fun attachedToWindow() {
         Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
                 "expanded: ${page?.pageExpanded()}")
@@ -254,7 +287,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
             else
                 descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_TEXT_START
         } else {
-            descriptionTextView.text = "没有识别到内容哦!"
+            descriptionTextView.text = "智能识别没有找到内容哦!\n您可以尝试【显示原始内容】"
             descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
         }
         descriptionTextView.visibility = View.VISIBLE

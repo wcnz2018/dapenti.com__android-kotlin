@@ -29,6 +29,7 @@ import me.majiajie.swipeback.SwipeBackActivity
 class DetailActivity : SwipeBackActivity() {
     companion object {
         private const val TAG = "DetailActivity"
+        const val EXTRA_URL = "extra_url"
         const val EXTRA_HTML = "extra_string_html"
         const val EXTRA_COVER_URL = "extra_string_cover"
         const val EXTRA_TITLE = "extra_string_title"
@@ -156,6 +157,7 @@ class DetailActivity : SwipeBackActivity() {
 
     private fun prepareContent() {
         val intent = intent
+        val urlString = intent.getStringExtra(EXTRA_URL)
         val htmlString = intent.getStringExtra(EXTRA_HTML)
         val titleString = intent.getStringExtra(EXTRA_TITLE)
         val coverString = intent.getStringExtra(EXTRA_COVER_URL)
@@ -184,7 +186,10 @@ class DetailActivity : SwipeBackActivity() {
                     .into(coverImageView!!)
         }
 
-        webView?.loadDataWithBaseURL(null, htmlString,
-                "text/html", "UTF-8", null)
+        if (urlString.isNullOrEmpty())
+            webView?.loadDataWithBaseURL(null, htmlString,
+                    "text/html", "UTF-8", null)
+        else
+            webView?.loadUrl(urlString)
     }
 }

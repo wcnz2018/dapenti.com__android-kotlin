@@ -17,6 +17,7 @@ class DaPenTi {
         const val ACTION_CATEGORY_PREPARED = "com.willchou.dapenti.categoryPrepared"
         const val ACTION_CATEGORY_ERROR = "com.willchou.dapenti.categoryError"
         const val ACTION_PAGE_PREPARED = "com.willchou.dapenti.pagePrepared"
+        const val ACTION_PAGE_FAILED = "com.willchou.dapenti.pageFailed"
         const val ACTION_PAGE_FAVORITE = "com.willchou.dapenti.pageFavorite"
         const val ACTION_DATABASE_CHANGED = "com.willchou.dapenti.databaseChanged"
 
@@ -46,6 +47,14 @@ class DaPenTi {
             Log.d(TAG, "notifyPageChanged: $pageTitle")
 
             val intent = Intent(ACTION_PAGE_PREPARED)
+            intent.putExtra(EXTRA_PAGE_TITLE, pageTitle)
+            DaPenTiApplication.getAppContext().sendBroadcast(intent)
+        }
+
+        fun notifyPageError(pageTitle: String) {
+            Log.d(TAG, "notifyPageError: $pageTitle")
+
+            val intent = Intent(ACTION_PAGE_FAILED)
             intent.putExtra(EXTRA_PAGE_TITLE, pageTitle)
             DaPenTiApplication.getAppContext().sendBroadcast(intent)
         }

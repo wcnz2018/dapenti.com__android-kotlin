@@ -19,13 +19,9 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         const val PageTypeNote = 2
         const val PageTypePicture = 3
         const val PageTypeVideo = 4
-        const val PageTypeOriginal = 5
     }
 
     var pageType = PageTypeUnknown
-    // TODO: finish me
-    private var bodyHtml: String? = null
-    //private var originalHtml: String? = null
 
     var isSelected = false
     private var isExpanded = false
@@ -36,9 +32,7 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     var pageNotes = PageNotes()
     var pagePicture = PagePicture()
     var pageVideo = PageVideo()
-
-    //internal var contentElement: Element? = null
-    //internal var coverImageUrl: String? = null
+    var pageOriginal = PageOriginal()
 
     fun pageExpanded(): Boolean {
         return isExpanded
@@ -70,9 +64,14 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         var invalidReason: String = ""
     }
 
-    fun initiated(): Boolean {
-        return pageType != PageTypeUnknown
+    class PageOriginal {
+        var valid: Boolean = false
+        var contentHtml: String? = null
+        var coverImageUrl: String? = null
     }
+
+    var isPageInitiated: Boolean = false
+    fun initiated(): Boolean { return isPageInitiated }
 
     fun getFavorite():Boolean { return favorite }
     fun setFavorite(f:Boolean) {
@@ -104,8 +103,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
             pageVideo.invalid = true
             pageVideo.invalidReason = "检测到防外链的新浪视频, 使用浏览器打开吧..."
         }
-
-        // TODO: get description
 
         pageType = PageTypeVideo
         return true
@@ -165,7 +162,6 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     private fun prepareLongReading(doc: Document): Boolean {
         val e = getFirstElement(doc, "div.oblog_text,span.oblog_text > div") ?: return false
 
-        pageLongReading = PageLongReading()
         pageLongReading.contentHtml = getContent(e)
         pageLongReading.coverImageUrl = getCoverImageUrl(e)
 
@@ -173,30 +169,32 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         return true
     }
 
-    private fun prepareOriginal(doc: Document): Boolean {
-        val e = getFirstElement(doc, "body") ?: return false
+    private fun prepareOriginal(doc: Document) {
+        pageOriginal.valid = false
+        val e = getFirstElement(doc, "body") ?: return
 
-        pageLongReading = PageLongReading()
-        pageLongReading.contentHtml = getContent(e)
-        pageLongReading.coverImageUrl = getCoverImageUrl(e)
-
-        pageType = PageTypeLongReading
-        return true
+        pageOriginal.contentHtml = getContent(e)
+        pageOriginal.coverImageUrl = getCoverImageUrl(e)
+        pageOriginal.valid = true
     }
 
     fun prepareContent() {
         synchronized(TAG) {
+            isPageInitiated = false
             if (doPrepareContent())
                 DaPenTi.notifyPageChanged(pageTitle)
+            else
+                DaPenTi.notifyPageError(pageTitle)
+            isPageInitiated = true
         }
     }
 
-    fun smartContent(): Boolean {
+    private fun smartContent(): Boolean {
         if (Settings.settings!!.smartContentEnabled)
             if (checkByTitle(doc!!) || checkByContent(doc!!))
                 return true
 
-        return prepareOriginal(doc!!)
+        return false
     }
 
     private fun checkByTitle(doc: Document): Boolean {
@@ -243,22 +241,20 @@ class DaPenTiPage internal constructor(val pageTitle: String,
             }
 
             if (doc != null) {
-                val body = getFirstElement(doc!!, "body")
-                if (body != null)
-                    bodyHtml = body.toString()
+                prepareOriginal(doc!!)
+                smartContent()
+                return true
             }
 
-            return smartContent()
+            return false
         } catch (e: Exception) {
             e.printStackTrace()
             return false
         }
-
     }
 
     private fun getCoverImageUrl(contentElement: Element): String {
         val es = contentElement.select("img:not(.W_img_face)")
-        // TODO: validate image url
         return if (es.size >= 1) es.first().attr("src") else ""
 
     }

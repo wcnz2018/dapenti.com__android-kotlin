@@ -11,6 +11,8 @@
 
     <string name="confirm_message_remove_favorite">确定要将选择的项目从收藏中移除吗？</string>
 
+    <string name="note_video_forbidden">已设置当前条件下不播放视频</string>
+
     <string name="snack_removed_from_favorite">已从收藏中移除</string>
     <string name="snack_selected_none">未选择项目</string>
 

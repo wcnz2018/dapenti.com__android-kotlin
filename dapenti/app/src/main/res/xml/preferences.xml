@@ -22,13 +22,13 @@
             android:defaultValue="WiFi"
             android:dialogTitle="@string/setting_general_auto_play" />
 
+        <!--
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="@string/pref_key_smart_content"
             android:title="@string/setting_general_smart_content"
             android:summary="@string/setting_summary_smart_content" />
 
-        <!--
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/pref_key_display_image"

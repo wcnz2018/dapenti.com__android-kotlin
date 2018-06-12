@@ -44,10 +44,6 @@ class FavoriteActivity : SwipeBackActivity() {
 
                 confirmDialog.clickEventListener = object : ConfirmDialog.ClickEventListener {
                     override fun confirmed() {
-                        Snackbar.make(recyclerView!!,
-                                resources.getString(R.string.snack_removed_from_favorite),
-                                Snackbar.LENGTH_LONG).show()
-
                         for (page in selectedPageList) {
                             page.setFavorite(false)
                             page.isSelected = false
@@ -55,6 +51,10 @@ class FavoriteActivity : SwipeBackActivity() {
 
                         loadAdapterData()
                         leaveSelectMode()
+
+                        Snackbar.make(recyclerView!!,
+                                resources.getString(R.string.snack_removed_from_favorite),
+                                Snackbar.LENGTH_LONG).show()
                     }
                 }
                 confirmDialog.show()

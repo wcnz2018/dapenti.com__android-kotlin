@@ -45,7 +45,12 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
             when (intent?.action) {
                 DaPenTi.ACTION_PAGE_PREPARED -> {
                     Log.d(TAG, "onReceive PagePrepared")
-                    notifyItemChanged(index, RecyclerViewHolder.Bind_PlayVideo)
+                    notifyItemChanged(index, RecyclerViewHolder.Bind_ShowContent)
+                }
+
+                DaPenTi.ACTION_PAGE_FAILED -> {
+                    Log.d(TAG, "onReceive PageFailed")
+                    notifyItemChanged(index, RecyclerViewHolder.Bind_PageFailed)
                 }
 
                 DaPenTi.ACTION_PAGE_FAVORITE -> {
@@ -76,7 +81,8 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
             Log.d(TAG, "payLoad: $s")
 
             when (s) {
-                RecyclerViewHolder.Bind_PlayVideo -> holder.setupContent(Settings.settings!!.canPlayVideo())
+                RecyclerViewHolder.Bind_ShowContent -> holder.setupContent(Settings.settings!!.canPlayVideo())
+                RecyclerViewHolder.Bind_PageFailed -> holder.invalidContent()
                 RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
                 RecyclerViewHolder.Bind_Collapse -> holder.hideContent(true)
                 RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()
@@ -89,6 +95,7 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
     private fun registerReceiver() {
         val filter = IntentFilter()
         filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
+        filter.addAction(DaPenTi.ACTION_PAGE_FAILED)
         filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
         DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
     }

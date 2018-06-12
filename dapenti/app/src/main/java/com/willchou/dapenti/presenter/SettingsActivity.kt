@@ -91,6 +91,7 @@ class SettingsActivity : SwipeBackActivity() {
                 val intent = Intent(DaPenTiApplication.getAppContext(),
                         PageOrderActivity::class.java)
                 startActivity(intent)
+                return true
             }
 
             if (key == resources.getString(R.string.pref_key_clear_cache)) {
