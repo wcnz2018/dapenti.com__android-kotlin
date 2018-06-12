@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.util.AttributeSet
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -14,8 +15,13 @@ import android.view.ViewGroup
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
+import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
+import android.webkit.WebView
+
+
+
 
 class VideoWebView : WebView {
     companion object {
@@ -71,23 +77,9 @@ class VideoWebView : WebView {
             videoWebViewContentEventListener?.onLoadFailed()
         }
 
-        private fun injectStyleSheet(view: WebView, style: String?) {
-            if (style == null)
-                return
-
-            view.loadUrl("javascript:" +
-                    "var style = document.createElement('style');" +
-                    "style.innerHTML=\"$style\";" +
-                    "document.body.appendChild(style);")
-        }
-
         override fun onPageFinished(view: WebView, url: String) {
             Log.d(TAG, "onPageFinished, playOnLoadFinished: $playOnLoadFinished")
-
-            // webView may use it's cache to present content,
-            // day/night mode from new html which belongs to the same url
-            // does not have effect any more, we change it manually after load finished
-            injectStyleSheet(view, Settings.settings?.viewModeCSSStyle)
+            injectCSSOrJavaScript()
 
             loadFinished = true
             if (playOnLoadFinished) {
@@ -122,6 +114,74 @@ class VideoWebView : WebView {
             notifyFullScreen(false)
             super.onHideCustomView()
         }
+    }
+
+    private fun injectStyleSheet(style: String?) {
+        if (style == null)
+            return
+
+        loadUrl("javascript:" +
+                "var style = document.createElement('style');" +
+                "style.innerHTML=\"$style\";" +
+                "document.body.appendChild(style);")
+    }
+
+    private fun injectStyleSheetFromAsset(cssName: String) {
+        Log.d(TAG, "injectStyleSheetFromAsset: $cssName")
+        try {
+            val inputStream = DaPenTiApplication.getAppContext().assets.open(cssName)
+            val buffer = ByteArray(inputStream.available())
+            inputStream.read(buffer)
+            inputStream.close()
+            val encoded = Base64.encodeToString(buffer, Base64.NO_WRAP)
+            loadUrl("javascript:(function() {" +
+                    "var parent = document.getElementsByTagName('head').item(0);" +
+                    "var style = document.createElement('style');" +
+                    "style.type = 'text/css';" +
+                    // Tell the browser to BASE64-decode the string into your script !!!
+                    "style.innerHTML = window.atob('" + encoded + "');" +
+                    "parent.appendChild(style)" +
+                    "})()")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun injectJavaScriptFromAsset(scriptName: String) {
+        Log.d(TAG, "injectJavaScriptFromAsset: $scriptName")
+        try {
+            val input = DaPenTiApplication.getAppContext().assets.open(scriptName)
+            val buffer = ByteArray(input.available())
+            input.read(buffer)
+            input.close()
+
+            // String-ify the script byte-array using BASE64 encoding !!!
+            val encoded = Base64.encodeToString(buffer, Base64.NO_WRAP)
+            loadUrl("javascript:(function() {" +
+                    "var parent = document.getElementsByTagName('head').item(0);" +
+                    "var script = document.createElement('script');" +
+                    "script.type = 'text/javascript';" +
+                    // Tell the browser to BASE64-decode the string into your script !!!
+                    "script.innerHTML = window.atob('" + encoded + "');" +
+                    "parent.appendChild(script)" +
+                    "})()")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun injectCSSOrJavaScript() {
+        injectStyleSheetFromAsset("css/mediaelementplayer.min.css")
+        injectStyleSheetFromAsset("css/custom.css")
+        injectJavaScriptFromAsset("js/jquery.min.js")
+        injectJavaScriptFromAsset("js/mediaelement-and-player.min.js")
+
+        injectJavaScriptFromAsset("js/custom.js")
+
+        // webView may use it's cache to present content,
+        // day/night mode from new html which belongs to the same url
+        // does not have effect any more, we change it manually after load finished
+        injectStyleSheet(Settings.settings?.viewModeCSSStyle)
     }
 
     @SuppressLint("ClickableViewAccessibility")

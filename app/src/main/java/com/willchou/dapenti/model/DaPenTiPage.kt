@@ -95,6 +95,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         val e = getFirstElement(doc, "video") ?: return false
         val src = e.attr("src")
 
+        e.attr("style", "width:100% !important; height:auto !important;")
+
         pageVideo.contentHtml = getContent(e)
         if (src.isEmpty()) {
             pageVideo.invalid = true
@@ -293,15 +295,14 @@ class DaPenTiPage internal constructor(val pageTitle: String,
         var html: String = "<html><head>" + "<meta name=\"content-type\" content=\"text/html; charset=utf-8\">"
         html += "<style>" +
                 "img:not(.W_img_face) {display: block; margin: 0 auto;max-width: 100%;}" +
-                "video { width:100% !important; height:auto !important; }" +
                 "table { width: 100% !important; }" + Settings.settings?.viewModeCSSStyle +
                 "</style>"
-        html += "<script type=\"text/javascript\">\n" +
-                "  document.addEventListener(\"DOMContentLoaded\", function(event) {\n" +
-                "    document.querySelectorAll('img').forEach(function(img){\n" +
-                "      img.onerror = function(){this.style.display='none';};\n" +
-                "    })\n" +
-                "  });\n" +
+        html += "<script type=\"text/javascript\">" +
+                "  document.addEventListener(\"DOMContentLoaded\", function(event) {" +
+                "    document.querySelectorAll('img').forEach(function(img){" +
+                "      img.onerror = function(){this.style.display='none';};" +
+                "    })" +
+                "  });" +
                 "</script>"
 
         html += if (innerHTML.startsWith("<body>"))
