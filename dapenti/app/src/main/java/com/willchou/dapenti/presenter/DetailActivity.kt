@@ -138,9 +138,10 @@ class DetailActivity : SwipeBackActivity() {
         nestedScrollView = findViewById(R.id.nestedScrollView) as NestedScrollView
 
         webView = findViewById(R.id.webview) as VideoWebView
-        coverImageView = findViewById(R.id.coverImage) as ImageView
-
         webView?.enableZoomGesture = true
+        webView?.settings?.userAgentString = "Android"
+
+        coverImageView = findViewById(R.id.coverImage) as ImageView
 
         floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
         floatingActionButton?.setOnClickListener { view ->

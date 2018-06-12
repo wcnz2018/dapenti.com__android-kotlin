@@ -42,6 +42,8 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
 
     init {
         database = this
+
+        cleanUp()
     }
 
     class PageInfo(val pageTitle: String, val pageUrl: URL, val isFavorite: Boolean)
@@ -110,6 +112,21 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return pageID
     }
 
+    private fun cleanUp() {
+        synchronized(this) {
+            val db = writableDatabase
+            val sql = "DELETE FROM $TABLE_PAGE_INDEX WHERE $COLUMN_PAGE_INDEX__PAGE_ID NOT IN " +
+                    "(SELECT $COLUMN_PAGE__ID from $TABLE_PAGES)"
+
+            Log.d(TAG, "sql: $sql")
+            try {
+                db.execSQL(sql)
+            } catch (e: Exception) { e.printStackTrace() } finally {
+                db.close()
+            }
+        }
+    }
+
     fun addCategory(category: String, url: String) {
         Log.d(TAG, "addCategory: $category, url: $url")
 
@@ -136,7 +153,7 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
     }
 
     fun removePageBefore(before: Date) {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         val beforeString = dateFormat.format(before)
 
         Log.d(TAG, "remove before $beforeString")

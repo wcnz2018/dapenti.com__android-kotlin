@@ -128,7 +128,7 @@ class SettingsActivity : SwipeBackActivity() {
                             }
 
                             setup()
-                            Snackbar.make(view, "清理成功", Snackbar.LENGTH_LONG).show()
+                            //Snackbar.make(view, "清理成功", Snackbar.LENGTH_LONG).show()
                         }
                     }
                     confirmDialog.show()

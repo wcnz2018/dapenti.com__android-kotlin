@@ -23,6 +23,8 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     }
 
     var pageType = PageTypeUnknown
+    // TODO: finish me
+    private var bodyHtml: String? = null
     //private var originalHtml: String? = null
 
     var isSelected = false
@@ -63,6 +65,9 @@ class DaPenTiPage internal constructor(val pageTitle: String,
     class PageVideo {
         var description: String? = null
         var contentHtml: String? = null
+
+        var invalid: Boolean = false
+        var invalidReason: String = ""
     }
 
     fun initiated(): Boolean {
@@ -89,8 +94,17 @@ class DaPenTiPage internal constructor(val pageTitle: String,
 
     private fun preparePageVideo(doc: Document): Boolean {
         val e = getFirstElement(doc, "video") ?: return false
+        val src = e.attr("src")
 
         pageVideo.contentHtml = getContent(e)
+        if (src.isEmpty()) {
+            pageVideo.invalid = true
+            pageVideo.invalidReason = "没有检测到视频..."
+        } else if (src.contains("f.us.sinaimg.cn")) {
+            pageVideo.invalid = true
+            pageVideo.invalidReason = "检测到防外链的新浪视频, 使用浏览器打开吧..."
+        }
+
         // TODO: get description
 
         pageType = PageTypeVideo
@@ -226,6 +240,12 @@ class DaPenTiPage internal constructor(val pageTitle: String,
             if (doc == null) {
                 doc = Jsoup.parse(pageUrl, 5000)
                 database?.updatePageContent(pageTitle, doc!!.toString())
+            }
+
+            if (doc != null) {
+                val body = getFirstElement(doc!!, "body")
+                if (body != null)
+                    bodyHtml = body.toString()
             }
 
             return smartContent()

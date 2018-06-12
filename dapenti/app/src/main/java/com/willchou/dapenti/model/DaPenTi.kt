@@ -86,6 +86,9 @@ class DaPenTi {
                     if (t.isEmpty() || u.isEmpty())
                         continue
 
+                    // as we're on Mobile, fetch mobile version
+                    //u = u.replace("more.asp", "readforwx.asp")
+
                     //if (!u.contains(url.protocol))
                     if (!u.contains("http"))
                         u = "$prefix/$u"

@@ -368,7 +368,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                 val canPlayVideo = Settings.settings!!.canPlayVideo()
                 if (canPlayVideo) {
                     val pageVideo = page!!.pageVideo
-                    showVideo(v, pageVideo.contentHtml!!, playVideoIfPossible)
+                    if (pageVideo.invalid) {
+                        showDescription(pageVideo.invalidReason, true)
+                    } else
+                        showVideo(v, pageVideo.contentHtml!!, playVideoIfPossible)
                 } else
                     showDescription("已设置当前条件下不播放视频...", true)
             }

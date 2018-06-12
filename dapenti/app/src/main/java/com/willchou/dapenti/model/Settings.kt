@@ -152,43 +152,50 @@ class Settings {
         fileOrDirectory.delete()
     }
 
-    private fun getFolderSize(directory: File): Long {
+    private fun getFolderSize(directory: File, ignoreEndWith: String?): Long {
         var length: Long = 0
         for (file in directory.listFiles()) {
+            if (ignoreEndWith != null) {
+                if (file.absoluteFile.toString().endsWith(ignoreEndWith))
+                    continue
+            }
+
             length += if (file.isFile)
                 file.length()
             else
-                getFolderSize(file)
+                getFolderSize(file, ignoreEndWith)
         }
         return length
     }
 
-    private fun getDirSizeInsidePackageData(dirEndWith: String): Long {
+    private fun getDirSizeInsidePackageData(dirEndWith: String, ignoreEndWith: String?): Long {
         var size: Long = 0
 
         for (file in File(packageDataDir).listFiles()) {
             if (!file.isDirectory)
                 continue
-            if (file.absoluteFile.endsWith(dirEndWith))
-                size += getFolderSize(file)
+
+            val af = file.absoluteFile
+            if (af.toString().endsWith(dirEndWith))
+                size += getFolderSize(file, ignoreEndWith)
         }
 
         return size
     }
 
     fun getCacheSize(): Long {
-        return getDirSizeInsidePackageData("cache")
+        return getDirSizeInsidePackageData("cache", null)
     }
 
     fun clearCache() {
         for (file in File(packageDataDir).listFiles()) {
-            if (file.absoluteFile.endsWith("cache"))
+            if (file.absoluteFile.toString().endsWith("cache"))
                 deleteRecursive(file)
         }
     }
 
     fun getDatabaseSize(): Long {
-        return getDirSizeInsidePackageData("databases")
+        return getDirSizeInsidePackageData("databases", "journal")
     }
 
     fun getSizeString(size: Long): String {

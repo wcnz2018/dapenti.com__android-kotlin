@@ -23,6 +23,7 @@
 
     <string name="action_collapse_all">收起全部</string>
     <string name="action_add_favorite">添加收藏</string>
+    <string name="action_show_original">显示原始内容</string>
     <string name="action_remove_favorite">移除收藏</string>
     <string name="action_hide_item">不再显示</string>
     <string name="action_delete_item">选择和删除</string>

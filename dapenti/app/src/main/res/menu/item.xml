@@ -5,6 +5,9 @@
         <item
             android:id="@+id/action_favorite"
             android:title="@string/action_add_favorite" />
+        <item
+            android:id="@+id/action_show_original"
+            android:title="@string/action_show_original" />
         <!--
         <item
             android:id="@+id/action_hide"
