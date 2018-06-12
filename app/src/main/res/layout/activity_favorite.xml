@@ -54,4 +54,21 @@
             android:textSize="18sp" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/noteLayout"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textAlignment="center"
+            android:text="@string/note_empty_favorite"/>
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>

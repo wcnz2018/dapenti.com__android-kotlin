@@ -26,6 +26,7 @@ class FavoriteActivity : SwipeBackActivity() {
     private var recyclerView: DRecyclerView? = null
 
     private var linearLayout: LinearLayout? = null
+    private var noteLayout: LinearLayout? = null
     private var favoriteList: List<DaPenTiPage>? = null
 
     private val clickListener = View.OnClickListener { view ->
@@ -72,6 +73,7 @@ class FavoriteActivity : SwipeBackActivity() {
 
         recyclerView = findViewById(R.id.recycler_view) as DRecyclerView
         linearLayout = findViewById(R.id.linearLayout) as LinearLayout
+        noteLayout = findViewById(R.id.noteLayout) as LinearLayout
 
         val reverseButton = findViewById(R.id.reverse_button) as Button
         val removeButton = findViewById(R.id.remove_button) as Button
@@ -106,10 +108,12 @@ class FavoriteActivity : SwipeBackActivity() {
         Log.d(TAG, "item clicked: " + item.title)
         when (item.itemId) {
             R.id.action_select_mode -> {
-                if (DRecyclerView.isSelectMode())
-                    leaveSelectMode()
-                else
-                    enterSelectMode()
+                if (noteLayout!!.visibility == View.GONE) {
+                    if (DRecyclerView.isSelectMode())
+                        leaveSelectMode()
+                    else
+                        enterSelectMode()
+                }
             }
         }
         return super.onOptionsItemSelected(item)
@@ -138,8 +142,11 @@ class FavoriteActivity : SwipeBackActivity() {
 
     private fun loadAdapterData() {
         favoriteList = DaPenTi.daPenTi?.getFavoritePages()
-        if (favoriteList == null)
+        if (favoriteList!!.isEmpty()) {
+            linearLayout!!.visibility = View.GONE
+            noteLayout!!.visibility = View.VISIBLE
             return
+        }
 
         val adapter = recyclerView?.getRecyclerViewAdapter()
         adapter?.daPenTiPages = favoriteList!!

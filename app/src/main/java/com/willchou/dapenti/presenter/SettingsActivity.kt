@@ -68,7 +68,7 @@ class SettingsActivity : SwipeBackActivity() {
             val databaseSize = s.getSizeString(s.getDatabaseSize())
 
             val pref = findPreference(resources.getString(R.string.pref_key_clear_cache))
-            pref.summary = "页面呈现缓存: $cacheSize, 条目数据库: $databaseSize"
+            pref.summary = "页面内容缓存: $cacheSize, 条目数据库: $databaseSize"
         }
 
         override fun onPreferenceTreeClick(preferenceScreen: PreferenceScreen,

@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:textColor="#FFFFFF"
             android:textAlignment="center"
-            android:text="@string/update_failed"/>
+            android:text="@string/note_update_failed"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
