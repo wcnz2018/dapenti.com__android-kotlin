@@ -2,6 +2,7 @@
     $('video').mediaelementplayer({
         videoWidth: '100%',
         videoHeight: '100%',
+        hideVideoControlsOnLoad: true,
         pauseOtherPlayers: true,
         enableAutosize: true
     })

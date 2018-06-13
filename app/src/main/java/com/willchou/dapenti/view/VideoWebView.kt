@@ -63,7 +63,6 @@ class VideoWebView : WebView {
     private var webViewClient = object : WebViewClient() {
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
             Log.d(TAG, "onPageStarted")
-            // TODO: 显示等待
         }
 
         override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
@@ -100,6 +99,10 @@ class VideoWebView : WebView {
         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
             Log.d(TAG, "consoleMessage: " + consoleMessage?.message())
             return super.onConsoleMessage(consoleMessage)
+        }
+
+        override fun getDefaultVideoPoster(): Bitmap {
+            return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
         }
 
         override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {

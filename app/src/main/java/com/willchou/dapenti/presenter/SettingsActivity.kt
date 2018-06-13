@@ -8,7 +8,6 @@ import android.preference.ListPreference
 import android.preference.Preference
 import android.preference.PreferenceFragment
 import android.preference.PreferenceScreen
-import android.support.design.widget.Snackbar
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.View
@@ -76,10 +75,17 @@ class SettingsActivity : SwipeBackActivity() {
             Log.d(TAG, "preference clicked: $preference")
 
             val aboutTitle = resources.getString(R.string.setting_other_about)
+            val emailTitle = resources.getString(R.string.setting_other_author)
             val title = preference.title.toString()
             if (title == aboutTitle) {
                 val intent = Intent(Intent.ACTION_VIEW)
                 intent.data = Uri.parse(preference.summary.toString())
+                startActivity(intent)
+                return true
+            }
+            if (title == emailTitle) {
+                val intent = Intent(Intent.ACTION_SENDTO,
+                        Uri.parse("mailto:" + resources.getString(R.string.setting_summary_author)))
                 startActivity(intent)
                 return true
             }
@@ -136,6 +142,7 @@ class SettingsActivity : SwipeBackActivity() {
 
                     false
                 }
+                return true
             }
 
             return true
