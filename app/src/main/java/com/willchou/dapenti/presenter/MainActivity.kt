@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.os.Handler
 import android.os.Parcelable
@@ -24,6 +25,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.willchou.dapenti.R
+import com.willchou.dapenti.databinding.ActivityMainBinding
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.VideoWebView
@@ -37,13 +39,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var mainActivity: MainActivity? = null
-
-    private var toolbar: Toolbar? = null
-    private var tabLayout: TabLayout? = null
-
-    private var waitLayout: LinearLayout? = null
-    private var waitTextView: TextView? = null
-    private var waitProgressBar: ProgressBar? = null
+    private var binding: ActivityMainBinding? = null
 
     private var loadAlreadyFailed: Boolean = false
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -82,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         initiateContent()
 
@@ -94,16 +90,6 @@ class MainActivity : AppCompatActivity() {
         registerReceiver(broadcastReceiver, intentFilter)
 
         mainActivity = this
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause")
     }
 
     override fun onDestroy() {
@@ -158,31 +144,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showWait(failed: Boolean) {
-        waitLayout?.visibility = View.VISIBLE
-
+        binding!!.waitLayout.visibility = View.VISIBLE
         if (failed) {
-            waitProgressBar?.visibility = View.GONE
-            waitTextView?.visibility = View.VISIBLE
+            binding!!.waitProgressBar.visibility = View.GONE
+            binding!!.waitTextView.visibility = View.VISIBLE
         } else {
-            waitProgressBar?.visibility = View.VISIBLE
-            waitTextView?.visibility = View.GONE
+            binding!!.waitProgressBar.visibility = View.VISIBLE
+            binding!!.waitTextView.visibility = View.GONE
         }
     }
 
-    private fun hideWait() {
-        waitLayout?.visibility = View.GONE
-    }
+    private fun hideWait() { binding!!.waitLayout.visibility = View.GONE }
 
     private fun initiateContent() {
-        waitLayout = findViewById(R.id.waitLayout)
-        waitTextView = findViewById(R.id.waitTextView)
-        waitProgressBar = findViewById(R.id.waitProgressBar)
-
-        tabLayout = findViewById(R.id.tabs)
-        tabLayout!!.visibility = View.GONE
-
-        toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(binding!!.toolbar)
 
         DaPenTi.storageDir = filesDir.absolutePath
 
@@ -203,12 +178,12 @@ class MainActivity : AppCompatActivity() {
 
         hideWait()
 
-        tabLayout!!.visibility = View.VISIBLE
-        tabLayout!!.tabMode = TabLayout.MODE_SCROLLABLE
+        binding!!.tabLayout.visibility = View.VISIBLE
+        binding!!.tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
 
         val viewPager = findViewById<ViewPager>(R.id.viewpager)
         setupViewPager(viewPager)
-        tabLayout?.setupWithViewPager(viewPager)
+        binding!!.tabLayout.setupWithViewPager(viewPager)
     }
 
     private fun setupViewPager(viewPager: ViewPager) {
