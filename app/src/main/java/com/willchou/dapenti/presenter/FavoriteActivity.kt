@@ -91,13 +91,6 @@ class FavoriteActivity : SwipeBackActivity() {
         recyclerView?.updateVisibleState(null)
     }
 
-    override fun onPause() {
-        super.onPause()
-
-        // prevent leak
-        recyclerView?.getRecyclerViewAdapter()?.unregisterReceiver()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         Log.d(TAG, "onCreateOptionsMenu")
         menuInflater.inflate(R.menu.favorite, menu)

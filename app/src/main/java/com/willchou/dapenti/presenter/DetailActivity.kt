@@ -1,29 +1,26 @@
 package com.willchou.dapenti.presenter
 
+import android.databinding.DataBindingUtil
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.RequiresApi
-import android.support.design.widget.AppBarLayout
 import android.support.design.widget.CollapsingToolbarLayout
-import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
-import android.support.v4.widget.NestedScrollView
-import android.support.v7.widget.Toolbar
+import android.util.Log
 import android.view.KeyEvent
-import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.Priority
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.willchou.dapenti.R
+import com.willchou.dapenti.databinding.ActivityDetailBinding
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.VideoWebView
 import me.majiajie.swipeback.SwipeBackActivity
 
 class DetailActivity : SwipeBackActivity() {
@@ -35,11 +32,7 @@ class DetailActivity : SwipeBackActivity() {
         const val EXTRA_TITLE = "extra_string_title"
     }
 
-    private var appBarLayout: AppBarLayout? = null
-    private var nestedScrollView: NestedScrollView? = null
-    private var webView: VideoWebView? = null
-    private var coverImageView: ImageView? = null
-    private var floatingActionButton: FloatingActionButton? = null
+    private var binding: ActivityDetailBinding? = null
 
     private var scrollHeight: Int = 0
     private var appBarVisible: Boolean = true
@@ -51,9 +44,10 @@ class DetailActivity : SwipeBackActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
-        setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { onBackPressed() }
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_detail)
+
+        setSupportActionBar(binding!!.toolbar)
+        binding!!.toolbar.setNavigationOnClickListener { onBackPressed() }
 
         prepareViews()
         prepareScroll()
@@ -61,8 +55,9 @@ class DetailActivity : SwipeBackActivity() {
     }
 
     override fun onBackPressed() {
-        if (webView != null && webView!!.canGoBack()) {
-            webView?.goBack()
+        val webView = binding!!.contentDetail?.webview
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack()
             return
         }
 
@@ -70,26 +65,28 @@ class DetailActivity : SwipeBackActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        val y = nestedScrollView!!.scrollY
+        val y = binding!!.contentDetail!!.nestedScrollView.scrollY
+        val appBar = binding!!.appBarLayout
+        val nestedScrollView = binding!!.contentDetail!!.nestedScrollView
+
+        Log.d(TAG, "appBarLayout visible: $appBarVisible")
 
         when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                if (appBarVisible) {
-                    appBarLayout?.setExpanded(false, true)
-                    return true
-                }
+                if (appBarVisible)
+                    appBar.setExpanded(false, true)
+                else
+                    nestedScrollView.scrollTo(0, y + scrollHeight)
 
-                nestedScrollView?.scrollTo(0, y + scrollHeight)
                 return true
             }
 
             KeyEvent.KEYCODE_VOLUME_UP -> {
-                if (y == 0) {
-                    appBarLayout?.setExpanded(true, true)
-                    return true
-                }
+                if (y == 0)
+                    appBar.setExpanded(true, true)
+                else
+                    nestedScrollView.scrollTo(0, y - scrollHeight)
 
-                nestedScrollView?.scrollTo(0, y - scrollHeight)
                 return true
             }
         }
@@ -100,11 +97,11 @@ class DetailActivity : SwipeBackActivity() {
         val drawable = ContextCompat.getDrawable(this,
                 if (favorite) R.drawable.favorite else R.drawable.not_favorite
         )
-        floatingActionButton?.setImageDrawable(drawable)
+        binding!!.fabActionButton.setImageDrawable(drawable)
     }
 
     private fun applyUserSettings() {
-        val webSettings = webView?.settings ?: return
+        val webSettings = binding!!.contentDetail!!.webview.settings ?: return
         val settings = Settings.settings ?: return
 
         when (settings.fontSize) {
@@ -128,24 +125,18 @@ class DetailActivity : SwipeBackActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun prepareViews() {
-        appBarLayout = findViewById(R.id.app_bar) as AppBarLayout
-        appBarLayout!!.addOnOffsetChangedListener { _, verticalOffset ->
-            appBarVisible = Math.abs(verticalOffset) != appBarLayout?.totalScrollRange
+        val appBarLayout = binding!!.appBarLayout
+        appBarLayout.addOnOffsetChangedListener { _, verticalOffset ->
+            appBarVisible = Math.abs(verticalOffset) != appBarLayout.totalScrollRange
         }
 
         // to prevent error: can't call void android.view.View.setElevation(float) on null object
-        appBarLayout!!.stateListAnimator = null
+        appBarLayout.stateListAnimator = null
 
-        nestedScrollView = findViewById(R.id.nestedScrollView) as NestedScrollView
+        binding!!.contentDetail!!.webview.enableZoomGesture = true
+        binding!!.contentDetail!!.webview.settings?.userAgentString = "Android"
 
-        webView = findViewById(R.id.webview) as VideoWebView
-        webView?.enableZoomGesture = true
-        webView?.settings?.userAgentString = "Android"
-
-        coverImageView = findViewById(R.id.coverImage) as ImageView
-
-        floatingActionButton = findViewById(R.id.fab) as FloatingActionButton
-        floatingActionButton?.setOnClickListener { view ->
+        binding!!.fabActionButton.setOnClickListener { view ->
             val newFavorite = !daPenTiPage!!.getFavorite()
             daPenTiPage!!.setFavorite(newFavorite)
             updateFavorite(newFavorite)
@@ -156,7 +147,6 @@ class DetailActivity : SwipeBackActivity() {
     }
 
     private fun prepareContent() {
-        val intent = intent
         val urlString = intent.getStringExtra(EXTRA_URL)
         val htmlString = intent.getStringExtra(EXTRA_HTML)
         val titleString = intent.getStringExtra(EXTRA_TITLE)
@@ -177,19 +167,16 @@ class DetailActivity : SwipeBackActivity() {
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .priority(Priority.HIGH)
 
-        val settings = Settings.settings
-        if (settings != null && settings.isImageEnabled) {
-            Glide.with(this)
-                    .load(coverString)
-                    .apply(options)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(coverImageView!!)
-        }
+        Glide.with(this)
+                .load(coverString)
+                .apply(options)
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .into(binding!!.coverImageView)
 
         if (urlString.isNullOrEmpty())
-            webView?.loadDataWithBaseURL(null, htmlString,
+            binding!!.contentDetail!!.webview.loadDataWithBaseURL(null, htmlString,
                     "text/html", "UTF-8", null)
         else
-            webView?.loadUrl(urlString)
+            binding!!.contentDetail!!.webview.loadUrl(urlString)
     }
 }

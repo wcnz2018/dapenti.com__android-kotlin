@@ -36,6 +36,8 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_COLLAPSE_ALL = "com.willchou.dapenti.COLLAPSE_ALL"
     }
 
+    private var mainActivity: MainActivity? = null
+
     private var toolbar: Toolbar? = null
     private var tabLayout: TabLayout? = null
 
@@ -69,9 +71,9 @@ class MainActivity : AppCompatActivity() {
 
                 VideoWebView.ACTION_ENTER_FULLSCREEN -> {
                     val pageTitle = intent.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
-                    val it = Intent(context, FullScreenVideoActivity::class.java)
+                    val it = Intent(mainActivity!!, FullScreenVideoActivity::class.java)
                     it.putExtra(DaPenTi.EXTRA_PAGE_TITLE, pageTitle)
-                    context?.startActivity(it)
+                    mainActivity!!.startActivity(it)
                 }
             }
         }
@@ -90,6 +92,8 @@ class MainActivity : AppCompatActivity() {
         intentFilter.addAction(Settings.ACTION_PLAY_ON_MOBILE_DATA)
         intentFilter.addAction(VideoWebView.ACTION_ENTER_FULLSCREEN)
         registerReceiver(broadcastReceiver, intentFilter)
+
+        mainActivity = this
     }
 
     override fun onResume() {

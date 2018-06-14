@@ -14,13 +14,13 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.DRecyclerView
 import com.willchou.dapenti.view.RecyclerViewAdapter
+import com.willchou.dapenti.view.VideoWebView
 
 class ListFragment : Fragment() {
     companion object {
@@ -54,6 +54,11 @@ class ListFragment : Fragment() {
                 }
 
                 DaPenTi.ACTION_DATABASE_CHANGED -> setupRecyclerView()
+
+                DaPenTi.ACTION_PAGE_PREPARED,
+                DaPenTi.ACTION_PAGE_FAILED,
+                DaPenTi.ACTION_PAGE_FAVORITE,
+                VideoWebView.ACTION_VIDEO_LOADFINISHED -> recyclerView?.broadcastAction(intent)
             }
         }
     }
@@ -68,13 +73,20 @@ class ListFragment : Fragment() {
         val filter = IntentFilter()
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
         filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
+
         filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
         filter.addAction(DaPenTi.ACTION_DATABASE_CHANGED)
-        DaPenTiApplication.getAppContext().registerReceiver(broadcastReceiver, filter)
+
+        filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
+        filter.addAction(DaPenTi.ACTION_PAGE_FAILED)
+        filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
+
+        filter.addAction(VideoWebView.ACTION_VIDEO_LOADFINISHED)
+        context!!.registerReceiver(broadcastReceiver, filter)
     }
 
     private fun unregisterReceiver() {
-        DaPenTiApplication.getAppContext().unregisterReceiver(broadcastReceiver)
+        context!!.unregisterReceiver(broadcastReceiver)
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {

@@ -20,15 +20,13 @@ import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
 import android.webkit.WebView
 
-
-
-
 class VideoWebView : WebView {
     companion object {
         private const val TAG = "VideoWebView"
 
-        const val ACTION_ENTER_FULLSCREEN = "com.willchou.dapenti.EnhancedWebViewEnterFullScreen"
-        const val ACTION_QUIT_FULLSCREEN = "com.willchou.dapenti.EnhancedWebViewQuitFullScreen"
+        const val ACTION_ENTER_FULLSCREEN = "com.willchou.dapenti.VideoWebViewEnterFullScreen"
+        const val ACTION_QUIT_FULLSCREEN = "com.willchou.dapenti.VideoWebViewQuitFullScreen"
+        const val ACTION_VIDEO_LOADFINISHED = "com.willchou.dapenti.VideoWebViewLoadFinished"
     }
 
     constructor(context: Context) : super(context) {
@@ -46,12 +44,6 @@ class VideoWebView : WebView {
     var enableZoomGesture: Boolean = false
     private var defaultFontSize: Int = 0
     private var scaleGestureDetector: ScaleGestureDetector? = null
-
-    interface VideoWebViewContentEventListener {
-        fun onLoadFinished()
-        fun onLoadFailed()
-    }
-    var videoWebViewContentEventListener: VideoWebViewContentEventListener? = null
 
     private var loadFinished: Boolean = false
 
@@ -73,7 +65,6 @@ class VideoWebView : WebView {
         override fun onReceivedHttpError(view: WebView, request: WebResourceRequest,
                                          errorResponse: WebResourceResponse) {
             Log.d(TAG, "onReceivedHttpError")
-            videoWebViewContentEventListener?.onLoadFailed()
         }
 
         override fun onPageFinished(view: WebView, url: String) {
@@ -87,7 +78,7 @@ class VideoWebView : WebView {
             }
 
             defaultFontSize = settings.defaultFontSize
-            videoWebViewContentEventListener?.onLoadFinished()
+            notifyLoadFinished()
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
@@ -115,6 +106,7 @@ class VideoWebView : WebView {
 
         override fun onHideCustomView() {
             notifyFullScreen(false)
+            pauseVideo()
             super.onHideCustomView()
         }
     }
@@ -203,6 +195,12 @@ class VideoWebView : WebView {
         context.sendBroadcast(intent)
     }
 
+    private fun notifyLoadFinished() {
+        val intent = Intent(ACTION_VIDEO_LOADFINISHED)
+        intent.putExtra(DaPenTi.EXTRA_PAGE_TITLE, belongPageTitle)
+        context.sendBroadcast(intent)
+    }
+
     fun detachFromParent() {
         (videoViewContainer?.parent as ViewGroup?)?.removeView(videoViewContainer)
         (parent as ViewGroup?)?.removeView(this)
@@ -233,12 +231,14 @@ class VideoWebView : WebView {
     }
 
     fun startVideo() {
+        Log.d(TAG, "startVideo: loadFinished: $loadFinished")
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()")
     }
 
     fun pauseVideo() {
         playOnLoadFinished = false
+        Log.d(TAG, "pauseVideo: loadFinished: $loadFinished")
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()")
     }

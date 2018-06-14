@@ -4,7 +4,6 @@ import android.content.Intent
 import android.util.Log
 import android.util.Pair
 import com.willchou.dapenti.DaPenTiApplication
-import com.willchou.dapenti.view.DRecyclerView
 import com.willchou.dapenti.view.VideoWebView
 import org.jsoup.Jsoup
 import java.net.URL

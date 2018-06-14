@@ -9,7 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
-import android.widget.RelativeLayout
+import android.widget.LinearLayout
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.view.VideoWebView
@@ -18,7 +18,7 @@ class FullScreenVideoActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "FullScreenVideoActivity"
     }
-    private var videoLayout: RelativeLayout? = null
+    private var videoLayout: LinearLayout? = null
     private var videoWebView: VideoWebView? = null
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -56,10 +56,11 @@ class FullScreenVideoActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         Log.d(TAG, "onBackPressed")
-        super.onBackPressed()
 
         videoWebView?.pauseVideo()
         videoWebView?.detachFromParent()
+
+        super.onBackPressed()
     }
 
     private fun setupContent() {

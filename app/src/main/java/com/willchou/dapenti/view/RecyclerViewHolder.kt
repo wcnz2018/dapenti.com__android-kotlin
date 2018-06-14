@@ -37,6 +37,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         const val Bind_SelectModeAnimation = "selectModeAnimation"
         const val Bind_SelectModeQuit = "selectModeQuit"
         const val Bind_SelectChanged = "selectChanged"
+        const val Bind_PageLoadFinished = "pageLoadFinished"
     }
 
     private val cardView: CardView = mView.findViewById(R.id.cardView)
@@ -233,6 +234,11 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         showDescription("内容获取失败,请稍后重试...", true)
     }
 
+    fun pageLoadFinished() {
+        hideProgressBar()
+        videoLayout.visibility = View.VISIBLE
+    }
+
     internal fun attachedToWindow() {
         Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
                 "expanded: ${page?.pageExpanded()}")
@@ -319,30 +325,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         progressBar.visibility = View.VISIBLE
     }
 
-    private fun initVideoWebView(videoWebView: VideoWebView?) {
-        videoWebView?.belongPageTitle = page?.pageTitle
-        videoWebView?.videoWebViewContentEventListener =
-                object : VideoWebView.VideoWebViewContentEventListener {
-                    override fun onLoadFinished() {
-                        Log.d(TAG, "onLoadFailed")
-                        hideProgressBar()
-                        videoLayout.visibility = View.VISIBLE
-                    }
-
-                    override fun onLoadFailed() {
-                        Log.d(TAG, "onLoadFailed")
-                    }
-                }
-    }
-
-    private fun unInitVideoWebView(videoWebView: VideoWebView?) {
-        videoWebView?.videoWebViewContentEventListener = null
-    }
-
     private fun hideVideo() {
         val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
         videoWebView?.pauseVideo()
-        unInitVideoWebView(videoWebView)
 
         videoLayout.visibility = View.GONE
         videoLayout.removeAllViews()
@@ -355,7 +340,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
         if (videoWebView == null) {
             videoWebView = VideoWebView(DaPenTiApplication.getAppContext())
-            initVideoWebView(videoWebView)
+            videoWebView.belongPageTitle = page?.pageTitle
 
             videoWebView.playOnLoadFinished = autoPlay
             videoWebView.loadDataWithBaseURL("", contentHtml,
@@ -366,8 +351,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
             DaPenTi.daPenTi!!.cacheVideoWebView(page!!.pageTitle, videoWebView)
         } else {
-            initVideoWebView(videoWebView)
-
             hideProgressBar()
             videoLayout.visibility = View.VISIBLE
         }
