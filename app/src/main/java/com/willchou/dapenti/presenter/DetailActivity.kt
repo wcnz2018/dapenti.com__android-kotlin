@@ -155,8 +155,7 @@ class DetailActivity : SwipeBackActivity() {
         daPenTiPage = DaPenTi.daPenTi?.findPageByTitle(titleString)
         updateFavorite(daPenTiPage!!.getFavorite())
 
-        val collapsingToolbarLayout = findViewById(R.id.toolbar_layout) as CollapsingToolbarLayout
-        collapsingToolbarLayout.title = titleString
+        binding!!.toolbarLayout.title = titleString
 
         applyUserSettings()
 

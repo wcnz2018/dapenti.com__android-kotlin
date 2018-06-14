@@ -217,6 +217,7 @@ class VideoWebView : WebView {
             v.addView(this)
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun setup() {
         loadFinished = false
 
@@ -231,14 +232,12 @@ class VideoWebView : WebView {
     }
 
     fun startVideo() {
-        Log.d(TAG, "startVideo: loadFinished: $loadFinished")
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].play(); })()")
     }
 
     fun pauseVideo() {
         playOnLoadFinished = false
-        Log.d(TAG, "pauseVideo: loadFinished: $loadFinished")
         if (loadFinished)
             loadUrl("javascript:(function() { document.getElementsByTagName('video')[0].pause(); })()")
     }
@@ -248,7 +247,6 @@ class VideoWebView : WebView {
         private var toast: Toast? = null
 
         override fun onScale(detector: ScaleGestureDetector?): Boolean {
-            Log.d(TAG, "onScale.detector: $detector, factor: ${detector?.scaleFactor}")
             if (detector == null)
                 return super.onScale(detector)
 
@@ -269,8 +267,6 @@ class VideoWebView : WebView {
             return true
         }
 
-        override fun onScaleEnd(detector: ScaleGestureDetector?) {
-
-        }
+        override fun onScaleEnd(detector: ScaleGestureDetector?) { }
     }
 }

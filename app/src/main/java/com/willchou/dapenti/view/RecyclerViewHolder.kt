@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Handler
 import android.support.design.widget.Snackbar
-import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
@@ -23,9 +22,11 @@ import com.willchou.dapenti.presenter.DetailActivity
 import android.net.Uri
 import android.os.Build
 import android.support.annotation.RequiresApi
+import com.willchou.dapenti.databinding.PentiListItemBinding
 import com.willchou.dapenti.model.DaPenTi
 
-class RecyclerViewHolder internal constructor(private val mView: View)
+class RecyclerViewHolder internal constructor(private val mView: View,
+                                              val binding: PentiListItemBinding)
     : RecyclerView.ViewHolder(mView) {
     companion object {
         private const val TAG = "RecyclerViewHolder"
@@ -39,16 +40,6 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         const val Bind_SelectChanged = "selectChanged"
         const val Bind_PageLoadFinished = "pageLoadFinished"
     }
-
-    private val cardView: CardView = mView.findViewById(R.id.cardView)
-
-    private val titleTextView: TextView = mView.findViewById(R.id.title)
-    private val progressBar: ProgressBar = mView.findViewById(R.id.progressBar)
-    private val descriptionTextView: TextView = mView.findViewById(R.id.description)
-    private val imageView: ImageView = mView.findViewById(R.id.image)
-    private val favoriteImage: ImageView = mView.findViewById(R.id.page_favorite_iv)
-    private val checkImage: ImageView = mView.findViewById(R.id.page_check_iv)
-    private val videoLayout: LinearLayout = mView.findViewById(R.id.webViewLayout)
 
     private var foregroundColor: Int = Color.BLACK
     private var backgroundColor: Int = Color.WHITE
@@ -65,10 +56,10 @@ class RecyclerViewHolder internal constructor(private val mView: View)
 
     private fun toggleSelect() {
         if (page!!.isSelected) {
-            checkImage.visibility = View.GONE
+            binding.checkImageView.visibility = View.GONE
             page!!.isSelected = false
         } else {
-            checkImage.visibility = View.VISIBLE
+            binding.checkImageView.visibility = View.VISIBLE
             page!!.isSelected = true
         }
     }
@@ -108,7 +99,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     private fun itemLongClicked(v: View) {
         Log.d(TAG, "long press: $v")
 
-        val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), titleTextView, Gravity.END)
+        val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), binding.title, Gravity.END)
         popMenu.inflate(R.menu.item)
         if (page!!.getFavorite())
             popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_remove_favorite)
@@ -167,64 +158,64 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         popMenu.show()
     }
 
-    fun checkSelect() {
+    internal fun checkSelect() {
         Log.d(TAG, "checkSelect: isSelectMode: ${DRecyclerView.isSelectMode()}")
         if (!DRecyclerView.isSelectMode()) {
-            checkImage.visibility = View.GONE
+            binding.checkImageView.visibility = View.GONE
             return
         }
 
-        checkImage.visibility = if (page!!.isSelected) View.VISIBLE else View.GONE
+        binding.checkImageView.visibility = if (page!!.isSelected) View.VISIBLE else View.GONE
     }
 
-    fun checkFavorite() {
-        favoriteImage.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
+    internal fun checkFavorite() {
+        binding.favoriteImageView.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
-    fun enterSelectModeAnimation() {
-        checkImage.visibility = View.VISIBLE
+    internal fun enterSelectModeAnimation() {
+        binding.checkImageView.visibility = View.VISIBLE
 
         val animation = AlphaAnimation(1.0f, 0f)
         animation.duration = 350
         animation.repeatCount = 1
-        checkImage.animation = animation
+        binding.checkImageView.animation = animation
 
         Handler().postDelayed({
-            checkImage.visibility = View.GONE
+            binding.checkImageView.visibility = View.GONE
         }, animation.duration + 100)
     }
 
-    fun quitSelectMode() {
-        checkImage.visibility = View.GONE
+    internal fun quitSelectMode() {
+        binding.checkImageView.visibility = View.GONE
     }
 
     private fun checkNightMode() {
         backgroundColor = Settings.settings!!.getLighterBackgroundColor()
         foregroundColor = Settings.settings!!.getForegroundColor()
 
-        titleTextView.setTextColor(foregroundColor)
-        descriptionTextView.setTextColor(foregroundColor)
+        binding.title.setTextColor(foregroundColor)
+        binding.description.setTextColor(foregroundColor)
 
-        cardView.setCardBackgroundColor(backgroundColor)
+        binding.cardView.setCardBackgroundColor(backgroundColor)
     }
 
-    fun update(page: DaPenTiPage) {
+    internal fun update(page: DaPenTiPage) {
         this.page = page
         Log.d(TAG, "update with page ${page.pageTitle}")
 
         val animation = AlphaAnimation(0f, 1.0f)
         animation.duration = 200
-        cardView.animation = animation
+        binding.cardView.animation = animation
     }
 
-    fun setupContent(playVideoIfPossible: Boolean) {
-        titleTextView.text = page!!.pageTitle
+    internal fun setupContent(playVideoIfPossible: Boolean) {
+        binding.title.text = page!!.pageTitle
 
         if (page!!.pageExpanded())
             showContent(mView, playVideoIfPossible)
     }
 
-    fun invalidContent() {
+    internal fun invalidContent() {
         if (!page!!.pageExpanded())
             return
 
@@ -234,9 +225,9 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         showDescription("内容获取失败,请稍后重试...", true)
     }
 
-    fun pageLoadFinished() {
+    internal fun pageLoadFinished() {
         hideProgressBar()
-        videoLayout.visibility = View.VISIBLE
+        binding.videoLayout.visibility = View.VISIBLE
     }
 
     internal fun attachedToWindow() {
@@ -259,18 +250,18 @@ class RecyclerViewHolder internal constructor(private val mView: View)
         Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
 
         if (expand) {
-            titleTextView.setTextColor(backgroundColor)
-            titleTextView.setBackgroundColor(Color.GRAY)
+            binding.title.setTextColor(backgroundColor)
+            binding.title.setBackgroundColor(Color.GRAY)
 
             if (saveState)
                 page!!.markExpanded(true)
         } else {
-            titleTextView.setTextColor(foregroundColor)
-            titleTextView.setBackgroundColor(0)
+            binding.title.setTextColor(foregroundColor)
+            binding.title.setBackgroundColor(0)
 
-            descriptionTextView.visibility = View.GONE
-            imageView.visibility = View.GONE
-            progressBar.visibility = View.GONE
+            binding.description.visibility = View.GONE
+            binding.image.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
 
             if (saveState)
                 page!!.markExpanded(false)
@@ -278,59 +269,59 @@ class RecyclerViewHolder internal constructor(private val mView: View)
     }
 
     private fun hideDescription() {
-        descriptionTextView.visibility = View.GONE
+        binding.description.visibility = View.GONE
     }
 
     private fun showDescription(s: String?, centerAlign: Boolean) {
         when (settings?.fontSize) {
-            Settings.FontSizeSmall -> descriptionTextView.textSize = 14f
-            Settings.FontSizeMedia -> descriptionTextView.textSize = 15f
-            Settings.FontSizeBig -> descriptionTextView.textSize = 17f
-            Settings.FontSizeSuperBig -> descriptionTextView.textSize = 20f
+            Settings.FontSizeSmall -> binding.description.textSize = 14f
+            Settings.FontSizeMedia -> binding.description.textSize = 15f
+            Settings.FontSizeBig -> binding.description.textSize = 17f
+            Settings.FontSizeSuperBig -> binding.description.textSize = 20f
         }
 
         if (s != null) {
-            descriptionTextView.text = s
+            binding.description.text = s
             if (centerAlign)
-                descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+                binding.description.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
             else
-                descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_TEXT_START
+                binding.description.textAlignment = TextView.TEXT_ALIGNMENT_TEXT_START
         } else {
-            descriptionTextView.text = "智能识别没有找到内容哦!\n您可以尝试【显示原始内容】"
-            descriptionTextView.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
+            binding.description.text = "智能识别没有找到内容哦!\n您可以尝试【显示原始内容】"
+            binding.description.textAlignment = TextView.TEXT_ALIGNMENT_CENTER
         }
-        descriptionTextView.visibility = View.VISIBLE
+        binding.description.visibility = View.VISIBLE
     }
 
     private fun hideImage() {
-        imageView.visibility = View.GONE
-        imageView.setImageDrawable(null)
+        binding.image.visibility = View.GONE
+        binding.image.setImageDrawable(null)
     }
 
     private fun showImage(v: View, imageUrl: String?) {
-        imageView.setImageDrawable(null)
+        binding.image.setImageDrawable(null)
         if (settings != null && settings!!.isImageEnabled) {
             Glide.with(v.context)
                     .load(imageUrl)
-                    .into(imageView)
-            imageView.visibility = View.VISIBLE
+                    .into(binding.image)
+            binding.image.visibility = View.VISIBLE
         }
     }
 
     private fun hideProgressBar() {
-        progressBar.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
     }
 
     private fun showProgressBar() {
-        progressBar.visibility = View.VISIBLE
+        binding.progressBar.visibility = View.VISIBLE
     }
 
     private fun hideVideo() {
         val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
         videoWebView?.pauseVideo()
 
-        videoLayout.visibility = View.GONE
-        videoLayout.removeAllViews()
+        binding.videoLayout.visibility = View.GONE
+        binding.videoLayout.removeAllViews()
     }
 
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
@@ -347,21 +338,21 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                     "text/html", "UTF-8", null)
 
             showProgressBar()
-            videoLayout.visibility = View.GONE
+            binding.videoLayout.visibility = View.GONE
 
             DaPenTi.daPenTi!!.cacheVideoWebView(page!!.pageTitle, videoWebView)
         } else {
             hideProgressBar()
-            videoLayout.visibility = View.VISIBLE
+            binding.videoLayout.visibility = View.VISIBLE
         }
 
-        videoWebView.moveTo(videoLayout, false)
+        videoWebView.moveTo(binding.videoLayout, false)
 
         if (autoPlay)
             videoWebView.startVideo()
     }
 
-    fun hideContent(saveExpandState: Boolean) {
+    internal fun hideContent(saveExpandState: Boolean) {
         setExpand(false, saveExpandState)
         hideDescription()
         hideImage()
@@ -409,9 +400,7 @@ class RecyclerViewHolder internal constructor(private val mView: View)
                 context.startActivity(intent)
             }
 
-            else -> {
-                showDescription(null, true)
-            }
+            else -> showDescription(null, true)
         }
     }
 

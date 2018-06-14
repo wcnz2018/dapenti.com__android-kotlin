@@ -1,10 +1,12 @@
 package com.willchou.dapenti.view
 
+import android.databinding.DataBindingUtil
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.willchou.dapenti.R
+import com.willchou.dapenti.databinding.PentiListItemBinding
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 
@@ -60,20 +62,12 @@ class RecyclerViewAdapter(var daPenTiPages: List<DaPenTiPage>?)
         holder.detachedFromWindow()
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        Log.d(TAG, "onAttachedToRecyclerView")
-    }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        Log.d(TAG, "onDetachedFromRecyclerView")
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
         Log.d(TAG, "onCreateViewHolder")
-        val v = LayoutInflater.from(parent.context)
-                .inflate(R.layout.penti_list_item, parent, false)
-        return RecyclerViewHolder(v)
+        val binding: PentiListItemBinding  = DataBindingUtil.inflate(
+                LayoutInflater.from(parent.context),
+                R.layout.penti_list_item, parent, false)
+
+        return RecyclerViewHolder(binding.root, binding)
     }
 }
