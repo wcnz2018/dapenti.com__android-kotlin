@@ -138,7 +138,6 @@ class FavoriteActivity : SwipeBackActivity() {
         if (favoriteList!!.isEmpty()) {
             linearLayout!!.visibility = View.GONE
             noteLayout!!.visibility = View.VISIBLE
-            return
         }
 
         val adapter = recyclerView?.getRecyclerViewAdapter()
