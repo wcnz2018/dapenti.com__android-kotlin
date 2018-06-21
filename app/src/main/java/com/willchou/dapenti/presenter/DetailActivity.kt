@@ -1,11 +1,13 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.support.annotation.Nullable
 import android.support.annotation.RequiresApi
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
@@ -18,12 +20,10 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.willchou.dapenti.R
 import com.willchou.dapenti.databinding.ActivityDetailBinding
-import com.willchou.dapenti.model.DaPenTi
-import com.willchou.dapenti.model.DaPenTiPage
+import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.vm.DetailViewModel
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import me.majiajie.swipeback.SwipeBackActivity
 
@@ -42,6 +42,7 @@ class DetailActivity : SwipeBackActivity() {
     private var appBarVisible: Boolean = true
 
     private var detailViewModel: DetailViewModel? = null
+    private var observer = Observer<DaPenTiData.Page> { prepareContent() }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +65,12 @@ class DetailActivity : SwipeBackActivity() {
         Observable.just(detailViewModel)
                 .subscribeOn(Schedulers.io())
                 .doOnNext { it!!.initDB() }
-                .subscribe { runOnUiThread { prepareContent() } }
+                .subscribe { detailViewModel!!.pageData?.observeForever(observer) }
+    }
+
+    override fun onDestroy() {
+        detailViewModel!!.pageData?.removeObserver(observer)
+        super.onDestroy()
     }
 
     override fun onBackPressed() {

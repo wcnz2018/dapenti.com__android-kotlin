@@ -42,9 +42,9 @@ class FragmentViewModel(private val category: String): ViewModel() {
 
     private val helper = PagingRequestHelper(executor)
 
-    private val categoryDao = DaPenTiRoomDatabase.get(DaPenTiApplication.getAppContext()).categoryDao()
-    private val pageDao = DaPenTiRoomDatabase.get(DaPenTiApplication.getAppContext()).pageDao()
-    private val indexDao = DaPenTiRoomDatabase.get(DaPenTiApplication.getAppContext()).indexDao()
+    private val categoryDao = DaPenTiRoomDatabase.get().categoryDao()
+    private val pageDao = DaPenTiRoomDatabase.get().pageDao()
+    private val indexDao = DaPenTiRoomDatabase.get().indexDao()
 
     private var categoryData: DaPenTiData.Category? = null
     private var allPages : LiveData<PagedList<DaPenTiData.Page>>? = null
@@ -57,7 +57,7 @@ class FragmentViewModel(private val category: String): ViewModel() {
             pageDao.insert(page)
             val index = DaPenTiData.Index(
                     categoryID = categoryData!!.id!!,
-                    pageID = pageDao.getPage(page.title).id!!)
+                    pageID = pageDao.getPage(page.title).value!!.id!!)
             indexDao.insert(index)
         }
 

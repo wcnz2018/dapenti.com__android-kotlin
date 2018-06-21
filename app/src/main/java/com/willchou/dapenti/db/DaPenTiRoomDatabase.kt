@@ -1,9 +1,11 @@
 package com.willchou.dapenti.db
 
+import android.arch.lifecycle.LiveData
 import android.arch.paging.DataSource
 import android.arch.persistence.room.*
 import android.arch.persistence.room.Database
 import android.content.Context
+import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__DISPLAY_ORDER
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__TITLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__VISIBLE
@@ -28,7 +30,7 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
         private var INSTANCE: DaPenTiRoomDatabase? = null
 
         @Synchronized
-        fun get(context: Context): DaPenTiRoomDatabase {
+        fun get(context: Context = DaPenTiApplication.getAppContext()): DaPenTiRoomDatabase {
             if (INSTANCE == null) {
                 INSTANCE = Room.databaseBuilder(context.applicationContext,
                         DaPenTiRoomDatabase::class.java, /*DaPenTiData.DATABASE_NAME*/"DaPenTi2.db")
@@ -70,8 +72,12 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
         fun getPages(categoryID: Int): DataSource.Factory<Int, DaPenTiData.Page>
 
         @Query("SELECT * FROM $TABLE_PAGES " +
+                "WHERE $COLUMN_PAGE__FAVORITE=1 ORDER BY $COLUMN_PAGE__FAVORITE_AT DESC")
+        fun getFavoritePages(): DataSource.Factory<Int, DaPenTiData.Page>
+
+        @Query("SELECT * FROM $TABLE_PAGES " +
                 "WHERE $COLUMN_PAGE__TITLE=:pageTitle")
-        fun getPage(pageTitle: String): DaPenTiData.Page
+        fun getPage(pageTitle: String): LiveData<DaPenTiData.Page>
 
         @Query("SELECT $COLUMN_PAGE__FAVORITE FROM $TABLE_PAGES " +
                 "WHERE $COLUMN_PAGE__TITLE=:pageTitle")

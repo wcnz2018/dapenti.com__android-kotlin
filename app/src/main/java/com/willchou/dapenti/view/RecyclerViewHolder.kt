@@ -1,5 +1,6 @@
 package com.willchou.dapenti.view
 
+import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -20,11 +21,17 @@ import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
 import android.net.Uri
 import com.willchou.dapenti.databinding.PentiListItemBinding
+import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.vm.HolderViewModel
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import java.util.*
+import android.R.attr.countDown
+import android.R.attr.countDown
+import android.support.annotation.Nullable
+
 
 class RecyclerViewHolder internal constructor(private val mView: View,
                                               val binding: PentiListItemBinding)
@@ -48,6 +55,15 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private var backgroundColor: Int = Color.WHITE
 
     private var holderModel: HolderViewModel? = null
+
+    private var observer = object : Observer<DaPenTiData.Page> {
+        override fun onChanged(@Nullable page: DaPenTiData.Page?) {
+            checkSelect()
+            checkNightMode()
+            checkFavorite()
+            setupContent(false)
+        }
+    }
 
     fun getHolderTitle(): String? {
         return holderModel?.pageTitle
@@ -254,10 +270,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
                 .doOnNext { it.initDB() }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    checkSelect()
-                    checkNightMode()
-                    checkFavorite()
-                    setupContent(false)
+                    holderModel!!.pageData?.observeForever(observer)
                 }
     }
 
@@ -265,6 +278,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         Log.d(TAG, "detachedFromWindow: ${holderModel?.pageTitle}")
 
         hideContent(false)
+        holderModel!!.pageData?.removeObserver(observer)
     }
 
     private fun setExpand(expand: Boolean, saveState: Boolean) {
@@ -413,7 +427,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
                 intent.putExtra(DetailActivity.EXTRA_COVER_URL, pageLongReading.coverImageUrl)
                 intent.putExtra(DetailActivity.EXTRA_TITLE, holderModel!!.pageTitle)
 
-                holderModel!!.pageMayChanged = true
+                //holderModel!!.pageMayChanged = true
                 context.startActivity(intent)
             }
 

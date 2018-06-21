@@ -6,7 +6,7 @@ import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.db.DaPenTiRoomDatabase
 
 class MainViewModel : ViewModel() {
-    private val dao = DaPenTiRoomDatabase.get(DaPenTiApplication.getAppContext()).categoryDao()
+    private val dao = DaPenTiRoomDatabase.get().categoryDao()
 
     fun getCategories(visibleOnly: Boolean = true) : List<DaPenTiData.Category> {
         return if (visibleOnly)

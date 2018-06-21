@@ -3,18 +3,14 @@ package com.willchou.dapenti.vm
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.util.Log
-import com.willchou.dapenti.DaPenTiApplication
-import com.willchou.dapenti.db.DaPenTiData
-import com.willchou.dapenti.db.DaPenTiRoomDatabase
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.utils.DObservable
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.net.URL
 import java.util.*
 
-class HolderViewModel(val pageTitle: String,
+class HolderViewModel(val title: String,
                       /* for ViewHolder use */
                       var selected: Boolean = false,
                       var expanded: Boolean = false,
@@ -28,43 +24,27 @@ class HolderViewModel(val pageTitle: String,
                       var pagePicture: PagePicture = PagePicture(),
                       var pageVideo: PageVideo = PageVideo(),
                       var pageOriginal: PageOriginal = PageOriginal()
-) : ViewModel() {
-    var pageDao: DaPenTiRoomDatabase.PageDao? = null
-    var pageData: DaPenTiData.Page? = null
-
+) : DetailViewModel(title) {
     fun initDB() {
-        if (pageDao == null)
-            pageDao = DaPenTiRoomDatabase.get(DaPenTiApplication.getAppContext()).pageDao()
-
-        if (pageMayChanged || pageData == null) {
-            pageData = pageDao!!.getPage(pageTitle)
-            pageMayChanged = false
-        }
-    }
-
-    fun getUrlString(): String = pageData!!.url
-
-    fun getFavorite(): Boolean = pageData!!.favorite == 1
-    fun setFavorite(f: Boolean) {
-        pageData!!.favorite = if (f) 1 else 0
-        Thread { pageDao!!.updateFavorite(pageData!!.id!!, pageData!!.favorite) }.start()
+        super.initDB(pageMayChanged)
+        pageMayChanged = false
     }
 
     fun contentPrepared(): Boolean = (doc != null)
 
     @Synchronized
     fun prepareContent(): Boolean {
-        Log.d(TAG, "prepareContent with url: ${pageData!!.url}")
+        Log.d(TAG, "prepareContent with url: ${pageData!!.value!!.url}")
         try {
-            val html = pageData!!.content
+            val html = pageData!!.value!!.content
             if (html.isEmpty()) {
-                doc = Jsoup.parse(URL(pageData!!.url), 5000)
+                doc = Jsoup.parse(URL(pageData!!.value!!.url), 5000)
                 if (doc != null && doc.toString().isEmpty()) {
-                    pageData!!.content = doc.toString()
-                    pageDao!!.updateContent(pageData!!.id!!, pageData!!.content)
+                    pageData!!.value!!.content = doc.toString()
+                    pageDao!!.updateContent(pageData!!.value!!.id!!, pageData!!.value!!.content)
                 }
             } else
-                doc = Jsoup.parse(html, pageData!!.url)
+                doc = Jsoup.parse(html, pageData!!.value!!.url)
 
             if (doc != null) {
                 prepareOriginal(doc!!.clone())
@@ -137,7 +117,7 @@ class HolderViewModel(val pageTitle: String,
     }
 
     private fun preparePagePicture(doc: Document): Boolean {
-        if (!pageData!!.url.contains("more.asp?name=tupian"))
+        if (!pageData!!.value!!.url.contains("more.asp?name=tupian"))
             return false
 
         val ss = arrayOf("div>img[src^='http://www.dapenti.com']",
