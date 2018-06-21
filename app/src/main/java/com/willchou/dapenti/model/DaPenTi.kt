@@ -111,12 +111,11 @@ class DaPenTi {
             return lp
         }
 
+        @Synchronized
         fun getElementsWithQuery(url: URL, query: String): MutableList<Pair<String, URL>> {
             try {
-                synchronized(TAG) {
-                    val doc = Jsoup.parse(url, 5000)
-                    return getElementsWithQuery(url, doc.toString(), query)
-                }
+                val doc = Jsoup.parse(url, 5000)
+                return getElementsWithQuery(url, doc.toString(), query)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

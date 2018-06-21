@@ -1,12 +1,12 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.ViewModelProviders
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.os.Handler
 import android.os.Parcelable
 import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
@@ -16,19 +16,20 @@ import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import com.willchou.dapenti.R
 import com.willchou.dapenti.databinding.ActivityMainBinding
 import com.willchou.dapenti.model.DaPenTi
+import com.willchou.dapenti.db.DaPenTiData
+import com.willchou.dapenti.model.DaPenTiWeb
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.vm.MainViewModel
 import com.willchou.dapenti.view.VideoWebView
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -47,8 +48,11 @@ class MainActivity : AppCompatActivity() {
             when (intent?.action) {
                 DaPenTi.ACTION_CATEGORY_PREPARED -> {
                     val title = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
+
+                    /*
                     if (title == null)
                         setupContent()
+                        */
                 }
 
                 DaPenTi.ACTION_CATEGORY_ERROR -> {
@@ -59,10 +63,10 @@ class MainActivity : AppCompatActivity() {
                 Settings.ACTION_PLAY_ON_MOBILE_DATA -> {
                     Snackbar.make(findViewById(android.R.id.content),
                             "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
-                            .setAction(R.string.title_activity_settings, {
+                            .setAction(R.string.title_activity_settings) {
                                 val i = Intent(context!!, SettingsActivity::class.java)
                                 context.startActivity(i)
-                            }).show()
+                            }.show()
                 }
 
                 VideoWebView.ACTION_ENTER_FULLSCREEN -> {
@@ -159,17 +163,43 @@ class MainActivity : AppCompatActivity() {
     private fun initiateContent() {
         setSupportActionBar(binding!!.toolbar)
 
-        DaPenTi.storageDir = filesDir.absolutePath
+        //DaPenTi.storageDir = filesDir.absolutePath
 
+        /*
         Handler().postDelayed({
             if (!DaPenTi.daPenTi!!.initiated() && !loadAlreadyFailed)
                 showWait(false)
         }, 500)
 
         Thread { DaPenTi.daPenTi?.prepareCategory(false) }.start()
+        */
+
+        showWait(false)
+
+        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        Observable.just(mainViewModel)
+                .subscribeOn(Schedulers.io())
+                .subscribe {
+                    var cs = mainViewModel.getCategories()
+                    //Log.d(TAG, "cs: $cs")
+
+                    if (cs.isEmpty()) {
+                        Log.d(TAG, "category is empty, fetch from website")
+
+                        val list = DaPenTiWeb.getCategories()
+                        if (list.isNotEmpty())
+                            mainViewModel.insertCategories(list)
+                    }
+
+                    cs = mainViewModel.getCategories()
+                    //Log.d(TAG, "cs: $cs")
+
+                    runOnUiThread { setupContent(cs) }
+                }
     }
 
-    private fun setupContent() {
+    /*
+    private fun setupContent_old() {
         Log.d(TAG, "setupContent")
         if (!DaPenTi.daPenTi!!.initiated()) {
             showWait(true)
@@ -185,7 +215,26 @@ class MainActivity : AppCompatActivity() {
         setupViewPager(viewPager)
         binding!!.tabLayout.setupWithViewPager(viewPager)
     }
+    */
 
+    private fun setupContent(categories: List<DaPenTiData.Category>) {
+        Log.d(TAG, "setupContent")
+        hideWait()
+
+        binding!!.tabLayout.visibility = View.VISIBLE
+        binding!!.tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
+
+        val viewPager = findViewById<ViewPager>(R.id.viewpager)
+
+        val adapter = Adapter(supportFragmentManager)
+        for (c in categories)
+            adapter.addFragment(c.title, ListFragment().withCategory(c.title))
+        viewPager.adapter = adapter
+
+        binding!!.tabLayout.setupWithViewPager(viewPager)
+    }
+
+    /*
     private fun setupViewPager(viewPager: ViewPager) {
         val adapter = Adapter(supportFragmentManager)
 
@@ -202,6 +251,7 @@ class MainActivity : AppCompatActivity() {
 
         viewPager.adapter = adapter
     }
+    */
 
     internal class Adapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
         private val fragmentPairList: MutableList<Pair<String, ListFragment>> = ArrayList()

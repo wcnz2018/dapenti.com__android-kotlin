@@ -1,11 +1,11 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.Observer
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
@@ -18,13 +18,17 @@ import com.willchou.dapenti.R
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
-import com.willchou.dapenti.view.DRecyclerView
-import com.willchou.dapenti.view.RecyclerViewAdapter
-import com.willchou.dapenti.view.VideoWebView
+import android.arch.lifecycle.ViewModelProviders
+import com.willchou.dapenti.view.*
+import com.willchou.dapenti.vm.FragmentViewModel
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 class ListFragment : Fragment() {
     companion object {
         private const val TAG = "ListFragment"
+        private const val EXTRA_CATEGORY = "category"
     }
 
     private var daPenTiCategory: DaPenTiCategory? = null
@@ -34,6 +38,8 @@ class ListFragment : Fragment() {
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
 
 
+    private var categoryName: String? = null
+    private var fragmentViewModel: FragmentViewModel? = null
     var recycledViewPool: RecyclerView.RecycledViewPool? = null
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -53,19 +59,20 @@ class ListFragment : Fragment() {
                         activity!!.runOnUiThread { setupRecyclerView() }
                 }
 
+                /*
                 DaPenTi.ACTION_DATABASE_CHANGED -> setupRecyclerView()
 
                 DaPenTi.ACTION_PAGE_PREPARED,
                 DaPenTi.ACTION_PAGE_FAILED,
                 DaPenTi.ACTION_PAGE_FAVORITE,
+                */
                 VideoWebView.ACTION_VIDEO_LOADFINISHED -> recyclerView?.broadcastAction(intent)
             }
         }
     }
 
-    internal fun setDaPenTiCategory(daPenTiCategory: DaPenTiCategory):
-            ListFragment {
-        this.daPenTiCategory = daPenTiCategory
+    internal fun withCategory(name: String) : ListFragment {
+        categoryName = name
         return this
     }
 
@@ -74,12 +81,14 @@ class ListFragment : Fragment() {
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
         filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
 
+        /*
         filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
         filter.addAction(DaPenTi.ACTION_DATABASE_CHANGED)
 
         filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
         filter.addAction(DaPenTi.ACTION_PAGE_FAILED)
         filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
+        */
 
         filter.addAction(VideoWebView.ACTION_VIDEO_LOADFINISHED)
         context!!.registerReceiver(broadcastReceiver, filter)
@@ -96,9 +105,28 @@ class ListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate: ${daPenTiCategory?.categoryName}")
+
+        if (savedInstanceState != null) {
+            val n = savedInstanceState.getString(EXTRA_CATEGORY)
+            if (!n.isNullOrEmpty())
+                categoryName = n
+        }
+
+        fragmentViewModel = ViewModelProviders
+                .of(this, FragmentViewModel.Factor(categoryName!!))
+                .get(categoryName!!, FragmentViewModel::class.java)
+
+        //swipeRefreshLayout!!.isRefreshing = true
+        Observable.just(fragmentViewModel)
+                .subscribeOn(Schedulers.io())
+                .subscribe { fragmentViewModel?.preparePagesIfEmpty() }
 
         registerReceiver()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        Log.d(TAG, "onSaveInstanceState")
+        outState.putString(EXTRA_CATEGORY, categoryName)
     }
 
     override fun onDestroy() {
@@ -146,37 +174,21 @@ class ListFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        swipeRefreshLayout!!.isRefreshing = false
-        if (daPenTiCategory == null) return
-        recyclerViewAdapter = RecyclerViewAdapter(daPenTiCategory!!.pages)
+        recyclerViewAdapter = RecyclerViewAdapter()
 
         recyclerView!!.layoutManager = LinearLayoutManager(recyclerView!!.context)
         recyclerView!!.recycledViewPool = recycledViewPool
         recyclerView!!.adapter = recyclerViewAdapter
-
-        Log.d(TAG, "setupRecyclerView(${daPenTiCategory?.categoryName})" +
-                " with adapter: $recyclerViewAdapter")
-        Log.d(TAG, "data.size: ${daPenTiCategory?.pages?.size}")
-
-        recyclerViewAdapter!!.notifyDataSetChanged()
     }
 
     private fun prepareContent() {
-        if (daPenTiCategory == null)
-            return
+        setupRecyclerView()
 
-        if (daPenTiCategory!!.initiated()) {
-            setupRecyclerView()
-        } else {
-            Handler().postDelayed({
-                if (!daPenTiCategory!!.initiated())
-                    swipeRefreshLayout!!.isRefreshing = true
-            }, 500)
-            Thread { daPenTiCategory!!.preparePages(false) }.start()
-        }
-
-        swipeRefreshLayout!!.setOnRefreshListener {
-            Thread { daPenTiCategory!!.preparePages(true) }.start()
-        }
+        Observable.just(fragmentViewModel)
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    it!!.getPages()?.observe(this,
+                            Observer(recyclerViewAdapter!!::submitList))
+                }
     }
 }

@@ -141,8 +141,10 @@ class FavoriteActivity : SwipeBackActivity() {
         }
 
         val adapter = recyclerView?.getRecyclerViewAdapter()
+        /*
         adapter?.daPenTiPages = favoriteList!!
         adapter?.notifyDataSetChanged()
+        */
     }
 
     private fun setupContent() {
@@ -152,7 +154,7 @@ class FavoriteActivity : SwipeBackActivity() {
         recyclerView?.setBackgroundColor(backgroundColor)
         linearLayout?.setBackgroundColor(backgroundColor)
 
-        recyclerView?.adapter = RecyclerViewAdapter(null)
+        //recyclerView?.adapter = RecyclerViewAdapter(null)
 
         loadAdapterData()
     }

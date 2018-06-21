@@ -1,6 +1,5 @@
 package com.willchou.dapenti.view
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -20,16 +19,20 @@ import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
 import android.net.Uri
-import android.os.Build
-import android.support.annotation.RequiresApi
 import com.willchou.dapenti.databinding.PentiListItemBinding
 import com.willchou.dapenti.model.DaPenTi
+import com.willchou.dapenti.vm.HolderViewModel
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 class RecyclerViewHolder internal constructor(private val mView: View,
                                               val binding: PentiListItemBinding)
     : RecyclerView.ViewHolder(mView) {
     companion object {
         private const val TAG = "RecyclerViewHolder"
+
+        const val Extra_Favorite = "extra_favorite"
 
         const val Bind_ShowContent = "showContent"
         const val Bind_PageFailed = "pageFailed"
@@ -44,7 +47,11 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private var foregroundColor: Int = Color.BLACK
     private var backgroundColor: Int = Color.WHITE
 
-    private var page: DaPenTiPage? = null
+    private var holderModel: HolderViewModel? = null
+
+    fun getHolderTitle(): String? {
+        return holderModel?.pageTitle
+    }
 
     init {
         mView.setOnClickListener { v: View -> itemClicked(v) }
@@ -55,12 +62,12 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun toggleSelect() {
-        if (page!!.isSelected) {
+        if (holderModel!!.selected) {
             binding.checkImageView.visibility = View.GONE
-            page!!.isSelected = false
+            holderModel!!.selected = false
         } else {
             binding.checkImageView.visibility = View.VISIBLE
-            page!!.isSelected = true
+            holderModel!!.selected = true
         }
     }
 
@@ -70,21 +77,28 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             return
         }
 
-        if (page!!.initiated()) {
+        if (holderModel!!.contentPrepared()) {
             triggerContent(v)
-        } else {
-            if (page!!.pageExpanded()) {
-                setExpand(false, true)
-                return
-            }
-
-            setExpand(true, true)
-            Handler().postDelayed({
-                if (!page!!.initiated())
-                    showProgressBar()
-            }, 500)
-            Thread(Runnable { page!!.prepareContent() }).start()
+            return
         }
+
+        if (holderModel!!.expanded) {
+            setExpand(false, true)
+            return
+        }
+
+        setExpand(true, true)
+
+        Handler().postDelayed({
+            if (!holderModel!!.contentPrepared())
+                showProgressBar()
+        }, 300)
+
+        Observable.just(holderModel)
+                .observeOn(Schedulers.io())
+                .doOnNext { holderModel!!.prepareContent() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { setupContent(Settings.settings!!.canPlayVideo()) }
     }
 
     private fun copyToClipboard(v: View, message: String) {
@@ -101,16 +115,19 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
         val popMenu = PopupMenu(DaPenTiApplication.getAppContext(), binding.title, Gravity.END)
         popMenu.inflate(R.menu.item)
-        if (page!!.getFavorite())
+        if (holderModel!!.getFavorite())
             popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_remove_favorite)
         else
             popMenu.menu.findItem(R.id.action_favorite).setTitle(R.string.action_add_favorite)
 
+        val title = holderModel!!.pageTitle
+        var url = holderModel!!.getUrlString()
+
         popMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.action_favorite -> {
-                    val newFavorite = !page!!.getFavorite();
-                    page!!.setFavorite(newFavorite)
+                    val newFavorite = !holderModel!!.getFavorite();
+                    holderModel!!.setFavorite(newFavorite)
 
                     var s = "已从收藏中移除"
                     if (newFavorite)
@@ -123,14 +140,13 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
                     val context = v.context
                     val intent = Intent(context, DetailActivity::class.java)
-                    intent.putExtra(DetailActivity.EXTRA_TITLE, page!!.pageTitle)
+                    intent.putExtra(DetailActivity.EXTRA_TITLE, title)
 
-                    var url = page!!.pageUrl.toString()
-                    if (url.contains("more.asp")) {  // fetch page for mobile
+                    if (url.contains("more.asp")) {  // fetch holderModel for mobile
                         url = url.replace("more.asp", "readforwx.asp")
                         intent.putExtra(DetailActivity.EXTRA_URL, url)
                     } else {
-                        val pageOriginal = page!!.pageOriginal
+                        val pageOriginal = holderModel!!.pageOriginal
                         if (pageOriginal.valid) { // html already exists
                             intent.putExtra(DetailActivity.EXTRA_HTML, pageOriginal.contentHtml)
                             intent.putExtra(DetailActivity.EXTRA_COVER_URL, pageOriginal.coverImageUrl)
@@ -141,13 +157,13 @@ class RecyclerViewHolder internal constructor(private val mView: View,
                     context.startActivity(intent)
                 }
 
-                R.id.action_copy_title -> copyToClipboard(v, page!!.pageTitle)
+                R.id.action_copy_title -> copyToClipboard(v, title)
 
-                R.id.action_copy_link -> copyToClipboard(v, page!!.pageUrl.toString())
+                R.id.action_copy_link -> copyToClipboard(v, url)
 
                 R.id.action_open_link -> {
                     val intent = Intent(Intent.ACTION_VIEW)
-                    intent.data = Uri.parse(page!!.pageUrl.toString())
+                    intent.data = Uri.parse(url)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     DaPenTiApplication.getAppContext().startActivity(intent)
                 }
@@ -165,11 +181,11 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             return
         }
 
-        binding.checkImageView.visibility = if (page!!.isSelected) View.VISIBLE else View.GONE
+        binding.checkImageView.visibility = if (holderModel!!.selected) View.VISIBLE else View.GONE
     }
 
     internal fun checkFavorite() {
-        binding.favoriteImageView.visibility = if (page!!.getFavorite()) View.VISIBLE else View.GONE
+        binding.favoriteImageView.visibility = if (holderModel!!.getFavorite()) View.VISIBLE else View.GONE
     }
 
     internal fun enterSelectModeAnimation() {
@@ -199,24 +215,26 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         binding.cardView.setCardBackgroundColor(backgroundColor)
     }
 
-    internal fun update(page: DaPenTiPage) {
-        this.page = page
-        Log.d(TAG, "update with page ${page.pageTitle}")
+    internal fun bindTo(model: HolderViewModel) {
+        holderModel = model
+        Log.d(TAG, "bindTo with page ${holderModel!!.pageTitle}")
 
         val animation = AlphaAnimation(0f, 1.0f)
         animation.duration = 200
         binding.cardView.animation = animation
+
+        binding.title.text = model.pageTitle
     }
 
     internal fun setupContent(playVideoIfPossible: Boolean) {
-        binding.title.text = page!!.pageTitle
+        binding.title.text = holderModel?.pageTitle
 
-        if (page!!.pageExpanded())
+        if (holderModel!!.expanded)
             showContent(mView, playVideoIfPossible)
     }
 
     internal fun invalidContent() {
-        if (!page!!.pageExpanded())
+        if (!holderModel!!.expanded)
             return
 
         hideImage()
@@ -231,30 +249,28 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     internal fun attachedToWindow() {
-        Log.d(TAG, "attachToWindow: ${page!!.pageTitle}," +
-                "expanded: ${page?.pageExpanded()}")
-
-        checkSelect()
-        checkNightMode()
-        checkFavorite()
-        setupContent(false)
+        Observable.just(holderModel!!)
+                .observeOn(Schedulers.io())
+                .doOnNext { it.initDB() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    checkSelect()
+                    checkNightMode()
+                    checkFavorite()
+                    setupContent(false)
+                }
     }
 
     internal fun detachedFromWindow() {
-        Log.d(TAG, "detachedFromWindow: ${page?.pageTitle}")
+        Log.d(TAG, "detachedFromWindow: ${holderModel?.pageTitle}")
 
         hideContent(false)
     }
 
     private fun setExpand(expand: Boolean, saveState: Boolean) {
-        Log.d(TAG, "setExpand ${page?.pageTitle} to $expand, saveState: $saveState")
-
         if (expand) {
             binding.title.setTextColor(backgroundColor)
             binding.title.setBackgroundColor(Color.GRAY)
-
-            if (saveState)
-                page!!.markExpanded(true)
         } else {
             binding.title.setTextColor(foregroundColor)
             binding.title.setBackgroundColor(0)
@@ -262,10 +278,10 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             binding.description.visibility = View.GONE
             binding.image.visibility = View.GONE
             binding.progressBar.visibility = View.GONE
-
-            if (saveState)
-                page!!.markExpanded(false)
         }
+
+        if (saveState)
+            holderModel!!.expanded = expand
     }
 
     private fun hideDescription() {
@@ -317,7 +333,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun hideVideo() {
-        val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
+        val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(holderModel!!.pageTitle)
         videoWebView?.pauseVideo()
 
         binding.videoLayout.visibility = View.GONE
@@ -325,13 +341,13 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
-        Log.d(TAG, "showVideo for ${page?.pageTitle}, autoPlay: $autoPlay")
+        Log.d(TAG, "showVideo for ${holderModel!!.pageTitle}, autoPlay: $autoPlay")
 
-        var videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(page!!.pageTitle)
+        var videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(holderModel!!.pageTitle)
 
         if (videoWebView == null) {
             videoWebView = VideoWebView(DaPenTiApplication.getAppContext())
-            videoWebView.belongPageTitle = page?.pageTitle
+            videoWebView.belongPageTitle = holderModel!!.pageTitle
 
             videoWebView.playOnLoadFinished = autoPlay
             videoWebView.loadDataWithBaseURL("", contentHtml,
@@ -340,7 +356,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             showProgressBar()
             binding.videoLayout.visibility = View.GONE
 
-            DaPenTi.daPenTi!!.cacheVideoWebView(page!!.pageTitle, videoWebView)
+            DaPenTi.daPenTi!!.cacheVideoWebView(holderModel!!.pageTitle, videoWebView)
         } else {
             hideProgressBar()
             binding.videoLayout.visibility = View.VISIBLE
@@ -364,12 +380,12 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         setExpand(true, true)
         hideProgressBar()
 
-        when (page!!.pageType) {
+        when (holderModel!!.pageType) {
             DaPenTiPage.PageTypeNote ->
-                showDescription(page!!.pageNotes.content, false)
+                showDescription(holderModel!!.pageNotes.content, false)
 
             DaPenTiPage.PageTypePicture -> {
-                val picture = page!!.pagePicture
+                val picture = holderModel!!.pagePicture
                 showDescription(picture.description, false)
                 showImage(v, picture.imageUrl)
             }
@@ -377,7 +393,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             DaPenTiPage.PageTypeVideo -> {
                 val canPlayVideo = Settings.settings!!.canPlayVideo()
                 if (canPlayVideo) {
-                    val pageVideo = page!!.pageVideo
+                    val pageVideo = holderModel!!.pageVideo
                     if (pageVideo.invalid) {
                         showDescription(pageVideo.invalidReason, true)
                     } else
@@ -389,14 +405,15 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             DaPenTiPage.PageTypeLongReading -> {
                 setExpand(false, true)
 
-                val pageLongReading = page!!.pageLongReading
+                val pageLongReading = holderModel!!.pageLongReading
 
                 val context = v.context
                 val intent = Intent(context, DetailActivity::class.java)
                 intent.putExtra(DetailActivity.EXTRA_HTML, pageLongReading.contentHtml)
                 intent.putExtra(DetailActivity.EXTRA_COVER_URL, pageLongReading.coverImageUrl)
-                intent.putExtra(DetailActivity.EXTRA_TITLE, page!!.pageTitle)
+                intent.putExtra(DetailActivity.EXTRA_TITLE, holderModel!!.pageTitle)
 
+                holderModel!!.pageMayChanged = true
                 context.startActivity(intent)
             }
 
@@ -405,9 +422,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun triggerContent(v: View) {
-        Log.d(TAG, "update ${page?.pageTitle} with pageType: " + page!!.pageType)
-
-        if (page!!.pageExpanded())
+        if (holderModel!!.expanded)
             hideContent(true)
         else
             showContent(v, true)

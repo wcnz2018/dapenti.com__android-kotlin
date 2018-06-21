@@ -21,43 +21,10 @@ class DRecyclerView : RecyclerView {
     constructor(context: Context) : super(context)
 
     fun broadcastAction(intent: Intent?) {
-        val pageTitle = intent?.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
-
-        val daPenTiPages = (adapter as RecyclerViewAdapter?)?.daPenTiPages ?: return
-
-        var index = -1
-        for (i in daPenTiPages.indices) {
-            val title = daPenTiPages[i].pageTitle
-            if (title == pageTitle) {
-                index = i
-                break
-            }
-        }
-
-        if (index == -1) {
-            Log.d(TAG, "Unable to find Page by title $pageTitle")
-            return
-        }
-
         when (intent?.action) {
-            DaPenTi.ACTION_PAGE_PREPARED -> {
-                Log.d(TAG, "onReceive PagePrepared")
-                adapter.notifyItemChanged(index, RecyclerViewHolder.Bind_ShowContent)
-            }
-
-            DaPenTi.ACTION_PAGE_FAILED -> {
-                Log.d(TAG, "onReceive PageFailed")
-                adapter.notifyItemChanged(index, RecyclerViewHolder.Bind_PageFailed)
-            }
-
-            DaPenTi.ACTION_PAGE_FAVORITE -> {
-                Log.d(TAG, "onReceive PageFavorite")
-                adapter.notifyItemChanged(index, RecyclerViewHolder.Bind_Favorite)
-            }
-
             VideoWebView.ACTION_VIDEO_LOADFINISHED -> {
                 Log.d(TAG, "onReceive PageLoadFinished")
-                adapter.notifyItemChanged(index, RecyclerViewHolder.Bind_PageLoadFinished)
+                updateVisibleState(RecyclerViewHolder.Bind_PageLoadFinished)
             }
         }
     }
@@ -88,6 +55,7 @@ class DRecyclerView : RecyclerView {
     }
 
     fun reverseSelect() {
+        /*
         val adapter = adapter as RecyclerViewAdapter? ?: return
         if (adapter.daPenTiPages == null)
             return
@@ -95,9 +63,11 @@ class DRecyclerView : RecyclerView {
         for (page in adapter.daPenTiPages!!)
             page.isSelected = !page.isSelected
         updateVisibleState(RecyclerViewHolder.Bind_SelectChanged)
+        */
     }
 
     fun getSelectPages(): List<DaPenTiPage>? {
+        /*
         val adapter = adapter as RecyclerViewAdapter? ?: return null
         if (adapter.daPenTiPages == null)
             return null
@@ -109,9 +79,12 @@ class DRecyclerView : RecyclerView {
         }
 
         return list
+        */
+        return null
     }
 
     fun collapseAll() {
+        /*
         val adapter = adapter as RecyclerViewAdapter? ?: return
         if (adapter.daPenTiPages == null)
             return
@@ -120,5 +93,6 @@ class DRecyclerView : RecyclerView {
             page.markExpanded(false)
 
         updateVisibleState(RecyclerViewHolder.Bind_Collapse)
+        */
     }
 }

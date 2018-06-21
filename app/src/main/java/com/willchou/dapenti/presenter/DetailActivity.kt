@@ -1,12 +1,12 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.support.annotation.RequiresApi
-import android.support.design.widget.CollapsingToolbarLayout
 import android.support.design.widget.Snackbar
 import android.support.v4.content.ContextCompat
 import android.util.Log
@@ -21,6 +21,10 @@ import com.willchou.dapenti.databinding.ActivityDetailBinding
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.vm.DetailViewModel
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import me.majiajie.swipeback.SwipeBackActivity
 
 class DetailActivity : SwipeBackActivity() {
@@ -37,7 +41,7 @@ class DetailActivity : SwipeBackActivity() {
     private var scrollHeight: Int = 0
     private var appBarVisible: Boolean = true
 
-    private var daPenTiPage: DaPenTiPage? = null
+    private var detailViewModel: DetailViewModel? = null
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,9 +53,18 @@ class DetailActivity : SwipeBackActivity() {
         setSupportActionBar(binding!!.toolbar)
         binding!!.toolbar.setNavigationOnClickListener { onBackPressed() }
 
+        val title = intent.getStringExtra(EXTRA_TITLE)
+        detailViewModel = ViewModelProviders.of(this, DetailViewModel.Factor(title))
+                .get(title, DetailViewModel::class.java)
+
         prepareViews()
         prepareScroll()
-        prepareContent()
+        prepareCover()
+
+        Observable.just(detailViewModel)
+                .subscribeOn(Schedulers.io())
+                .doOnNext { it!!.initDB() }
+                .subscribe { runOnUiThread { prepareContent() } }
     }
 
     override fun onBackPressed() {
@@ -125,6 +138,8 @@ class DetailActivity : SwipeBackActivity() {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun prepareViews() {
+        binding!!.toolbarLayout.title = detailViewModel!!.pageTitle
+
         val appBarLayout = binding!!.appBarLayout
         appBarLayout.addOnOffsetChangedListener { _, verticalOffset ->
             appBarVisible = Math.abs(verticalOffset) != appBarLayout.totalScrollRange
@@ -137,8 +152,9 @@ class DetailActivity : SwipeBackActivity() {
         binding!!.contentDetail!!.webview.settings?.userAgentString = "Android"
 
         binding!!.fabActionButton.setOnClickListener { view ->
-            val newFavorite = !daPenTiPage!!.getFavorite()
-            daPenTiPage!!.setFavorite(newFavorite)
+            val newFavorite = !detailViewModel!!.getFavorite()
+            detailViewModel!!.setFavorite(newFavorite)
+
             updateFavorite(newFavorite)
 
             val s = if (newFavorite) "已加入收藏" else "已从收藏中移除"
@@ -146,18 +162,8 @@ class DetailActivity : SwipeBackActivity() {
         }
     }
 
-    private fun prepareContent() {
-        val urlString = intent.getStringExtra(EXTRA_URL)
-        val htmlString = intent.getStringExtra(EXTRA_HTML)
-        val titleString = intent.getStringExtra(EXTRA_TITLE)
+    private fun prepareCover() {
         val coverString = intent.getStringExtra(EXTRA_COVER_URL)
-
-        daPenTiPage = DaPenTi.daPenTi?.findPageByTitle(titleString)
-        updateFavorite(daPenTiPage!!.getFavorite())
-
-        binding!!.toolbarLayout.title = titleString
-
-        applyUserSettings()
 
         val options = RequestOptions()
                 .centerCrop()
@@ -171,6 +177,15 @@ class DetailActivity : SwipeBackActivity() {
                 .apply(options)
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .into(binding!!.coverImageView)
+    }
+
+    private fun prepareContent() {
+        updateFavorite(detailViewModel!!.getFavorite())
+
+        val urlString = intent.getStringExtra(EXTRA_URL)
+        val htmlString = intent.getStringExtra(EXTRA_HTML)
+
+        applyUserSettings()
 
         if (urlString.isNullOrEmpty())
             binding!!.contentDetail!!.webview.loadDataWithBaseURL(null, htmlString,

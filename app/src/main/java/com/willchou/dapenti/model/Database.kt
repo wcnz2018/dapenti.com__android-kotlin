@@ -112,21 +112,21 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return pageID
     }
 
+    @Synchronized
     private fun cleanUp() {
-        synchronized(this) {
-            val db = writableDatabase
-            val sql = "DELETE FROM $TABLE_PAGE_INDEX WHERE $COLUMN_PAGE_INDEX__PAGE_ID NOT IN " +
-                    "(SELECT $COLUMN_PAGE__ID from $TABLE_PAGES)"
+        val db = writableDatabase
+        val sql = "DELETE FROM $TABLE_PAGE_INDEX WHERE $COLUMN_PAGE_INDEX__PAGE_ID NOT IN " +
+                "(SELECT $COLUMN_PAGE__ID from $TABLE_PAGES)"
 
-            Log.d(TAG, "sql: $sql")
-            try {
-                db.execSQL(sql)
-            } catch (e: Exception) { e.printStackTrace() } finally {
-                db.close()
-            }
+        Log.d(TAG, "sql: $sql")
+        try {
+            db.execSQL(sql)
+        } catch (e: Exception) { e.printStackTrace() } finally {
+            db.close()
         }
     }
 
+    @Synchronized
     fun addCategory(category: String, url: String) {
         Log.d(TAG, "addCategory: $category, url: $url")
 
@@ -134,84 +134,81 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         values.put(COLUMN_CATEGORY__TITLE, category)
         values.put(COLUMN_CATEGORY__URL, url)
 
-        synchronized(this) {
-            val db = writableDatabase
-            if (getCategoryID(db, category) != -1) {
-                Log.d(TAG, "addCategory with $category, already exists")
-                db.close()
-                return
-            }
+        val db = writableDatabase
+        if (getCategoryID(db, category) != -1) {
+            Log.d(TAG, "addCategory with $category, already exists")
+            db.close()
+            return
+        }
 
-            try {
-                db.insertOrThrow(TABLE_CATEGORIES, null, values)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                db.close()
-            }
+        try {
+            db.insertOrThrow(TABLE_CATEGORIES, null, values)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db.close()
         }
     }
 
+    @Synchronized
     fun removePageBefore(before: Date) {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         val beforeString = dateFormat.format(before)
 
         Log.d(TAG, "remove before $beforeString")
 
-        synchronized(this) {
-            val db = writableDatabase
-            val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
-                    "$COLUMN_PAGE_INDEX__CREATE_AT<=?", arrayOf(beforeString),
-                    null, null, null)
+        val db = writableDatabase
+        val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
+                "$COLUMN_PAGE_INDEX__CREATE_AT<=?", arrayOf(beforeString),
+                null, null, null)
 
-            val pageIdList: MutableList<Int> = ArrayList()
-            while (cursor.moveToNext()) {
-                pageIdList.add(cursor.getInt(0))
-            }
-            cursor.close()
-
-            if (pageIdList.isEmpty()) {
-                Log.d(TAG, "no index found before $beforeString")
-                db.close()
-                return
-            }
-
-            val joinString = pageIdList.joinToString()
-            db.delete(TABLE_PAGE_INDEX,
-                    "$COLUMN_PAGE_INDEX__PAGE_ID IN ($joinString)", null)
-
-            db.delete(TABLE_PAGES,
-                    "$COLUMN_PAGE__ID IN ($joinString)", null)
-
-            db.close()
+        val pageIdList: MutableList<Int> = ArrayList()
+        while (cursor.moveToNext()) {
+            pageIdList.add(cursor.getInt(0))
         }
+        cursor.close()
+
+        if (pageIdList.isEmpty()) {
+            Log.d(TAG, "no index found before $beforeString")
+            db.close()
+            return
+        }
+
+        val joinString = pageIdList.joinToString()
+        db.delete(TABLE_PAGE_INDEX,
+                "$COLUMN_PAGE_INDEX__PAGE_ID IN ($joinString)", null)
+
+        db.delete(TABLE_PAGES,
+                "$COLUMN_PAGE__ID IN ($joinString)", null)
+
+        db.close()
 
         DaPenTi.daPenTi!!.databaseChanged()
     }
 
+    @Synchronized
     fun updateCategoriesOrderAndVisible(pairs: List<Pair<String, Boolean>>) {
-        synchronized(this) {
-            val db = writableDatabase
-            for (i in pairs.indices) {
-                val p = pairs[i]
+        val db = writableDatabase
+        for (i in pairs.indices) {
+            val p = pairs[i]
 
-                val categoryID = getCategoryID(db, p.first)
-                if (categoryID == -1) {
-                    Log.d(TAG, "Unable to get categoryID: " + p.first)
-                    continue
-                }
-
-                val values = ContentValues()
-                values.put(COLUMN_CATEGORY__DISPLAY_ORDER, i)
-                values.put(COLUMN_CATEGORY__VISIBLE, if (p.second) "1" else "0")
-
-                db.update(TABLE_CATEGORIES, values,
-                        "$COLUMN_CATEGORY__ID=?", arrayOf(categoryID.toString()))
+            val categoryID = getCategoryID(db, p.first)
+            if (categoryID == -1) {
+                Log.d(TAG, "Unable to get categoryID: " + p.first)
+                continue
             }
-            db.close()
+
+            val values = ContentValues()
+            values.put(COLUMN_CATEGORY__DISPLAY_ORDER, i)
+            values.put(COLUMN_CATEGORY__VISIBLE, if (p.second) "1" else "0")
+
+            db.update(TABLE_CATEGORIES, values,
+                    "$COLUMN_CATEGORY__ID=?", arrayOf(categoryID.toString()))
         }
+        db.close()
     }
 
+    @Synchronized
     fun getCategories(pairs: MutableList<Pair<String, URL>>, visibleOnly: Boolean) {
         pairs.clear()
 
@@ -223,44 +220,41 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
             selectionArg = arrayOf("1")
         }
 
-        synchronized(this) {
-            val db = readableDatabase
-            val cursor = db.query(TABLE_CATEGORIES, arrayOf(COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__URL),
-                    selection, selectionArg, null, null,
-                    COLUMN_CATEGORY__DISPLAY_ORDER)
+        val db = readableDatabase
+        val cursor = db.query(TABLE_CATEGORIES, arrayOf(COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__URL),
+                selection, selectionArg, null, null,
+                COLUMN_CATEGORY__DISPLAY_ORDER)
 
-            while (cursor.moveToNext()) {
-                try {
-                    pairs.add(Pair(cursor.getString(0),
-                            URL(cursor.getString(1))))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-
+        while (cursor.moveToNext()) {
+            try {
+                pairs.add(Pair(cursor.getString(0),
+                        URL(cursor.getString(1))))
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
-            Log.d(TAG, "getCategories get size: " + pairs.size)
-
-            cursor.close()
-            db.close()
         }
+
+        Log.d(TAG, "getCategories get size: " + pairs.size)
+
+        cursor.close()
+        db.close()
     }
 
+    @Synchronized
     fun getCategoryVisible(pairs: MutableList<Pair<String, Boolean>>) {
         pairs.clear()
 
-        synchronized(this) {
-            val db = readableDatabase
-            val cursor = db.query(TABLE_CATEGORIES,
-                    arrayOf(COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__VISIBLE),
-                    null, null, null, null, null)
+        val db = readableDatabase
+        val cursor = db.query(TABLE_CATEGORIES,
+                arrayOf(COLUMN_CATEGORY__TITLE, COLUMN_CATEGORY__VISIBLE),
+                null, null, null, null, null)
 
-            while (cursor.moveToNext())
-                pairs.add(Pair(cursor.getString(0), cursor.getInt(1) == 1))
+        while (cursor.moveToNext())
+            pairs.add(Pair(cursor.getString(0), cursor.getInt(1) == 1))
 
-            cursor.close()
-            db.close()
-        }
+        cursor.close()
+        db.close()
     }
 
     private fun insertNewPage(db: SQLiteDatabase, pageTitle: String, pageUrl: String): Int {
@@ -274,169 +268,164 @@ class Database(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null
         return getPageID(db, pageTitle)
     }
 
+    @Synchronized
     fun addPage(category: String, page: String, url: String) {
-        synchronized(this) {
-            val db = writableDatabase
-            val categoryID = getCategoryID(db, category)
-            if (categoryID == -1) {
-                Log.d(TAG, "Unable to find categoryID with $category")
-                db.close()
-                return
-            }
+        val db = writableDatabase
+        val categoryID = getCategoryID(db, category)
+        if (categoryID == -1) {
+            Log.d(TAG, "Unable to find categoryID with $category")
+            db.close()
+            return
+        }
 
-            var pageID = getPageID(db, page)
-            if (pageID == -1)
-                pageID = insertNewPage(db, page, url)
+        var pageID = getPageID(db, page)
+        if (pageID == -1)
+            pageID = insertNewPage(db, page, url)
 
-            if (pageID == -1) {
-                Log.d(TAG, "Unable to insert new page")
-                return
-            }
+        if (pageID == -1) {
+            Log.d(TAG, "Unable to insert new page")
+            return
+        }
 
-            val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__ID),
-                    "$COLUMN_PAGE_INDEX__PAGE_ID=? AND $COLUMN_PAGE_INDEX__CATEGORY_ID=?",
-                    arrayOf(pageID.toString(), categoryID.toString()),
-                    null, null, null)
-            if (cursor.count != 0) {
-                Log.d(TAG, "Index already exist($category -> $page)")
-                cursor.close()
-                return
-            }
+        val cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__ID),
+                "$COLUMN_PAGE_INDEX__PAGE_ID=? AND $COLUMN_PAGE_INDEX__CATEGORY_ID=?",
+                arrayOf(pageID.toString(), categoryID.toString()),
+                null, null, null)
+        if (cursor.count != 0) {
+            Log.d(TAG, "Index already exist($category -> $page)")
             cursor.close()
+            return
+        }
+        cursor.close()
 
-            val values = ContentValues()
-            values.put(COLUMN_PAGE_INDEX__CATEGORY_ID, categoryID)
-            values.put(COLUMN_PAGE_INDEX__PAGE_ID, pageID)
+        val values = ContentValues()
+        values.put(COLUMN_PAGE_INDEX__CATEGORY_ID, categoryID)
+        values.put(COLUMN_PAGE_INDEX__PAGE_ID, pageID)
 
-            try {
-                db.insertOrThrow(TABLE_PAGE_INDEX, null, values)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                db.close()
-            }
+        try {
+            db.insertOrThrow(TABLE_PAGE_INDEX, null, values)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db.close()
         }
     }
 
+    @Synchronized
     fun setPageFavorite(pageTitle: String, favorite: Boolean) {
-        synchronized(this) {
-            val db = writableDatabase
-            val values = ContentValues()
-            values.put(COLUMN_PAGE__FAVORITE, if (favorite) "1" else "0")
-            db.update(TABLE_PAGES, values, "$COLUMN_PAGE__TITLE=?", arrayOf(pageTitle))
-            db.close()
-        }
+        val db = writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_PAGE__FAVORITE, if (favorite) "1" else "0")
+        db.update(TABLE_PAGES, values, "$COLUMN_PAGE__TITLE=?", arrayOf(pageTitle))
+        db.close()
     }
 
+    @Synchronized
     fun getPageFavorite(pageTitle: String): Boolean {
-        synchronized(this) {
-            val db = readableDatabase
-            val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__FAVORITE), "$COLUMN_PAGE__TITLE=?",
-                    arrayOf(pageTitle), null, null, null)
+        val db = readableDatabase
+        val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__FAVORITE), "$COLUMN_PAGE__TITLE=?",
+                arrayOf(pageTitle), null, null, null)
 
-            var favorite = false
-            while (cursor.moveToNext()) {
-                val b = cursor.getInt(0)
-                if (b == 0 || b == 1) {
-                    favorite = b == 1
-                    break
-                }
+        var favorite = false
+        while (cursor.moveToNext()) {
+            val b = cursor.getInt(0)
+            if (b == 0 || b == 1) {
+                favorite = b == 1
+                break
             }
-            cursor.close()
-            db.close()
-
-            return favorite
         }
+        cursor.close()
+        db.close()
+
+        return favorite
     }
 
+    @Synchronized
     fun getPages(category: String, pairs: MutableList<PageInfo>) {
         pairs.clear()
 
         val dataBundleMap : HashMap<Int, PageInfo> = HashMap()
 
-        synchronized(this) {
-            val db = readableDatabase
-            val categoryID = getCategoryID(db, category)
-            if (categoryID == -1) {
-                Log.d(TAG, "Unable to find categoryID with $category")
-                db.close()
-                return
-            }
+        val db = readableDatabase
+        val categoryID = getCategoryID(db, category)
+        if (categoryID == -1) {
+            Log.d(TAG, "Unable to find categoryID with $category")
+            db.close()
+            return
+        }
 
-            var cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
-                    "$COLUMN_PAGE_INDEX__CATEGORY_ID=?", arrayOf(categoryID.toString()),
-                    null, null,
-                    "$COLUMN_PAGE_INDEX__CREATE_AT DESC")
+        var cursor = db.query(TABLE_PAGE_INDEX, arrayOf(COLUMN_PAGE_INDEX__PAGE_ID),
+                "$COLUMN_PAGE_INDEX__CATEGORY_ID=?", arrayOf(categoryID.toString()),
+                null, null,
+                "$COLUMN_PAGE_INDEX__CREATE_AT DESC")
 
-            val pageIDs: MutableList<Int> = ArrayList()
+        val pageIDs: MutableList<Int> = ArrayList()
+        while (cursor.moveToNext())
+            pageIDs.add(cursor.getInt(0))
+        cursor.close()
+
+        if (pageIDs.size == 0) {
+            db.close()
+            return
+        }
+
+        cursor = db.query(TABLE_PAGES,
+                arrayOf(COLUMN_PAGE__ID, COLUMN_PAGE__TITLE, COLUMN_PAGE__URL, COLUMN_PAGE__FAVORITE),
+                "$COLUMN_PAGE__ID IN (${pageIDs.joinToString()})",
+                null, null, null, null)
+
+        try {
             while (cursor.moveToNext())
-                pageIDs.add(cursor.getInt(0))
-            cursor.close()
-
-            if (pageIDs.size == 0) {
-                db.close()
-                return
-            }
-
-            cursor = db.query(TABLE_PAGES,
-                    arrayOf(COLUMN_PAGE__ID, COLUMN_PAGE__TITLE, COLUMN_PAGE__URL, COLUMN_PAGE__FAVORITE),
-                    "$COLUMN_PAGE__ID IN (${pageIDs.joinToString()})",
-                    null, null, null, null)
-
-            try {
-                while (cursor.moveToNext())
-                    dataBundleMap[cursor.getInt(0)] =
-                            PageInfo(cursor.getString(1), URL(cursor.getString(2)), cursor.getInt(3) == 1)
-            } catch (e: Exception) { e.printStackTrace() } finally {
-                cursor.close()
-                db.close()
-            }
-
-            for (i in pageIDs)
-                pairs.add(dataBundleMap[i]!!)
-        }
-    }
-
-    fun updatePageContent(page: String, content: String) {
-        synchronized(this) {
-            val db = writableDatabase
-            val pageID = getPageID(db, page)
-            if (pageID == -1) {
-                Log.d(TAG, "Unable to find page with $page")
-                db.close()
-                return
-            }
-
-            val values = ContentValues()
-            values.put(COLUMN_PAGE__CONTENT, content)
-
-            try {
-                db.update(TABLE_PAGES, values,
-                        "$COLUMN_PAGE__ID=?", arrayOf("" + pageID))
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                db.close()
-            }
-        }
-    }
-
-    fun getPageContent(page: String): String? {
-        var content: String? = ""
-        synchronized(this) {
-            val db = readableDatabase
-            val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__CONTENT),
-                    "$COLUMN_PAGE__TITLE=?", arrayOf(page), null, null, null)
-
-            while (cursor.moveToNext()) {
-                content = cursor.getString(0)
-                if (content != null)
-                    break
-            }
-
+                dataBundleMap[cursor.getInt(0)] =
+                        PageInfo(cursor.getString(1), URL(cursor.getString(2)), cursor.getInt(3) == 1)
+        } catch (e: Exception) { e.printStackTrace() } finally {
             cursor.close()
             db.close()
         }
+
+        for (i in pageIDs)
+            pairs.add(dataBundleMap[i]!!)
+    }
+
+    @Synchronized
+    fun updatePageContent(page: String, content: String) {
+        val db = writableDatabase
+        val pageID = getPageID(db, page)
+        if (pageID == -1) {
+            Log.d(TAG, "Unable to find page with $page")
+            db.close()
+            return
+        }
+
+        val values = ContentValues()
+        values.put(COLUMN_PAGE__CONTENT, content)
+
+        try {
+            db.update(TABLE_PAGES, values,
+                    "$COLUMN_PAGE__ID=?", arrayOf("" + pageID))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            db.close()
+        }
+    }
+
+    @Synchronized
+    fun getPageContent(page: String): String? {
+        var content: String? = ""
+        val db = readableDatabase
+        val cursor = db.query(TABLE_PAGES, arrayOf(COLUMN_PAGE__CONTENT),
+                "$COLUMN_PAGE__TITLE=?", arrayOf(page), null, null, null)
+
+        while (cursor.moveToNext()) {
+            content = cursor.getString(0)
+            if (content != null)
+                break
+        }
+
+        cursor.close()
+        db.close()
+
         return content
     }
 }
