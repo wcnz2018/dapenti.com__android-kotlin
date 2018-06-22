@@ -23,6 +23,7 @@ class DaPenTiData {
         const val COLUMN_PAGE__FAVORITE = "favorite"
         const val COLUMN_PAGE__FAVORITE_AT = "favorite_at"
         const val COLUMN_PAGE__CONTENT = "html_content"
+        const val COLUMN_PAGE__CHECKED = "checked"
 
         const val TABLE_PAGE_INDEX = "page_index"
         const val COLUMN_PAGE_INDEX__ID = "id"
@@ -68,7 +69,10 @@ class DaPenTiData {
                     var favoriteAt: Date? = null,
 
                     @ColumnInfo(name = COLUMN_PAGE__CONTENT)
-                    var content: String = "")
+                    var content: String = "",
+
+                    @ColumnInfo(name = COLUMN_PAGE__CHECKED)
+                    var checked: Int = 0)
 
     @Entity(tableName = TABLE_PAGE_INDEX,
             indices = [(Index(value = [COLUMN_PAGE_INDEX__PAGE_ID, COLUMN_PAGE_INDEX__CATEGORY_ID], unique = true))])

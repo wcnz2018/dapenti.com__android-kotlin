@@ -33,14 +33,13 @@ class FavoriteActivity : SwipeBackActivity() {
     private var noteLayout: LinearLayout? = null
 
     private var favoriteViewModel: FavoriteViewModel? = null
-    //private var favoriteList: List<DaPenTiPage>? = null
 
     private val clickListener = View.OnClickListener { view ->
         when (view.id) {
-            R.id.reverse_button -> recyclerView?.reverseSelect()
+            R.id.reverse_button -> Thread { favoriteViewModel!!.reverseChecked() }.start()
+
             R.id.remove_button -> {
-                val selectedPageList = recyclerView?.getSelectPages()
-                if (selectedPageList == null || selectedPageList.isEmpty()) {
+                if (favoriteViewModel!!.isCheckedEmpty()) {
                     recyclerView?.enterSelectMode()
                     return@OnClickListener
                 }
@@ -51,11 +50,7 @@ class FavoriteActivity : SwipeBackActivity() {
 
                 confirmDialog.clickEventListener = object : ConfirmDialog.ClickEventListener {
                     override fun confirmed() {
-                        for (page in selectedPageList) {
-                            page.setFavorite(false)
-                            page.isSelected = false
-                        }
-
+                        Thread { favoriteViewModel!!.removeFavoriteFromChecked() }.start()
                         leaveSelectMode()
 
                         Snackbar.make(recyclerView!!,
@@ -97,6 +92,11 @@ class FavoriteActivity : SwipeBackActivity() {
         //setupContent()
     }
 
+    override fun onDestroy() {
+        recyclerView?.exitSelectMode()
+        super.onDestroy()
+    }
+
     override fun onResume() {
         d(TAG, "onResume")
         super.onResume()
@@ -114,7 +114,11 @@ class FavoriteActivity : SwipeBackActivity() {
         d(TAG, "item clicked: " + item.title)
         when (item.itemId) {
             R.id.action_select_mode -> {
-                if (noteLayout!!.visibility == View.GONE) {
+                if (!favoriteViewModel!!.noFavorite) {
+                    /*
+                    recyclerView!!.scrollToPosition(favoriteViewModel!!.allFavoritePages.value!!.size - 1)
+                    recyclerView!!.scrollToPosition(0)
+                    */
                     if (DRecyclerView.isSelectMode())
                         leaveSelectMode()
                     else

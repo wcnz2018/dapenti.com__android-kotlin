@@ -27,9 +27,6 @@ import com.willchou.dapenti.vm.HolderViewModel
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.util.*
-import android.R.attr.countDown
-import android.R.attr.countDown
 import android.support.annotation.Nullable
 
 
@@ -48,6 +45,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         const val Bind_SelectModeAnimation = "selectModeAnimation"
         const val Bind_SelectModeQuit = "selectModeQuit"
         const val Bind_SelectChanged = "selectChanged"
+        const val Bind_SelectToggle = "selectToggle"
         const val Bind_PageLoadFinished = "pageLoadFinished"
     }
 
@@ -56,8 +54,11 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
     private var holderModel: HolderViewModel? = null
 
-    private var observer = object : Observer<DaPenTiData.Page> {
+    private var modelObserver = object : Observer<DaPenTiData.Page> {
         override fun onChanged(@Nullable page: DaPenTiData.Page?) {
+            if (page == null)
+                return
+
             checkSelect()
             checkNightMode()
             checkFavorite()
@@ -77,14 +78,9 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         }
     }
 
-    private fun toggleSelect() {
-        if (holderModel!!.selected) {
-            binding.checkImageView.visibility = View.GONE
-            holderModel!!.selected = false
-        } else {
-            binding.checkImageView.visibility = View.VISIBLE
-            holderModel!!.selected = true
-        }
+    fun toggleSelect() {
+        holderModel!!.setSelect(!holderModel!!.getSelect())
+        checkSelect()
     }
 
     private fun itemClicked(v: View) {
@@ -197,7 +193,12 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             return
         }
 
-        binding.checkImageView.visibility = if (holderModel!!.selected) View.VISIBLE else View.GONE
+        if (holderModel!!.getSelect())
+            binding.checkImageView.visibility = View.VISIBLE
+        else
+            binding.checkImageView.visibility = View.GONE
+
+        //binding.checkImageView.visibility = if (holderModel!!.selected.get()) View.VISIBLE else View.GONE
     }
 
     internal fun checkFavorite() {
@@ -214,6 +215,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
         Handler().postDelayed({
             binding.checkImageView.visibility = View.GONE
+            checkSelect()
         }, animation.duration + 100)
     }
 
@@ -235,9 +237,11 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         holderModel = model
         Log.d(TAG, "bindTo with page ${holderModel!!.pageTitle}")
 
+        /*
         val animation = AlphaAnimation(0f, 1.0f)
         animation.duration = 200
         binding.cardView.animation = animation
+        */
 
         binding.title.text = model.pageTitle
     }
@@ -270,15 +274,16 @@ class RecyclerViewHolder internal constructor(private val mView: View,
                 .doOnNext { it.initDB() }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    holderModel!!.pageData?.observeForever(observer)
+                    holderModel!!.pageData!!.observeForever(modelObserver)
                 }
     }
 
     internal fun detachedFromWindow() {
         Log.d(TAG, "detachedFromWindow: ${holderModel?.pageTitle}")
 
+        holderModel!!.pageData!!.removeObserver(modelObserver)
+
         hideContent(false)
-        holderModel!!.pageData?.removeObserver(observer)
     }
 
     private fun setExpand(expand: Boolean, saveState: Boolean) {

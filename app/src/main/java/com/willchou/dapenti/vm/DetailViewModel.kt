@@ -6,16 +6,17 @@ import android.arch.lifecycle.ViewModelProvider
 import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.db.DaPenTiRoomDatabase
 
+
 open class DetailViewModel(val pageTitle: String): ViewModel() {
     var pageDao: DaPenTiRoomDatabase.PageDao? = null
     var pageData: LiveData<DaPenTiData.Page>? = null
 
-    fun initDB(forceReloadData: Boolean = true) {
+    fun initDB() {
         if (pageDao == null)
             pageDao = DaPenTiRoomDatabase.get().pageDao()
 
-        if (forceReloadData || pageData == null)
-            pageData = pageDao!!.getPage(pageTitle)
+        if (pageData == null)
+            pageData = pageDao!!.getPageLiveData(pageTitle)
     }
 
     fun getUrlString(): String = pageData!!.value!!.url

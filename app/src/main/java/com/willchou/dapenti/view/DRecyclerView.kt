@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import android.util.Log
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.DaPenTiPage
+import com.willchou.dapenti.utils.DObservable
 
 class DRecyclerView : RecyclerView {
     companion object {
@@ -15,6 +16,8 @@ class DRecyclerView : RecyclerView {
 
         private var selectMode = false
         fun isSelectMode(): Boolean { return selectMode }
+
+        var flagReverse: DObservable<Boolean> = DObservable(false)
     }
     constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -52,18 +55,6 @@ class DRecyclerView : RecyclerView {
     fun exitSelectMode() {
         updateVisibleState(RecyclerViewHolder.Bind_SelectModeQuit)
         selectMode = false
-    }
-
-    fun reverseSelect() {
-        /*
-        val adapter = adapter as RecyclerViewAdapter? ?: return
-        if (adapter.daPenTiPages == null)
-            return
-
-        for (page in adapter.daPenTiPages!!)
-            page.isSelected = !page.isSelected
-        updateVisibleState(RecyclerViewHolder.Bind_SelectChanged)
-        */
     }
 
     fun getSelectPages(): List<DaPenTiPage>? {

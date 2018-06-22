@@ -12,6 +12,7 @@ import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__VISIBLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CATEGORY_ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CREATE_AT
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__PAGE_ID
+import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__CHECKED
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__CONTENT
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__FAVORITE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__FAVORITE_AT
@@ -77,7 +78,11 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
 
         @Query("SELECT * FROM $TABLE_PAGES " +
                 "WHERE $COLUMN_PAGE__TITLE=:pageTitle")
-        fun getPage(pageTitle: String): LiveData<DaPenTiData.Page>
+        fun getPageLiveData(pageTitle: String): LiveData<DaPenTiData.Page>
+
+        @Query("SELECT * FROM $TABLE_PAGES " +
+                "WHERE $COLUMN_PAGE__TITLE=:pageTitle")
+        fun getPage(pageTitle: String): DaPenTiData.Page
 
         @Query("SELECT $COLUMN_PAGE__FAVORITE FROM $TABLE_PAGES " +
                 "WHERE $COLUMN_PAGE__TITLE=:pageTitle")
@@ -90,6 +95,10 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
                 "WHERE $COLUMN_PAGE__ID = :pageID")
         fun updateContent(pageID: Int, content: String)
 
+        @Query("UPDATE $TABLE_PAGES SET $COLUMN_PAGE__CHECKED = :checked " +
+                "WHERE $COLUMN_PAGE__ID = :pageID")
+        fun updateChecked(pageID: Int, checked: Int)
+
         @Query("UPDATE $TABLE_PAGES SET $COLUMN_PAGE__FAVORITE = :favorite," +
                 "$COLUMN_PAGE__FAVORITE_AT = :at WHERE $COLUMN_PAGE__ID = :pageID")
         fun updateFavorite(pageID: Int, favorite: Int, at: Date = Calendar.getInstance().time)
@@ -98,7 +107,7 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
         fun insert(pages: List<DaPenTiData.Page>)
 
         @Insert(onConflict = OnConflictStrategy.IGNORE)
-        fun insert(page: DaPenTiData.Page)
+        fun insert(page: DaPenTiData.Page): Long
     }
 
     abstract fun indexDao() : IndexDao

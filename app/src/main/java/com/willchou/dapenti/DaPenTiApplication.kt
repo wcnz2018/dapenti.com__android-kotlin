@@ -35,7 +35,7 @@ class DaPenTiApplication : Application() {
                 .initiate(PreferenceManager.getDefaultSharedPreferences(this),
                         resources)
         DaPenTi()
-        Database(this)
+        //Database(this)
     }
 
     private fun prepareLeakCanary() {

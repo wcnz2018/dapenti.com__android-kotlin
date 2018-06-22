@@ -12,12 +12,10 @@ import java.util.*
 
 class HolderViewModel(val title: String,
                       /* for ViewHolder use */
-                      var selected: Boolean = false,
                       var expanded: Boolean = false,
                       /* for content/data flags */
                       private var doc: Document? = null,
                       var pageType: Int = PageTypeUnknown,
-                      var pageMayChanged: Boolean = false,
                       /* content types */
                       var pageLongReading: PageLongReading = PageLongReading(),
                       var pageNotes: PageNotes = PageNotes(),
@@ -25,12 +23,13 @@ class HolderViewModel(val title: String,
                       var pageVideo: PageVideo = PageVideo(),
                       var pageOriginal: PageOriginal = PageOriginal()
 ) : DetailViewModel(title) {
-    fun initDB() {
-        super.initDB(pageMayChanged)
-        pageMayChanged = false
-    }
-
     fun contentPrepared(): Boolean = (doc != null)
+
+    fun getSelect(): Boolean = pageData!!.value!!.checked == 1
+    fun setSelect(s: Boolean) {
+        pageData!!.value!!.checked = if (s) 1 else 0
+        Thread { pageDao!!.updateChecked(pageData!!.value!!.id!!, if (s) 1 else 0) }.start()
+    }
 
     @Synchronized
     fun prepareContent(): Boolean {
@@ -281,11 +280,11 @@ class HolderViewModel(val title: String,
 
     override fun toString(): String = "HolderViewModel[$pageData]"
 
-    class Factor(private val title: String):
+    class Factor(private val pageTitle: String):
             ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return HolderViewModel(title) as T
+            return HolderViewModel(pageTitle) as T
         }
     }
 

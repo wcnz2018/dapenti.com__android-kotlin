@@ -7,7 +7,6 @@ import android.arch.paging.LivePagedListBuilder
 import android.arch.paging.PagedList
 import android.arch.paging.PagingRequestHelper
 import android.util.Log
-import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.db.DaPenTiRoomDatabase
 import com.willchou.dapenti.model.DaPenTiWeb
@@ -54,11 +53,17 @@ class FragmentViewModel(private val category: String): ViewModel() {
         val list = DaPenTiWeb.getPages(categoryData!!.url)
 
         for (page in list.reversed()) {
-            pageDao.insert(page)
-            val index = DaPenTiData.Index(
-                    categoryID = categoryData!!.id!!,
-                    pageID = pageDao.getPage(page.title).value!!.id!!)
-            indexDao.insert(index)
+            val id = pageDao.insert(page)
+            Log.d(TAG, "insert $page returned id: $id")
+
+            if (id != (-1).toLong()) {
+                val index = DaPenTiData.Index(categoryID = categoryData!!.id!!, pageID = id.toInt())
+                indexDao.insert(index)
+            } else {
+                val p = pageDao.getPage(page.title)
+                val index = DaPenTiData.Index(categoryID = categoryData!!.id!!, pageID = p.id!!)
+                indexDao.insert(index)
+            }
         }
 
         return list.isNotEmpty()

@@ -59,6 +59,7 @@ class RecyclerViewAdapter : PagedListAdapter<DaPenTiData.Page, RecyclerViewHolde
                 RecyclerViewHolder.Bind_Collapse -> holder.hideContent(true)
                 RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()
                 RecyclerViewHolder.Bind_SelectChanged -> holder.checkSelect()
+                RecyclerViewHolder.Bind_SelectToggle -> holder.toggleSelect()
                 RecyclerViewHolder.Bind_SelectModeQuit -> holder.quitSelectMode()
                 RecyclerViewHolder.Bind_PageLoadFinished -> holder.pageLoadFinished()
             }
