@@ -54,7 +54,7 @@ class RecyclerViewAdapter : PagedListAdapter<DaPenTiData.Page, RecyclerViewHolde
 
             when (s) {
                 RecyclerViewHolder.Bind_ShowContent -> holder.setupContent(Settings.settings!!.canPlayVideo())
-                RecyclerViewHolder.Bind_PageFailed -> holder.invalidContent()
+                //RecyclerViewHolder.Bind_PageFailed -> holder.invalidContent()
                 RecyclerViewHolder.Bind_Favorite -> holder.checkFavorite()
                 RecyclerViewHolder.Bind_Collapse -> holder.hideContent(true)
                 RecyclerViewHolder.Bind_SelectModeAnimation -> holder.enterSelectModeAnimation()

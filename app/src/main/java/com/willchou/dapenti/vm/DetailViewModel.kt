@@ -11,7 +11,7 @@ open class DetailViewModel(val pageTitle: String): ViewModel() {
     var pageDao: DaPenTiRoomDatabase.PageDao? = null
     var pageData: LiveData<DaPenTiData.Page>? = null
 
-    fun initDB() {
+    open fun initDB() {
         if (pageDao == null)
             pageDao = DaPenTiRoomDatabase.get().pageDao()
 
@@ -23,8 +23,12 @@ open class DetailViewModel(val pageTitle: String): ViewModel() {
 
     fun getFavorite(): Boolean = pageData!!.value!!.favorite == 1
     fun setFavorite(f: Boolean) {
-        pageData!!.value!!.favorite = if (f) 1 else 0
-        Thread { pageDao!!.updateFavorite(pageData!!.value!!.id!!, pageData!!.value!!.favorite) }.start()
+        val to = if (f) 1 else 0
+        if (pageData!!.value!!.favorite == to)
+            return
+
+        pageData!!.value!!.favorite = to
+        Thread { pageDao!!.updateFavorite(pageData!!.value!!.id!!, to) }.start()
     }
 
     class Factor(private val title: String):

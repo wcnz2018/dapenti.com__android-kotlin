@@ -27,12 +27,19 @@ class HolderViewModel(val title: String,
 
     fun getSelect(): Boolean = pageData!!.value!!.checked == 1
     fun setSelect(s: Boolean) {
-        pageData!!.value!!.checked = if (s) 1 else 0
-        Thread { pageDao!!.updateChecked(pageData!!.value!!.id!!, if (s) 1 else 0) }.start()
+        val to = if (s) 1 else 0
+        if (pageData!!.value!!.checked == to)
+            return
+
+        pageData!!.value!!.checked = to
+        Thread { pageDao!!.updateChecked(pageData!!.value!!.id!!, to) }.start()
     }
 
     @Synchronized
     fun prepareContent(): Boolean {
+        if (contentPrepared())
+            return true
+
         Log.d(TAG, "prepareContent with url: ${pageData!!.value!!.url}")
         try {
             val html = pageData!!.value!!.content

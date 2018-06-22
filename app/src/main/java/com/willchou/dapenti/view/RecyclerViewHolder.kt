@@ -56,13 +56,24 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
     private var modelObserver = object : Observer<DaPenTiData.Page> {
         override fun onChanged(@Nullable page: DaPenTiData.Page?) {
-            pageInstance = page
             Log.d(TAG, "onChanged: page: $page")
+            if (page != null && page?.title == pageInstance?.title)
+                return
 
+            pageInstance = page
+
+            Log.d(TAG, "onChanged reload holder")
             checkSelect()
             checkNightMode()
             checkFavorite()
+
             setupContent(false)
+        }
+    }
+
+    private var videoPreparedObserver = object : java.util.Observer {
+        override fun update(p0: java.util.Observable?, p1: Any?) {
+            showContent(mView, true)
         }
     }
 
@@ -241,12 +252,6 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         holderModel = model
         Log.d(TAG, "bindTo with page ${holderModel!!.pageTitle}")
 
-        /*
-        val animation = AlphaAnimation(0f, 1.0f)
-        animation.duration = 200
-        binding.cardView.animation = animation
-        */
-
         binding.title.text = model.pageTitle
     }
 
@@ -257,8 +262,9 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             showContent(mView, playVideoIfPossible)
     }
 
+    /*
     internal fun invalidContent() {
-        if (!holderModel!!.expanded)
+        if (!holderModel!!.getExpanded())
             return
 
         hideImage()
@@ -266,6 +272,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         hideProgressBar()
         showDescription("内容获取失败,请稍后重试...", true)
     }
+    */
 
     internal fun pageLoadFinished() {
         hideProgressBar()
@@ -358,6 +365,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private fun hideVideo() {
         val videoWebView = VideoWebView.instanceCacheMap[holderModel!!.pageTitle]
         videoWebView?.pauseVideo()
+        videoWebView?.videoPrepared?.deleteObserver(videoPreparedObserver)
 
         binding.videoLayout.visibility = View.GONE
         binding.videoLayout.removeAllViews()
@@ -385,6 +393,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             binding.videoLayout.visibility = View.VISIBLE
         }
 
+        videoWebView.videoPrepared.addObserver(videoPreparedObserver)
         videoWebView.moveTo(binding.videoLayout, false)
 
         if (autoPlay)

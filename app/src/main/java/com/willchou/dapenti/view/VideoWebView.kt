@@ -19,6 +19,7 @@ import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
 import android.webkit.WebView
+import com.willchou.dapenti.utils.DObservable
 
 class VideoWebView : WebView {
     companion object {
@@ -42,6 +43,8 @@ class VideoWebView : WebView {
     constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle) {
         setup()
     }
+
+    val videoPrepared: DObservable<Boolean> = DObservable(false)
 
     var enableZoomGesture: Boolean = false
     private var defaultFontSize: Int = 0
@@ -80,7 +83,8 @@ class VideoWebView : WebView {
             }
 
             defaultFontSize = settings.defaultFontSize
-            notifyLoadFinished()
+            videoPrepared.set(true)
+            //notifyLoadFinished()
         }
 
         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
