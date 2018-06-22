@@ -1,12 +1,12 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.CardView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.Toolbar
-import android.util.Pair
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,15 +14,15 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.TextView
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.DaPenTi
-import com.willchou.dapenti.model.Database
 import com.willchou.dapenti.model.Settings
+import com.willchou.dapenti.vm.OrderViewModel
 import com.woxthebox.draglistview.DragItem
 import com.woxthebox.draglistview.DragItemAdapter
 import com.woxthebox.draglistview.DragListView
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import me.majiajie.swipeback.SwipeBackActivity
-import java.net.URL
-import java.util.*
+import kotlin.collections.ArrayList
 
 class PageOrderActivity : SwipeBackActivity() {
     companion object {
@@ -31,13 +31,15 @@ class PageOrderActivity : SwipeBackActivity() {
 
     private var applyButton: Button? = null
     private var dragListView: DragListView? = null
+
+    private var orderViewModel: OrderViewModel? = null
+
     private val itemDetailList = ArrayList<ItemDetail>()
 
-    internal inner class ItemDetail {
-        var title: String? = null
-        var uniqueID: Long = 0
-        var visible: Boolean = false
-    }
+    internal inner class ItemDetail (
+            var title: String,
+            var uniqueID: Long,
+            var visible: Boolean)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,32 +57,16 @@ class PageOrderActivity : SwipeBackActivity() {
             findViewById(R.id.linearLayout)?.setBackgroundColor(color)
         }
 
-        setupData()
-        setupLayout()
-    }
+        Observable.just(this)
+                .subscribeOn(Schedulers.io())
+                .doOnNext {
+                    orderViewModel = ViewModelProviders.of(this).get(OrderViewModel::class.java)
 
-    private fun setupData() {
-        val database = Database.database ?: return
-
-        val categories = ArrayList<Pair<String, URL>>()
-        database.getCategories(categories, false)
-
-        val visibleList = ArrayList<Pair<String, Boolean>>()
-        database.getCategoryVisible(visibleList)
-
-        for ((count, p) in categories.withIndex()) {
-            val id = ItemDetail()
-            id.title = p.first
-            id.uniqueID = count.toLong()
-
-            for (p2 in visibleList)
-                if (p2.first == id.title) {
-                    id.visible = p2.second
-                    break
+                    val list = orderViewModel!!.getCategoryAndVisibility()
+                    for ((i, l) in list.withIndex())
+                        itemDetailList.add(ItemDetail(l.first, i.toLong(), l.second))
                 }
-
-            itemDetailList.add(id)
-        }
+                .subscribe { runOnUiThread { setupLayout() } }
     }
 
     private fun setupLayout() {
@@ -108,19 +94,20 @@ class PageOrderActivity : SwipeBackActivity() {
     private fun saveChanged() {
         applyButton?.visibility = View.GONE
 
-        val list = ArrayList<Pair<String, Boolean>>()
+        val list: MutableList<Pair<String, Boolean>> = ArrayList()
         for (id in itemDetailList)
-            list.add(Pair<String, Boolean>(id.title, id.visible))
+            list.add(Pair(id.title, id.visible))
 
-        if (Database.database != null) {
-            Database.database?.updateCategoriesOrderAndVisible(list)
-            DaPenTi.daPenTi?.prepareCategory(false)
-            Snackbar.make(dragListView!!, "应用成功", Snackbar.LENGTH_SHORT).show()
-        } else {
-            Snackbar.make(dragListView!!, "数据库操作失败", Snackbar.LENGTH_SHORT)
-                    .show()
-            applyButton!!.visibility = View.VISIBLE
-        }
+        Observable.just(list)
+                .subscribeOn(Schedulers.io())
+                .doOnNext { orderViewModel!!.saveCategoryOrderAndVisibility(list) }
+                .subscribe {
+                    runOnUiThread {
+                        Snackbar.make(findViewById(android.R.id.content), "操作成功", Snackbar.LENGTH_SHORT)
+                                .show()
+                        applyButton!!.visibility = View.GONE
+                    }
+                }
     }
 
     internal inner class ItemAdapter : DragItemAdapter<ItemDetail, ViewHolder>() {

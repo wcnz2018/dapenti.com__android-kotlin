@@ -22,7 +22,6 @@ import com.willchou.dapenti.presenter.DetailActivity
 import android.net.Uri
 import com.willchou.dapenti.databinding.PentiListItemBinding
 import com.willchou.dapenti.db.DaPenTiData
-import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.vm.HolderViewModel
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -52,12 +51,13 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private var foregroundColor: Int = Color.BLACK
     private var backgroundColor: Int = Color.WHITE
 
+    private var pageInstance: DaPenTiData.Page? = null
     private var holderModel: HolderViewModel? = null
 
     private var modelObserver = object : Observer<DaPenTiData.Page> {
         override fun onChanged(@Nullable page: DaPenTiData.Page?) {
-            if (page == null)
-                return
+            pageInstance = page
+            Log.d(TAG, "onChanged: page: $page")
 
             checkSelect()
             checkNightMode()
@@ -188,21 +188,25 @@ class RecyclerViewHolder internal constructor(private val mView: View,
 
     internal fun checkSelect() {
         Log.d(TAG, "checkSelect: isSelectMode: ${DRecyclerView.isSelectMode()}")
-        if (!DRecyclerView.isSelectMode()) {
+        if (!DRecyclerView.isSelectMode() || pageInstance == null) {
             binding.checkImageView.visibility = View.GONE
             return
         }
 
-        if (holderModel!!.getSelect())
+        if (pageInstance!!.checked == 1)
             binding.checkImageView.visibility = View.VISIBLE
         else
             binding.checkImageView.visibility = View.GONE
-
-        //binding.checkImageView.visibility = if (holderModel!!.selected.get()) View.VISIBLE else View.GONE
     }
 
     internal fun checkFavorite() {
-        binding.favoriteImageView.visibility = if (holderModel!!.getFavorite()) View.VISIBLE else View.GONE
+        if (pageInstance == null)
+            return
+
+        if (pageInstance!!.favorite == 1)
+            binding.favoriteImageView.visibility = View.VISIBLE
+        else
+            binding.favoriteImageView.visibility = View.GONE
     }
 
     internal fun enterSelectModeAnimation() {
@@ -352,7 +356,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     }
 
     private fun hideVideo() {
-        val videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(holderModel!!.pageTitle)
+        val videoWebView = VideoWebView.instanceCacheMap[holderModel!!.pageTitle]
         videoWebView?.pauseVideo()
 
         binding.videoLayout.visibility = View.GONE
@@ -362,7 +366,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private fun showVideo(v: View, contentHtml: String, autoPlay: Boolean) {
         Log.d(TAG, "showVideo for ${holderModel!!.pageTitle}, autoPlay: $autoPlay")
 
-        var videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(holderModel!!.pageTitle)
+        var videoWebView = VideoWebView.instanceCacheMap[holderModel!!.pageTitle]
 
         if (videoWebView == null) {
             videoWebView = VideoWebView(DaPenTiApplication.getAppContext())
@@ -375,7 +379,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             showProgressBar()
             binding.videoLayout.visibility = View.GONE
 
-            DaPenTi.daPenTi!!.cacheVideoWebView(holderModel!!.pageTitle, videoWebView)
+            VideoWebView.instanceCacheMap[holderModel!!.pageTitle] = videoWebView
         } else {
             hideProgressBar()
             binding.videoLayout.visibility = View.VISIBLE

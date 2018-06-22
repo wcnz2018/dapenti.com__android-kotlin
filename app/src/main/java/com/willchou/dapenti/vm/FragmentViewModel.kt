@@ -35,11 +35,9 @@ class FragmentViewModel(private val category: String): ViewModel() {
          * scrollbars if you disable placeholders.
          */
         private const val ENABLE_PLACEHOLDERS = true
-
-        private val executor = Executors.newSingleThreadExecutor()
     }
 
-    private val helper = PagingRequestHelper(executor)
+    private val helper = PagingRequestHelper(MainViewModel.executor)
 
     private val categoryDao = DaPenTiRoomDatabase.get().categoryDao()
     private val pageDao = DaPenTiRoomDatabase.get().pageDao()

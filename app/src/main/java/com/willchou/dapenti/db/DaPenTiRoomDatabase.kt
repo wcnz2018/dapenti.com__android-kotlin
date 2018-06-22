@@ -7,6 +7,7 @@ import android.arch.persistence.room.Database
 import android.content.Context
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__DISPLAY_ORDER
+import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__TITLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__VISIBLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CATEGORY_ID
@@ -47,12 +48,17 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
     interface CategoryDao {
         @Query("SELECT * FROM $TABLE_CATEGORIES " +
                 "ORDER BY $COLUMN_CATEGORY__DISPLAY_ORDER")
-        fun allCategories(): List<DaPenTiData.Category>
+        fun allCategoriesDataSourceFactor(): DataSource.Factory<Int, DaPenTiData.Category>
 
         @Query("SELECT * FROM $TABLE_CATEGORIES " +
-                "WHERE $COLUMN_CATEGORY__VISIBLE='1' " +
                 "ORDER BY $COLUMN_CATEGORY__DISPLAY_ORDER")
-        fun visibleCategories(): List<DaPenTiData.Category>
+        fun allCategories(): List<DaPenTiData.Category>
+
+        @Query("UPDATE $TABLE_CATEGORIES SET " +
+                "$COLUMN_CATEGORY__DISPLAY_ORDER = :order," +
+                "$COLUMN_CATEGORY__VISIBLE = :visible " +
+                "WHERE $COLUMN_CATEGORY__TITLE = :category")
+        fun updateOrderAndVisible(category: String, order: Int, visible: Int)
 
         @Query("SELECT * FROM $TABLE_CATEGORIES " +
                 "WHERE $COLUMN_CATEGORY__TITLE=:categoryTitle")

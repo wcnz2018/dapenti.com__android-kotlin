@@ -1,5 +1,6 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -149,6 +150,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showWait(failed: Boolean) {
         binding!!.waitLayout.visibility = View.VISIBLE
+        binding!!.viewpager.visibility = View.GONE
         if (failed) {
             binding!!.waitProgressBar.visibility = View.GONE
             binding!!.waitTextView.visibility = View.VISIBLE
@@ -158,7 +160,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun hideWait() { binding!!.waitLayout.visibility = View.GONE }
+    private fun hideWait() {
+        binding!!.waitLayout.visibility = View.GONE
+        binding!!.viewpager.visibility = View.VISIBLE
+    }
 
     private fun initiateContent() {
         setSupportActionBar(binding!!.toolbar)
@@ -176,46 +181,17 @@ class MainActivity : AppCompatActivity() {
 
         showWait(false)
 
-        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        Observable.just(mainViewModel)
+        Observable.just(this)
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    var cs = mainViewModel.getCategories()
-                    //Log.d(TAG, "cs: $cs")
-
-                    if (cs.isEmpty()) {
-                        Log.d(TAG, "category is empty, fetch from website")
-
-                        val list = DaPenTiWeb.getCategories()
-                        if (list.isNotEmpty())
-                            mainViewModel.insertCategories(list)
-                    }
-
-                    cs = mainViewModel.getCategories()
-                    //Log.d(TAG, "cs: $cs")
-
-                    runOnUiThread { setupContent(cs) }
+                    val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+                    mainViewModel.allCategories.observe(this, Observer {
+                        val list = it?.toList()
+                        if (list != null)
+                            runOnUiThread { setupContent(list) }
+                    })
                 }
     }
-
-    /*
-    private fun setupContent_old() {
-        Log.d(TAG, "setupContent")
-        if (!DaPenTi.daPenTi!!.initiated()) {
-            showWait(true)
-            return
-        }
-
-        hideWait()
-
-        binding!!.tabLayout.visibility = View.VISIBLE
-        binding!!.tabLayout.tabMode = TabLayout.MODE_SCROLLABLE
-
-        val viewPager = findViewById<ViewPager>(R.id.viewpager)
-        setupViewPager(viewPager)
-        binding!!.tabLayout.setupWithViewPager(viewPager)
-    }
-    */
 
     private fun setupContent(categories: List<DaPenTiData.Category>) {
         Log.d(TAG, "setupContent")
@@ -227,31 +203,14 @@ class MainActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager>(R.id.viewpager)
 
         val adapter = Adapter(supportFragmentManager)
-        for (c in categories)
-            adapter.addFragment(c.title, ListFragment().withCategory(c.title))
+        for (c in categories) {
+            if (c.visible == 1)
+                adapter.addFragment(c.title, ListFragment().withCategory(c.title))
+        }
         viewPager.adapter = adapter
 
         binding!!.tabLayout.setupWithViewPager(viewPager)
     }
-
-    /*
-    private fun setupViewPager(viewPager: ViewPager) {
-        val adapter = Adapter(supportFragmentManager)
-
-        val daPenTi = DaPenTi.daPenTi
-        if (daPenTi == null) {
-            Log.e(TAG, "Unable to get data model")
-            return
-        }
-
-        for (category in daPenTi.daPenTiCategories) {
-            adapter.addFragment(category.categoryName,
-                    ListFragment().setDaPenTiCategory(category))
-        }
-
-        viewPager.adapter = adapter
-    }
-    */
 
     internal class Adapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
         private val fragmentPairList: MutableList<Pair<String, ListFragment>> = ArrayList()

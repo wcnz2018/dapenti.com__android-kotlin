@@ -27,6 +27,8 @@ class VideoWebView : WebView {
         const val ACTION_ENTER_FULLSCREEN = "com.willchou.dapenti.VideoWebViewEnterFullScreen"
         const val ACTION_QUIT_FULLSCREEN = "com.willchou.dapenti.VideoWebViewQuitFullScreen"
         const val ACTION_VIDEO_LOADFINISHED = "com.willchou.dapenti.VideoWebViewLoadFinished"
+
+        val instanceCacheMap: MutableMap<String, VideoWebView> = HashMap()
     }
 
     constructor(context: Context) : super(context) {

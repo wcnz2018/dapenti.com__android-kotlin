@@ -34,7 +34,7 @@ class DaPenTiApplication : Application() {
         Settings()
                 .initiate(PreferenceManager.getDefaultSharedPreferences(this),
                         resources)
-        DaPenTi()
+        //DaPenTi()
         //Database(this)
     }
 
