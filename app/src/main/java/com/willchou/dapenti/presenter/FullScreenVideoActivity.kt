@@ -70,7 +70,7 @@ class FullScreenVideoActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        videoWebView = DaPenTi.daPenTi!!.getCachedVideoWebView(pageTitle)
+        videoWebView = VideoWebView.instanceCacheMap[pageTitle]
         if (videoWebView == null) {
             Log.d(TAG, "unable to get videoWebView from page $pageTitle")
             onBackPressed()

@@ -45,6 +45,7 @@ class VideoWebView : WebView {
     }
 
     val videoPrepared: DObservable<Boolean> = DObservable(false)
+    val fullScreen: DObservable<Boolean> = DObservable(false)
 
     var enableZoomGesture: Boolean = false
     private var defaultFontSize: Int = 0

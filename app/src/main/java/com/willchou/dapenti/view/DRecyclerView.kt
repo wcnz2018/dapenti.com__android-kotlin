@@ -16,8 +16,6 @@ class DRecyclerView : RecyclerView {
 
         private var selectMode = false
         fun isSelectMode(): Boolean { return selectMode }
-
-        var flagReverse: DObservable<Boolean> = DObservable(false)
     }
     constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -47,7 +45,7 @@ class DRecyclerView : RecyclerView {
 
     fun enterSelectMode() {
         Log.d(TAG, "enterSelectModeAnimation")
-        DaPenTi.daPenTi?.resetPageSelect()
+        //DaPenTi.daPenTi?.resetPageSelect()
         updateVisibleState(RecyclerViewHolder.Bind_SelectModeAnimation)
         selectMode = true
     }
@@ -55,23 +53,6 @@ class DRecyclerView : RecyclerView {
     fun exitSelectMode() {
         updateVisibleState(RecyclerViewHolder.Bind_SelectModeQuit)
         selectMode = false
-    }
-
-    fun getSelectPages(): List<DaPenTiPage>? {
-        /*
-        val adapter = adapter as RecyclerViewAdapter? ?: return null
-        if (adapter.daPenTiPages == null)
-            return null
-
-        val list: MutableList<DaPenTiPage> = ArrayList()
-        for (page in adapter.daPenTiPages!!) {
-            if (page.isSelected)
-                list.add(page)
-        }
-
-        return list
-        */
-        return null
     }
 
     fun collapseAll() {

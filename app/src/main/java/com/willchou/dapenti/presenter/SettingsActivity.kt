@@ -115,6 +115,7 @@ class SettingsActivity : SwipeBackActivity() {
                     confirmDialog.clickEventListener = object : ConfirmDialog.ClickEventListener {
                         override fun confirmed() {
                             val settings = Settings.settings!!
+                            /* TODO: finish me
                             val database = Database.database!!
 
                             val calendar = Calendar.getInstance()
@@ -133,6 +134,7 @@ class SettingsActivity : SwipeBackActivity() {
                                     database.removePageBefore(calendar.time)
                                 }
                             }
+                            */
 
                             setup()
                             //Snackbar.make(view, "清理成功", Snackbar.LENGTH_LONG).show()

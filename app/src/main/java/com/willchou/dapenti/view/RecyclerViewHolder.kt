@@ -413,16 +413,16 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         hideProgressBar()
 
         when (holderModel!!.pageType) {
-            DaPenTiPage.PageTypeNote ->
+            HolderViewModel.PageTypeNote ->
                 showDescription(holderModel!!.pageNotes.content, false)
 
-            DaPenTiPage.PageTypePicture -> {
+            HolderViewModel.PageTypePicture -> {
                 val picture = holderModel!!.pagePicture
                 showDescription(picture.description, false)
                 showImage(v, picture.imageUrl)
             }
 
-            DaPenTiPage.PageTypeVideo -> {
+            HolderViewModel.PageTypeVideo -> {
                 val canPlayVideo = Settings.settings!!.canPlayVideo()
                 if (canPlayVideo) {
                     val pageVideo = holderModel!!.pageVideo
@@ -434,7 +434,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
                     showDescription("已设置当前条件下不播放视频...", true)
             }
 
-            DaPenTiPage.PageTypeLongReading -> {
+            HolderViewModel.PageTypeLongReading -> {
                 setExpand(false, true)
 
                 val pageLongReading = holderModel!!.pageLongReading

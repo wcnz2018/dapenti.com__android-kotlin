@@ -31,8 +31,6 @@ class ListFragment : Fragment() {
         private const val EXTRA_CATEGORY = "category"
     }
 
-    private var daPenTiCategory: DaPenTiCategory? = null
-
     private var swipeRefreshLayout: SwipeRefreshLayout? = null
     private var recyclerView: DRecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
@@ -52,20 +50,6 @@ class ListFragment : Fragment() {
 
                 MainActivity.ACTION_COLLAPSE_ALL -> recyclerView?.collapseAll()
 
-                DaPenTi.ACTION_CATEGORY_PREPARED -> {
-                    val categoryTitle = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
-                    Log.d(TAG, "onReceive: $categoryTitle")
-                    if (categoryTitle == daPenTiCategory?.categoryName)
-                        activity!!.runOnUiThread { setupRecyclerView() }
-                }
-
-                /*
-                DaPenTi.ACTION_DATABASE_CHANGED -> setupRecyclerView()
-
-                DaPenTi.ACTION_PAGE_PREPARED,
-                DaPenTi.ACTION_PAGE_FAILED,
-                DaPenTi.ACTION_PAGE_FAVORITE,
-                */
                 VideoWebView.ACTION_VIDEO_LOADFINISHED -> recyclerView?.broadcastAction(intent)
             }
         }
@@ -81,26 +65,12 @@ class ListFragment : Fragment() {
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
         filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
 
-        /*
-        filter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
-        filter.addAction(DaPenTi.ACTION_DATABASE_CHANGED)
-
-        filter.addAction(DaPenTi.ACTION_PAGE_PREPARED)
-        filter.addAction(DaPenTi.ACTION_PAGE_FAILED)
-        filter.addAction(DaPenTi.ACTION_PAGE_FAVORITE)
-        */
-
         filter.addAction(VideoWebView.ACTION_VIDEO_LOADFINISHED)
         context!!.registerReceiver(broadcastReceiver, filter)
     }
 
     private fun unregisterReceiver() {
         context!!.unregisterReceiver(broadcastReceiver)
-    }
-
-    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
-        super.setUserVisibleHint(isVisibleToUser)
-        Log.d(TAG, "isVisibleToUser: ${daPenTiCategory?.categoryName}")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,21 +100,17 @@ class ListFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy: ${daPenTiCategory?.categoryName}")
-
         unregisterReceiver()
+        super.onDestroy()
     }
 
     override fun onPause() {
         super.onPause()
-        Log.d(TAG, "onPause: ${daPenTiCategory?.categoryName}")
         swipeRefreshLayout!!.isRefreshing = false
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d(TAG, "onResume: ${daPenTiCategory?.categoryName}")
         swipeRefreshLayout!!.isRefreshing = false
 
         checkNightMode()
@@ -159,10 +125,6 @@ class ListFragment : Fragment() {
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary)
 
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
-
-        Log.d(TAG, "onCreateView(${daPenTiCategory?.categoryName}): " +
-                "adapter: $recyclerViewAdapter," +
-                "Bundle: $savedInstanceState")
 
         prepareContent()
         return swipeRefreshLayout
