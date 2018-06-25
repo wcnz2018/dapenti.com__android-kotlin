@@ -37,7 +37,6 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_COLLAPSE_ALL = "com.willchou.dapenti.COLLAPSE_ALL"
     }
 
-    private var mainActivity: MainActivity? = null
     private var binding: ActivityMainBinding? = null
 
     private var videoOnMobileDataObserver = java.util.Observer { _, p ->
@@ -58,8 +57,6 @@ class MainActivity : AppCompatActivity() {
 
         initiateContent()
         Settings.videoOnMobileData.addObserver(videoOnMobileDataObserver)
-
-        mainActivity = this
     }
 
     override fun onDestroy() {
@@ -114,6 +111,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showWait(failed: Boolean) {
+        Log.d(TAG, "showWait with failed: $failed")
         binding!!.waitLayout.visibility = View.VISIBLE
         binding!!.viewpager.visibility = View.GONE
         if (failed) {

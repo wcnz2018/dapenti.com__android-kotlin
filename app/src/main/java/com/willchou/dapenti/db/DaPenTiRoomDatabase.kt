@@ -12,6 +12,7 @@ import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__TITLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__VISIBLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CATEGORY_ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CREATE_AT
+import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__PAGE_ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__CHECKED
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE__CONTENT
@@ -114,6 +115,9 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
 
         @Insert(onConflict = OnConflictStrategy.IGNORE)
         fun insert(page: DaPenTiData.Page): Long
+
+        @Query("DELETE FROM $TABLE_PAGES WHERE $COLUMN_PAGE__ID IN (:pageIDs)")
+        fun deleteWithIDs(pageIDs: List<Int>)
     }
 
     abstract fun indexDao() : IndexDao
@@ -124,8 +128,15 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
                 " WHERE $COLUMN_PAGE_INDEX__CATEGORY_ID=:categoryID")
         fun getIndices(categoryID: Int): List<DaPenTiData.Index>
 
+        @Query("SELECT * FROM $TABLE_PAGE_INDEX" +
+                " WHERE $COLUMN_PAGE_INDEX__CREATE_AT <= :date")
+        fun getIndecesBefore(date: Date): List<DaPenTiData.Index>
+
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun insert(index: DaPenTiData.Index): Long
+
+        @Query("DELETE FROM $TABLE_PAGE_INDEX WHERE $COLUMN_PAGE_INDEX__ID IN (:indexIDs)")
+        fun deleteWithIDs(indexIDs: List<Int>)
     }
 
     class Converters {

@@ -1,5 +1,6 @@
 package com.willchou.dapenti.presenter
 
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -15,7 +16,12 @@ import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.ConfirmDialog
+import com.willchou.dapenti.vm.SettingsViewModel
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import me.majiajie.swipeback.SwipeBackActivity
+import java.util.*
 
 class SettingsActivity : SwipeBackActivity() {
     companion object {
@@ -23,6 +29,7 @@ class SettingsActivity : SwipeBackActivity() {
     }
 
     private var settingContent: View? = null
+    private var settingsViewModel: SettingsViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,17 +39,25 @@ class SettingsActivity : SwipeBackActivity() {
         setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { onBackPressed() }
 
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.setting_content, SettingsFragment().setContext(this))
-                .commit()
-
         settingContent = findViewById(R.id.setting_content)
 
         if (Settings.settings!!.nightMode) {
             setTheme(R.style.NightModeTheme)
             settingContent?.setBackgroundColor(Settings.settings!!.getLighterBackgroundColor())
         }
+
+        Observable.just(this)
+                .observeOn(Schedulers.io())
+                .doOnNext {
+                    settingsViewModel = ViewModelProviders.of(it).get(SettingsViewModel::class.java)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.setting_content, SettingsFragment().setContext(it))
+                            .commit()
+                }
     }
 
     internal class SettingsFragment : PreferenceFragment() {
@@ -113,8 +128,7 @@ class SettingsActivity : SwipeBackActivity() {
                     confirmDialog.clickEventListener = object : ConfirmDialog.ClickEventListener {
                         override fun confirmed() {
                             val settings = Settings.settings!!
-                            /* TODO: finish me
-                            val database = Database.database!!
+                            val settingsViewModel = (mContext as SettingsActivity).settingsViewModel
 
                             val calendar = Calendar.getInstance()
 
@@ -122,17 +136,16 @@ class SettingsActivity : SwipeBackActivity() {
                                 1 -> settings.clearCache() // cacheOnly
                                 2 -> { // weekAgo
                                     calendar.add(Calendar.DAY_OF_YEAR, -7)
-                                    database.removePageBefore(calendar.time)
                                 }
                                 3 -> { // monthAgo
                                     calendar.add(Calendar.MONTH, -1)
-                                    database.removePageBefore(calendar.time)
                                 }
                                 4 -> { // all
-                                    database.removePageBefore(calendar.time)
                                 }
                             }
-                            */
+
+                            if (index != 1)
+                                Thread{ settingsViewModel!!.removeDateBefore(calendar.time) }.start()
 
                             setup()
                             //Snackbar.make(view, "清理成功", Snackbar.LENGTH_LONG).show()

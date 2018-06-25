@@ -10,6 +10,7 @@ import android.util.Log
 import com.willchou.dapenti.db.DaPenTiData
 import com.willchou.dapenti.db.DaPenTiRoomDatabase
 import com.willchou.dapenti.model.DaPenTiWeb
+import com.willchou.dapenti.utils.DObservable
 import java.util.concurrent.Executors
 
 class FragmentViewModel(private val category: String): ViewModel() {
@@ -37,6 +38,8 @@ class FragmentViewModel(private val category: String): ViewModel() {
         private const val ENABLE_PLACEHOLDERS = true
     }
 
+    val isFetchingFromWeb: DObservable<Boolean> = DObservable(false)
+
     private val helper = PagingRequestHelper(MainViewModel.executor)
 
     private val categoryDao = DaPenTiRoomDatabase.get().categoryDao()
@@ -48,6 +51,7 @@ class FragmentViewModel(private val category: String): ViewModel() {
 
     private fun fetchPageFromWeb() : Boolean {
         Log.d(TAG, "url: ${categoryData!!.url}")
+        isFetchingFromWeb.set(true)
         val list = DaPenTiWeb.getPages(categoryData!!.url)
 
         for (page in list.reversed()) {
@@ -64,6 +68,7 @@ class FragmentViewModel(private val category: String): ViewModel() {
             }
         }
 
+        isFetchingFromWeb.set(false)
         return list.isNotEmpty()
     }
 

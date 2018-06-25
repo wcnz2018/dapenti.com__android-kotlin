@@ -34,7 +34,6 @@ class ListFragment : Fragment() {
     private var recyclerView: DRecyclerView? = null
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
 
-
     private var categoryName: String? = null
     private var fragmentViewModel: FragmentViewModel? = null
     var recycledViewPool: RecyclerView.RecycledViewPool? = null
@@ -49,6 +48,15 @@ class ListFragment : Fragment() {
 
                 MainActivity.ACTION_COLLAPSE_ALL -> recyclerView?.collapseAll()
             }
+        }
+    }
+
+    private val isFetchFromWebObserver = java.util.Observer { _, p ->
+        val doing = p as Boolean
+        activity?.runOnUiThread {
+            swipeRefreshLayout?.isRefreshing = doing
+            if (!doing)
+                recyclerView?.scrollToPosition(0)
         }
     }
 
@@ -82,10 +90,11 @@ class ListFragment : Fragment() {
                 .of(this, FragmentViewModel.Factor(categoryName!!))
                 .get(categoryName!!, FragmentViewModel::class.java)
 
-        //swipeRefreshLayout!!.isRefreshing = true
         Observable.just(fragmentViewModel)
                 .subscribeOn(Schedulers.io())
-                .subscribe { fragmentViewModel?.preparePagesIfEmpty() }
+                .subscribe { it?.preparePagesIfEmpty() }
+
+        fragmentViewModel!!.isFetchingFromWeb.addObserver(isFetchFromWebObserver)
 
         registerReceiver()
     }
@@ -97,6 +106,7 @@ class ListFragment : Fragment() {
 
     override fun onDestroy() {
         unregisterReceiver()
+        fragmentViewModel!!.isFetchingFromWeb.deleteObserver(isFetchFromWebObserver)
         super.onDestroy()
     }
 
@@ -123,6 +133,7 @@ class ListFragment : Fragment() {
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
 
         prepareContent()
+
         return swipeRefreshLayout
     }
 
@@ -145,8 +156,10 @@ class ListFragment : Fragment() {
         Observable.just(fragmentViewModel)
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    it!!.getPages()?.observe(this,
-                            Observer(recyclerViewAdapter!!::submitList))
+                    fragmentViewModel!!.getPages()?.observe(this,
+                            Observer {
+                                recyclerViewAdapter!!.submitList(it)
+                            })
                 }
     }
 }
