@@ -35,7 +35,7 @@ abstract class DaPenTiRoomDatabase : RoomDatabase() {
         fun get(context: Context = DaPenTiApplication.getAppContext()): DaPenTiRoomDatabase {
             if (INSTANCE == null) {
                 INSTANCE = Room.databaseBuilder(context.applicationContext,
-                        DaPenTiRoomDatabase::class.java, /*DaPenTiData.DATABASE_NAME*/"DaPenTi2.db")
+                        DaPenTiRoomDatabase::class.java, DaPenTiData.DATABASE_NAME)
                         .build()
             }
             return INSTANCE!!

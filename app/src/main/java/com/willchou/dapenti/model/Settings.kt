@@ -10,6 +10,7 @@ import android.util.Log
 import com.willchou.dapenti.DaPenTiApplication
 
 import com.willchou.dapenti.R
+import com.willchou.dapenti.utils.DObservable
 import java.io.File
 
 class Settings {
@@ -22,8 +23,6 @@ class Settings {
                 "body {color:black !important;background-color:white !important}" +
                         "a {color:blue; !important}"
 
-        const val ACTION_PLAY_ON_MOBILE_DATA = "com.willchou.dapenti.videoOnMobileData"
-
         const val FontSizeSmall = 0
         const val FontSizeMedia = 1
         const val FontSizeBig = 2
@@ -32,6 +31,8 @@ class Settings {
         const val DataTypeNone = 0
         const val DataTypeWifi = 1
         const val DataTypeMobile = 2
+
+        val videoOnMobileData: DObservable<Boolean> = DObservable(false)
 
         var settings: Settings? = null
             private set
@@ -113,11 +114,6 @@ class Settings {
         return DataTypeNone
     }
 
-    private fun notifyPlayOnMobileData() {
-        val intent = Intent(ACTION_PLAY_ON_MOBILE_DATA)
-        DaPenTiApplication.getAppContext().sendBroadcast(intent)
-    }
-
     fun canPlayVideo():Boolean {
         val dataType = getDataType()
         val s = prefs!!.getString(resources!!.getString(R.string.pref_key_auto_play), "")
@@ -131,8 +127,8 @@ class Settings {
 
         when (s) {
             "mobileAndWiFi" -> {
-                if (dataType == DataTypeMobile)
-                    notifyPlayOnMobileData()
+                if (dataType == DataTypeMobile && !videoOnMobileData.get())
+                    videoOnMobileData.set(true)
                 return dataType == DataTypeMobile || dataType == DataTypeWifi
             }
 

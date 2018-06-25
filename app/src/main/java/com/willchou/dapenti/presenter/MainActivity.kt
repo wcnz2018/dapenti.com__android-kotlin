@@ -40,19 +40,14 @@ class MainActivity : AppCompatActivity() {
     private var mainActivity: MainActivity? = null
     private var binding: ActivityMainBinding? = null
 
-    private var loadAlreadyFailed: Boolean = false
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                Settings.ACTION_PLAY_ON_MOBILE_DATA -> {
-                    Snackbar.make(findViewById(android.R.id.content),
-                            "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
-                            .setAction(R.string.title_activity_settings) {
-                                val i = Intent(context!!, SettingsActivity::class.java)
-                                context.startActivity(i)
-                            }.show()
-                }
-            }
+    private var videoOnMobileDataObserver = java.util.Observer { _, p ->
+        if (p as Boolean) {
+            Snackbar.make(findViewById(android.R.id.content),
+                    "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
+                    .setAction(R.string.title_activity_settings) {
+                        val i = Intent(this, SettingsActivity::class.java)
+                        this.startActivity(i)
+                    }.show()
         }
     }
 
@@ -62,10 +57,7 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         initiateContent()
-
-        val intentFilter = IntentFilter()
-        intentFilter.addAction(Settings.ACTION_PLAY_ON_MOBILE_DATA)
-        registerReceiver(broadcastReceiver, intentFilter)
+        Settings.videoOnMobileData.addObserver(videoOnMobileDataObserver)
 
         mainActivity = this
     }
@@ -74,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
 
-        unregisterReceiver(broadcastReceiver)
+        Settings.videoOnMobileData.deleteObserver(videoOnMobileDataObserver)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -140,17 +132,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initiateContent() {
         setSupportActionBar(binding!!.toolbar)
-
-        //DaPenTi.storageDir = filesDir.absolutePath
-
-        /*
-        Handler().postDelayed({
-            if (!DaPenTi.daPenTi!!.initiated() && !loadAlreadyFailed)
-                showWait(false)
-        }, 500)
-
-        Thread { DaPenTi.daPenTi?.prepareCategory(false) }.start()
-        */
 
         showWait(false)
 

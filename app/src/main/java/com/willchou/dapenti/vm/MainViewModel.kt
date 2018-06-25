@@ -22,7 +22,6 @@ class MainViewModel : ViewModel() {
                 override fun onZeroItemsLoaded() {
                     helper.runIfNotRunning(PagingRequestHelper.RequestType.INITIAL) {
                         Thread {
-                            //fetchPageFromWeb()
                             val list = DaPenTiWeb.getCategories()
                             if (list.isNotEmpty())
                                 dao.insert(categories = list)
@@ -32,12 +31,6 @@ class MainViewModel : ViewModel() {
                 }
             })
             .build()
-
-    //fun getCategories() : List<DaPenTiData.Category> = dao.visibleCategories()
-
-    fun insertCategories(categories: List<DaPenTiData.Category>) {
-        dao.insert(categories)
-    }
 
     companion object {
         private const val PAGE_SIZE = 30
