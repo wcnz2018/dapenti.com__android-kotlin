@@ -2,7 +2,6 @@ package com.willchou.dapenti.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.util.AttributeSet
@@ -16,18 +15,14 @@ import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.Toast
 import com.willchou.dapenti.DaPenTiApplication
-import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.model.Settings
-import android.webkit.WebView
 import com.willchou.dapenti.utils.DObservable
 
 class VideoWebView : WebView {
     companion object {
         private const val TAG = "VideoWebView"
 
-        const val ACTION_ENTER_FULLSCREEN = "com.willchou.dapenti.VideoWebViewEnterFullScreen"
-        const val ACTION_QUIT_FULLSCREEN = "com.willchou.dapenti.VideoWebViewQuitFullScreen"
-        const val ACTION_VIDEO_LOADFINISHED = "com.willchou.dapenti.VideoWebViewLoadFinished"
+        const val EXTRA_PAGE_TITLE = "pageTitle"
 
         val instanceCacheMap: MutableMap<String, VideoWebView> = HashMap()
     }
@@ -105,14 +100,14 @@ class VideoWebView : WebView {
 
         override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
             if (view is FrameLayout) {
-                notifyFullScreen(true)
+                fullScreen.set(true)
                 videoViewContainer = view
             }
             super.onShowCustomView(view, callback)
         }
 
         override fun onHideCustomView() {
-            notifyFullScreen(false)
+            fullScreen.set(false)
             pauseVideo()
             super.onHideCustomView()
         }
@@ -191,21 +186,6 @@ class VideoWebView : WebView {
         if (enableZoomGesture)
             scaleGestureDetector?.onTouchEvent(event)
         return super.onTouchEvent(event)
-    }
-
-    private fun notifyFullScreen(enter: Boolean) = if (enter) {
-        val intent = Intent(ACTION_ENTER_FULLSCREEN)
-        intent.putExtra(DaPenTi.EXTRA_PAGE_TITLE, belongPageTitle)
-        context.sendBroadcast(intent)
-    } else {
-        val intent = Intent(ACTION_QUIT_FULLSCREEN)
-        context.sendBroadcast(intent)
-    }
-
-    private fun notifyLoadFinished() {
-        val intent = Intent(ACTION_VIDEO_LOADFINISHED)
-        intent.putExtra(DaPenTi.EXTRA_PAGE_TITLE, belongPageTitle)
-        context.sendBroadcast(intent)
     }
 
     fun detachFromParent() {

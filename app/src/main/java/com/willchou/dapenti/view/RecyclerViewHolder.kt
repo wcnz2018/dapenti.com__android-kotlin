@@ -15,7 +15,6 @@ import android.widget.*
 import com.bumptech.glide.Glide
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.DaPenTiPage
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.model.Settings.Companion.settings
 import com.willchou.dapenti.presenter.DetailActivity
@@ -27,6 +26,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import android.support.annotation.Nullable
+import com.willchou.dapenti.presenter.FullScreenVideoActivity
 
 
 class RecyclerViewHolder internal constructor(private val mView: View,
@@ -74,6 +74,17 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private var videoPreparedObserver = object : java.util.Observer {
         override fun update(p0: java.util.Observable?, p1: Any?) {
             showContent(mView, true)
+        }
+    }
+
+    private var fullscreenObserver = object : java.util.Observer {
+        override fun update(p0: java.util.Observable?, p1: Any?) {
+            val fullScreen = p1!! as Boolean
+            if (fullScreen) {
+                val intent = Intent(mView.context, FullScreenVideoActivity::class.java)
+                intent.putExtra(VideoWebView.EXTRA_PAGE_TITLE, pageInstance!!.title)
+                mView.context.startActivity(intent)
+            }
         }
     }
 
@@ -366,6 +377,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
         val videoWebView = VideoWebView.instanceCacheMap[holderModel!!.pageTitle]
         videoWebView?.pauseVideo()
         videoWebView?.videoPrepared?.deleteObserver(videoPreparedObserver)
+        videoWebView?.fullScreen?.deleteObserver(fullscreenObserver)
 
         binding.videoLayout.visibility = View.GONE
         binding.videoLayout.removeAllViews()
@@ -393,6 +405,7 @@ class RecyclerViewHolder internal constructor(private val mView: View,
             binding.videoLayout.visibility = View.VISIBLE
         }
 
+        videoWebView.fullScreen.addObserver(fullscreenObserver)
         videoWebView.videoPrepared.addObserver(videoPreparedObserver)
         videoWebView.moveTo(binding.videoLayout, false)
 

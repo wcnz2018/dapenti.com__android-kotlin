@@ -1,6 +1,7 @@
 package com.willchou.dapenti.presenter
 
 import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -15,11 +16,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.DaPenTi
-import com.willchou.dapenti.model.DaPenTiCategory
 import com.willchou.dapenti.model.Settings
-import android.arch.lifecycle.ViewModelProviders
-import com.willchou.dapenti.view.*
+import com.willchou.dapenti.view.DRecyclerView
+import com.willchou.dapenti.view.RecyclerViewAdapter
 import com.willchou.dapenti.vm.FragmentViewModel
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -49,8 +48,6 @@ class ListFragment : Fragment() {
                 }
 
                 MainActivity.ACTION_COLLAPSE_ALL -> recyclerView?.collapseAll()
-
-                VideoWebView.ACTION_VIDEO_LOADFINISHED -> recyclerView?.broadcastAction(intent)
             }
         }
     }
@@ -65,7 +62,6 @@ class ListFragment : Fragment() {
         filter.addAction(MainActivity.ACTION_READING_MODE_CHANGED)
         filter.addAction(MainActivity.ACTION_COLLAPSE_ALL)
 
-        filter.addAction(VideoWebView.ACTION_VIDEO_LOADFINISHED)
         context!!.registerReceiver(broadcastReceiver, filter)
     }
 

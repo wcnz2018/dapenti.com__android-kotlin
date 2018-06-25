@@ -13,11 +13,9 @@ import android.util.Log
 import android.view.View
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.Database
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.view.ConfirmDialog
 import me.majiajie.swipeback.SwipeBackActivity
-import java.util.*
 
 class SettingsActivity : SwipeBackActivity() {
     companion object {

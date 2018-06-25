@@ -1,9 +1,5 @@
 package com.willchou.dapenti.presenter
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -11,8 +7,8 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.LinearLayout
 import com.willchou.dapenti.R
-import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.view.VideoWebView
+import java.util.*
 
 class FullScreenVideoActivity : AppCompatActivity() {
     companion object {
@@ -21,12 +17,9 @@ class FullScreenVideoActivity : AppCompatActivity() {
     private var videoLayout: LinearLayout? = null
     private var videoWebView: VideoWebView? = null
 
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                VideoWebView.ACTION_QUIT_FULLSCREEN -> onBackPressed()
-            }
-        }
+    private var videoFullscreenObserver = Observer { _, pFullScreen ->
+        val fullscreen = pFullScreen as Boolean
+        if (!fullscreen) onBackPressed()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,9 +34,6 @@ class FullScreenVideoActivity : AppCompatActivity() {
 
         videoLayout = findViewById(R.id.videoLayout)
 
-        val intentFilter = IntentFilter(VideoWebView.ACTION_QUIT_FULLSCREEN)
-        registerReceiver(broadcastReceiver, intentFilter)
-
         setupContent()
     }
 
@@ -51,7 +41,7 @@ class FullScreenVideoActivity : AppCompatActivity() {
         Log.d(TAG, "onDestroy")
         super.onDestroy()
 
-        unregisterReceiver(broadcastReceiver)
+        videoWebView?.fullScreen?.deleteObserver(videoFullscreenObserver)
     }
 
     override fun onBackPressed() {
@@ -64,7 +54,8 @@ class FullScreenVideoActivity : AppCompatActivity() {
     }
 
     private fun setupContent() {
-        val pageTitle = intent.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
+        val pageTitle = intent.getStringExtra(VideoWebView.EXTRA_PAGE_TITLE)
+        Log.d(TAG, "play full screen video with title $pageTitle")
         if (pageTitle == null) {
             Log.d(TAG, "unable to get page title from intent")
             onBackPressed()
@@ -75,6 +66,8 @@ class FullScreenVideoActivity : AppCompatActivity() {
             Log.d(TAG, "unable to get videoWebView from page $pageTitle")
             onBackPressed()
         }
+
+        videoWebView!!.fullScreen.addObserver(videoFullscreenObserver)
 
         videoWebView!!.moveTo(videoLayout!!, true)
         videoWebView!!.startVideo()

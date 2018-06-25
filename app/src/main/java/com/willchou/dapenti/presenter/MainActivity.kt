@@ -23,12 +23,9 @@ import android.view.MenuItem
 import android.view.View
 import com.willchou.dapenti.R
 import com.willchou.dapenti.databinding.ActivityMainBinding
-import com.willchou.dapenti.model.DaPenTi
 import com.willchou.dapenti.db.DaPenTiData
-import com.willchou.dapenti.model.DaPenTiWeb
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.vm.MainViewModel
-import com.willchou.dapenti.view.VideoWebView
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 
@@ -47,20 +44,6 @@ class MainActivity : AppCompatActivity() {
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                DaPenTi.ACTION_CATEGORY_PREPARED -> {
-                    val title = intent.getStringExtra(DaPenTi.EXTRA_CATEGORY_TITLE)
-
-                    /*
-                    if (title == null)
-                        setupContent()
-                        */
-                }
-
-                DaPenTi.ACTION_CATEGORY_ERROR -> {
-                    loadAlreadyFailed = true
-                    showWait(true)
-                }
-
                 Settings.ACTION_PLAY_ON_MOBILE_DATA -> {
                     Snackbar.make(findViewById(android.R.id.content),
                             "正在使用移动网络播放视频,请注意流量", Snackbar.LENGTH_LONG)
@@ -68,13 +51,6 @@ class MainActivity : AppCompatActivity() {
                                 val i = Intent(context!!, SettingsActivity::class.java)
                                 context.startActivity(i)
                             }.show()
-                }
-
-                VideoWebView.ACTION_ENTER_FULLSCREEN -> {
-                    val pageTitle = intent.getStringExtra(DaPenTi.EXTRA_PAGE_TITLE)
-                    val it = Intent(mainActivity!!, FullScreenVideoActivity::class.java)
-                    it.putExtra(DaPenTi.EXTRA_PAGE_TITLE, pageTitle)
-                    mainActivity!!.startActivity(it)
                 }
             }
         }
@@ -88,10 +64,7 @@ class MainActivity : AppCompatActivity() {
         initiateContent()
 
         val intentFilter = IntentFilter()
-        intentFilter.addAction(DaPenTi.ACTION_CATEGORY_PREPARED)
-        intentFilter.addAction(DaPenTi.ACTION_CATEGORY_ERROR)
         intentFilter.addAction(Settings.ACTION_PLAY_ON_MOBILE_DATA)
-        intentFilter.addAction(VideoWebView.ACTION_ENTER_FULLSCREEN)
         registerReceiver(broadcastReceiver, intentFilter)
 
         mainActivity = this
