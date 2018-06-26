@@ -3,11 +3,9 @@ package com.willchou.dapenti.db
 import android.arch.lifecycle.LiveData
 import android.arch.paging.DataSource
 import android.arch.persistence.room.*
-import android.arch.persistence.room.Database
 import android.content.Context
 import com.willchou.dapenti.DaPenTiApplication
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__DISPLAY_ORDER
-import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__ID
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__TITLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_CATEGORY__VISIBLE
 import com.willchou.dapenti.db.DaPenTiData.Companion.COLUMN_PAGE_INDEX__CATEGORY_ID

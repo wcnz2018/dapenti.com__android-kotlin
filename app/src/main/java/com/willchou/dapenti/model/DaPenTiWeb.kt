@@ -2,6 +2,7 @@ package com.willchou.dapenti.model
 
 import android.util.Log
 import com.willchou.dapenti.db.DaPenTiData
+import com.willchou.dapenti.utils.DObservable
 import org.jsoup.Jsoup
 import java.net.URL
 
@@ -67,11 +68,19 @@ class DaPenTiWeb {
             return ArrayList()
         }
 
+        val categoryFetching: DObservable<Boolean> = DObservable(false)
+        val categoryFailed: DObservable<Boolean> = DObservable(false)
         fun getCategories() : List<DaPenTiData.Category> {
+            categoryFetching.set(true)
+            categoryFailed.set(false)
+
             val list: MutableList<DaPenTiData.Category> = ArrayList()
 
             val ss = "div.center_title > a, div.title > a, div.title > p > a"
             val urlPairs = getElementsWithQuery(urlString, ss)
+
+            if (urlPairs.isEmpty())
+                categoryFailed.set(true)
 
             for (p in urlPairs) {
                 // "浮世绘"和"本月热读" 中的子页连接是错误的目录内容
@@ -81,6 +90,7 @@ class DaPenTiWeb {
                 list.add(DaPenTiData.Category(title = p.first, url = p.second.toString()))
             }
 
+            categoryFetching.set(false)
             return list
         }
 

@@ -2,10 +2,7 @@ package com.willchou.dapenti.presenter
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.os.Parcelable
@@ -24,10 +21,9 @@ import android.view.View
 import com.willchou.dapenti.R
 import com.willchou.dapenti.databinding.ActivityMainBinding
 import com.willchou.dapenti.db.DaPenTiData
+import com.willchou.dapenti.model.DaPenTiWeb
 import com.willchou.dapenti.model.Settings
 import com.willchou.dapenti.vm.MainViewModel
-import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -50,10 +46,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var categoryFetchingObserver = java.util.Observer { _, p ->
+        val fetching = p as Boolean
+        if (fetching)
+            runOnUiThread { showWait(false) }
+    }
+
+    private var categoryFetchFailedObserver = java.util.Observer { _, p ->
+        val failed = p as Boolean
+        if (failed)
+            runOnUiThread { showWait(true) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+
+        DaPenTiWeb.categoryFetching.addObserver(categoryFetchingObserver)
+        DaPenTiWeb.categoryFailed.addObserver(categoryFetchFailedObserver)
 
         initiateContent()
         Settings.videoOnMobileData.addObserver(videoOnMobileDataObserver)
@@ -62,6 +73,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
+
+        DaPenTiWeb.categoryFetching.deleteObserver(categoryFetchingObserver)
+        DaPenTiWeb.categoryFailed.deleteObserver(categoryFetchFailedObserver)
 
         Settings.videoOnMobileData.deleteObserver(videoOnMobileDataObserver)
     }
@@ -93,9 +107,11 @@ class MainActivity : AppCompatActivity() {
                 sendBroadcast(Intent(ACTION_READING_MODE_CHANGED))
             }
 
+            /*
             R.id.action_collapse_all -> {
                 sendBroadcast(Intent(ACTION_COLLAPSE_ALL))
             }
+            */
 
             R.id.action_favorite -> {
                 val intent = Intent(this, FavoriteActivity::class.java)
@@ -113,7 +129,7 @@ class MainActivity : AppCompatActivity() {
     private fun showWait(failed: Boolean) {
         Log.d(TAG, "showWait with failed: $failed")
         binding!!.waitLayout.visibility = View.VISIBLE
-        binding!!.viewpager.visibility = View.GONE
+        binding!!.tabLayout.visibility = View.GONE
         if (failed) {
             binding!!.waitProgressBar.visibility = View.GONE
             binding!!.waitTextView.visibility = View.VISIBLE
@@ -131,18 +147,15 @@ class MainActivity : AppCompatActivity() {
     private fun initiateContent() {
         setSupportActionBar(binding!!.toolbar)
 
-        showWait(false)
-
-        Observable.just(this)
-                .subscribeOn(Schedulers.io())
-                .subscribe {
-                    val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-                    mainViewModel.allCategories.observe(this, Observer {
-                        val list = it?.toList()
-                        if (list != null)
-                            runOnUiThread { setupContent(list) }
-                    })
-                }
+        Thread {
+            val vm = ViewModelProviders.of(this).get(MainViewModel::class.java)
+            vm.prepareCategoriesIfEmpty()
+            vm.allCategories?.observe(this, Observer {
+                val list = it?.toList()
+                if (list != null)
+                    runOnUiThread { setupContent(list) }
+            })
+        }.start()
     }
 
     private fun setupContent(categories: List<DaPenTiData.Category>) {

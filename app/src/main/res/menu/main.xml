@@ -4,10 +4,10 @@
     <item
         android:id="@+id/action_mode"
         android:title="@string/action_mode_night" />
+    <!--
     <item
         android:id="@+id/action_collapse_all"
         android:title="@string/action_collapse_all" />
-    <!--
     <item
         android:id="@+id/action_delete_item"
         android:title="@string/action_delete_item" />

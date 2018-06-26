@@ -1,14 +1,12 @@
 package com.willchou.dapenti.model
 
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.util.Log
 import com.willchou.dapenti.DaPenTiApplication
-
 import com.willchou.dapenti.R
 import com.willchou.dapenti.utils.DObservable
 import java.io.File

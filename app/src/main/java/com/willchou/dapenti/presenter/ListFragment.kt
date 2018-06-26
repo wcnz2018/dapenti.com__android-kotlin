@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
@@ -55,8 +56,11 @@ class ListFragment : Fragment() {
         val doing = p as Boolean
         activity?.runOnUiThread {
             swipeRefreshLayout?.isRefreshing = doing
-            if (!doing)
-                recyclerView?.scrollToPosition(0)
+            if (!doing) {
+                Handler().postDelayed({
+                    recyclerView?.smoothScrollToPosition(0)
+                }, 500)
+            }
         }
     }
 
