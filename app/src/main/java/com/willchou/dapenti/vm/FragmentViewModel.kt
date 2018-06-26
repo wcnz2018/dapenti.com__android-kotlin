@@ -49,7 +49,7 @@ class FragmentViewModel(private val category: String): ViewModel() {
     private var categoryData: DaPenTiData.Category? = null
     private var allPages : LiveData<PagedList<DaPenTiData.Page>>? = null
 
-    private fun fetchPageFromWeb() : Boolean {
+    fun fetchPageFromWeb() : Boolean {
         Log.d(TAG, "url: ${categoryData!!.url}")
         isFetchingFromWeb.set(true)
         val list = DaPenTiWeb.getPages(categoryData!!.url)

@@ -54,42 +54,32 @@ class RecyclerViewHolder internal constructor(private val mView: View,
     private var pageInstance: DaPenTiData.Page? = null
     private var holderModel: HolderViewModel? = null
 
-    private var modelObserver = object : Observer<DaPenTiData.Page> {
-        override fun onChanged(@Nullable page: DaPenTiData.Page?) {
-            Log.d(TAG, "onChanged: page: $page")
-            if (page != null && page?.title == pageInstance?.title)
-                return
+    private var modelObserver = Observer<DaPenTiData.Page> { page ->
+        Log.d(TAG, "onChanged: page: $page")
+        if (page != null && page.title == pageInstance?.title)
+            return@Observer
 
-            pageInstance = page
+        pageInstance = page
 
-            Log.d(TAG, "onChanged reload holder")
-            checkSelect()
-            checkNightMode()
-            checkFavorite()
+        Log.d(TAG, "onChanged reload holder")
+        checkSelect()
+        checkNightMode()
+        checkFavorite()
 
-            setupContent(false)
-        }
+        setupContent(false)
     }
 
-    private var videoPreparedObserver = object : java.util.Observer {
-        override fun update(p0: java.util.Observable?, p1: Any?) {
-            showContent(mView, true)
-        }
+    private var videoPreparedObserver = java.util.Observer { _, _ ->
+        showContent(mView, true)
     }
 
-    private var fullscreenObserver = object : java.util.Observer {
-        override fun update(p0: java.util.Observable?, p1: Any?) {
-            val fullScreen = p1!! as Boolean
-            if (fullScreen) {
-                val intent = Intent(mView.context, FullScreenVideoActivity::class.java)
-                intent.putExtra(VideoWebView.EXTRA_PAGE_TITLE, pageInstance!!.title)
-                mView.context.startActivity(intent)
-            }
+    private var fullscreenObserver = java.util.Observer { p0, p1 ->
+        val fullScreen = p1!! as Boolean
+        if (fullScreen) {
+            val intent = Intent(mView.context, FullScreenVideoActivity::class.java)
+            intent.putExtra(VideoWebView.EXTRA_PAGE_TITLE, pageInstance!!.title)
+            mView.context.startActivity(intent)
         }
-    }
-
-    fun getHolderTitle(): String? {
-        return holderModel?.pageTitle
     }
 
     init {

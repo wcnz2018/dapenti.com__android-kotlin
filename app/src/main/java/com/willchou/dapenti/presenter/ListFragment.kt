@@ -134,6 +134,12 @@ class ListFragment : Fragment() {
                 container, false) as SwipeRefreshLayout
         swipeRefreshLayout!!.setColorSchemeResources(R.color.colorAccent, R.color.colorPrimary)
 
+        swipeRefreshLayout?.setOnRefreshListener {
+            Thread {
+                fragmentViewModel!!.fetchPageFromWeb()
+            }.start()
+        }
+
         recyclerView = swipeRefreshLayout!!.findViewById(R.id.recycler_view)
 
         prepareContent()

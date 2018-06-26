@@ -242,6 +242,11 @@ class VideoWebView : WebView {
             else
                 settings.defaultFontSize -= 1
 
+            if (defaultFontSize == 0) {
+                Log.d(TAG, "defaultFontSize == 0 ??")
+                return true
+            }
+
             val s = "${settings.defaultFontSize * 100 / defaultFontSize}%"
 
             if (toast != null) toast?.cancel()
